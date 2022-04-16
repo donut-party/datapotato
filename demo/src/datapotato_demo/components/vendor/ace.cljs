@@ -1,4 +1,4 @@
-(ns specmonstah-demo.components.vendor.ace
+(ns datapotato-demo.components.vendor.ace
   (:require ["react-ace" :default AceEditor]
             [sweet-tooth.frontend.form.components :as stfc]
             ["brace/mode/clojure"]

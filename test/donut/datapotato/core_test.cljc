@@ -1,9 +1,9 @@
-(ns reifyhealth.specmonstah.core-test
+(ns donut.datapotato.core-test
   (:require #?(:clj [clojure.test :refer [deftest is are use-fixtures testing]]
                :cljs [cljs.test :include-macros true :refer [deftest is are use-fixtures testing]])
             [clojure.spec.test.alpha :as stest]
-            [reifyhealth.specmonstah.test-data :as td]
-            [reifyhealth.specmonstah.core :as sm]
+            [donut.datapotato.test-data :as td]
+            [donut.datapotato.core :as sm]
             [loom.graph :as lg]
             [loom.attr :as lat]))
 

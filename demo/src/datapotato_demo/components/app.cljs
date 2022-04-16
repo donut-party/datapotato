@@ -1,14 +1,14 @@
-(ns specmonstah-demo.components.app
+(ns datapotato-demo.components.app
   (:require [re-frame.core :as rf]
             [cljs.pprint :as pprint]
             [sweet-tooth.frontend.form.flow :as stff]
             [sweet-tooth.frontend.form.components :as stfc]
             [sweet-tooth.frontend.core.utils :as stcu]
 
-            [specmonstah-demo.examples.queries :as queries]
-            [specmonstah-demo.examples.schemas :as schemas]
-            [specmonstah-demo.components.vendor.ace :as ace]
-            [specmonstah-demo.components.vendor.vis :as vis]))
+            [datapotato-demo.examples.queries :as queries]
+            [datapotato-demo.examples.schemas :as schemas]
+            [datapotato-demo.components.vendor.ace :as ace]
+            [datapotato-demo.components.vendor.vis :as vis]))
 
 (defn pretty
   [x]
@@ -28,7 +28,7 @@
   []
   [:div.query
    [:h2 "Query"]
-   [:p "The Specmonstah query is used to specify the data you want to generate"]
+   [:p "The Datapotato query is used to specify the data you want to generate"]
    (stfc/with-form [:query]
      [:form {:on-submit (stcu/prevent-default #(rf/dispatch [:submit-query]))}
       [input :ace :query {:height "100px"
@@ -47,7 +47,7 @@
 (defn app
   []
   [:div
-   [:h1 "Specmonstah Demo"]
+   [:h1 "Datapotato Demo"]
    [:p "Shows how a query and a schema combine to generate a graph of
    entities. clojure.spec is used to generate a map for each entity
    could be inserted in a database."]

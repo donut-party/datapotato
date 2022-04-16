@@ -1,4 +1,4 @@
-(ns specmonstah-demo.examples.schemas
+(ns datapotato-demo.examples.schemas
   (:require [clojure.spec.alpha :as s]
             [clojure.test.check.generators :as gen :include-macros true]
             [shadow.resource :as rc]))

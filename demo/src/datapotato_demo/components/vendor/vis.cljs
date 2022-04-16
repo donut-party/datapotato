@@ -1,4 +1,4 @@
-(ns specmonstah-demo.components.vendor.vis
+(ns datapotato-demo.components.vendor.vis
   (:require ["react-graph-vis" :default Graph]
             [loom.graph :as lg]))
 

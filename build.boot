@@ -25,11 +25,11 @@
 (bootlaces! +version+)
 
 (task-options!
-  pom  {:project     'reifyhealth/specmonstah
+  pom  {:project     'donut/datapotato
         :version     +version+
         :description "Generate and process graphs of dependencies"
-        :url         "https://github.com/reifyhealth/specmonstah"
-        :scm         {:url "https://github.com/reifyhealth/specmonstah"}
+        :url         "https://github.com/donut/datapotato"
+        :scm         {:url "https://github.com/donut/datapotato"}
         :license     {"MIT" "https://opensource.org/licenses/MIT"}}
   test-cljs {:js-env :node})
 
@@ -43,7 +43,7 @@
   "build a jar"
   []
   (comp (pom)
-        (jar :file (str "specmonstah-" +version+ ".jar"))
+        (jar :file (str "datapotato-" +version+ ".jar"))
         (target :dir #{"target/build"})))
 
 (deftask push-release-without-gpg

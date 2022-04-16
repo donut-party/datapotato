@@ -1,10 +1,10 @@
-(ns specmonstah-demo.subs
+(ns datapotato-demo.subs
   (:require [re-frame.core :as rf]
             [sweet-tooth.frontend.paths :as p]
-            [reifyhealth.specmonstah.core :as sm]
-            [reifyhealth.specmonstah.spec-gen :as sg]
+            [donut.datapotato.core :as sm]
+            [donut.datapotato.spec-gen :as sg]
 
-            [specmonstah-demo.examples.schemas :as schemas]))
+            [datapotato-demo.examples.schemas :as schemas]))
 
 (rf/reg-sub :query :query)
 

@@ -1,9 +1,9 @@
-(ns specmonstah-demo.examples.queries
+(ns datapotato-demo.examples.queries
   (:require [shadow.resource :as rc]))
 
 (def queries
   [{:name        "specify usernames"
-    :description "Specmonstah generates a lot of data for you, but you have the power to customize any of it."
+    :description "Datapotato generates a lot of data for you, but you have the power to customize any of it."
     :query       {:user [[:custom-user-1 {:spec-gen {:user-name "Captain Crunch"}}]
                          [:custom-user-2 {:spec-gen {:id 100}}]]}}
    {:name        "multiple ents"

@@ -1,8 +1,8 @@
-(ns reifyhealth.specmonstah-tutorial.12
+(ns donut.datapotato-tutorial.12
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
-            [reifyhealth.specmonstah.core :as sm]
-            [reifyhealth.specmonstah.spec-gen :as sg]))
+            [donut.datapotato.core :as sm]
+            [donut.datapotato.spec-gen :as sg]))
 
 (def id-seq (atom 0))
 (s/def ::id (s/with-gen pos-int?

@@ -7,7 +7,7 @@
            :compiler-options {:closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}}
 
            :modules
-           {:main {:entries [specmonstah-demo.core]}}
+           {:main {:entries [datapotato-demo.core]}}
 
            :devtools
            {:http-root   "frontend-target/dev/public"
@@ -20,7 +20,7 @@
            :asset-path "/js"
 
            :modules
-           {:main {:entries [specmonstah-demo.core]}}
+           {:main {:entries [datapotato-demo.core]}}
 
            :release {:compiler-options {:source-map true}}}}
  :nrepl {:middleware [refactor-nrepl.middleware/wrap-refactor]}}

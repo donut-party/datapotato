@@ -1,4 +1,4 @@
-(ns reifyhealth.specmonstah.core
+(ns donut.datapotato.core
   (:require
    [better-cond.core :as b]
    [clojure.data :as data]
@@ -153,7 +153,7 @@
 (s/def ::unary-query-relations
   (s/or :ent-name ::ent-name))
 
-;; by default, specmonstah uses a default naming system to determine
+;; by default, datapotato uses a default naming system to determine
 ;; which ents to refer to. you can specify a `:refs` value to override
 ;; the default names.
 (s/def ::refs
@@ -259,7 +259,7 @@
     (keyword (str (name prefix) index))))
 
 (defn default-node-name
-  "Whenever specmonstah needs to create a node that's not manually
+  "Whenever datapotato needs to create a node that's not manually
   named, it uses this to generate the default name."
   [{:keys [schema]} ent-type]
   (numeric-node-name schema ent-type 0))

@@ -1,4 +1,4 @@
-(ns reifyhealth.specmonstah.test-data
+(ns donut.datapotato.test-data
   (:require #?(:clj [clojure.test :refer [deftest is are use-fixtures testing]]
                :cljs [cljs.test :include-macros true])
             [clojure.spec.alpha :as s]

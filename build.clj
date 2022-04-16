@@ -1,5 +1,5 @@
 (ns build
-  "specmonstah's build script. inspired by:
+  "datapotato's build script. inspired by:
   * https://github.com/seancorfield/honeysql/blob/develop/build.clj
   * https://github.com/seancorfield/build-clj
 
@@ -12,8 +12,8 @@
   (:require [clojure.tools.build.api :as b]
             [org.corfield.build :as bb]))
 
-(def lib 'reifyhealth/specmonstah)
-(def version (format "2.0.1" (b/git-count-revs nil)))
+(def lib 'donut/datapotato)
+(def version "3.0.0")
 
 (defn deploy "Deploy the JAR to Clojars"
   [opts]

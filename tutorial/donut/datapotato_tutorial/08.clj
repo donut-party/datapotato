@@ -1,5 +1,5 @@
-(ns reifyhealth.specmonstah-tutorial.08
-  (:require [reifyhealth.specmonstah.core :as sm]))
+(ns donut.datapotato-tutorial.08
+  (:require [donut.datapotato.core :as sm]))
 
 (def schema
   {:user  {:prefix :u}

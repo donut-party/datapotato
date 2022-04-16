@@ -1,8 +1,8 @@
-(ns specmonstah-demo.handlers
+(ns datapotato-demo.handlers
   (:require [re-frame.core :as rf]
             [sweet-tooth.frontend.paths :as p]
             [cljs.reader :as reader]
-            [specmonstah-demo.examples.schemas :as schemas]))
+            [datapotato-demo.examples.schemas :as schemas]))
 
 (rf/reg-event-db :init
   [rf/trim-v]

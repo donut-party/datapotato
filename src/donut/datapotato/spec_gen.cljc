@@ -1,9 +1,9 @@
-(ns reifyhealth.specmonstah.spec-gen
+(ns donut.datapotato.spec-gen
   (:require
    [clojure.spec.alpha :as s]
    [clojure.spec.gen.alpha :as gen]
    [clojure.data :as data]
-   [reifyhealth.specmonstah.core :as sm]))
+   [donut.datapotato.core :as sm]))
 
 (def spec-gen-visit-key :spec-gen)
 
@@ -36,7 +36,7 @@
 ;; -----------------
 
 ;; the functions below have been refactored and move to
-;; reifyhealth.specmonstah.core.
+;; donut.datapotato.core.
 
 (defn ^:deprecated omit-relation?
   [db ent-name reference-key]

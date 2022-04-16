@@ -1,5 +1,5 @@
-(ns reifyhealth.specmonstah-tutorial.10
-  (:require [reifyhealth.specmonstah.core :as sm]))
+(ns donut.datapotato-tutorial.10
+  (:require [donut.datapotato.core :as sm]))
 
 (def bad-schema
   {:user {:prefix :u}

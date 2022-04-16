@@ -1,4 +1,4 @@
-(ns specmonstah-demo.core
+(ns datapotato-demo.core
   (:require [reagent.core :as r]
             [re-frame.core :as rf]
             [re-frame.db :as rfdb]
@@ -8,9 +8,9 @@
             [sweet-tooth.frontend.load-all-handler-ns]
             [sweet-tooth.frontend.core.utils :as stcu]
             [sweet-tooth.frontend.config :as stconfig]
-            [specmonstah-demo.components.app :as app]
-            [specmonstah-demo.handlers]
-            [specmonstah-demo.subs]
+            [datapotato-demo.components.app :as app]
+            [datapotato-demo.handlers]
+            [datapotato-demo.subs]
             
             [goog.events]))
 

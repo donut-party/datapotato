@@ -1,7 +1,7 @@
-(ns reifyhealth.specmonstah-tutorial.11
+(ns donut.datapotato-tutorial.11
   (:require [clojure.spec.alpha :as s]
-            [reifyhealth.specmonstah.core :as sm]
-            [reifyhealth.specmonstah.spec-gen :as sg]))
+            [donut.datapotato.core :as sm]
+            [donut.datapotato.spec-gen :as sg]))
 
 (s/def ::id (s/and pos-int? #(< % 100)))
 

@@ -1,9 +1,9 @@
-(ns reifyhealth.specmonstah.spec-gen-test
+(ns donut.datapotato.spec-gen-test
   (:require #?(:clj [clojure.test :refer [deftest is use-fixtures testing]]
                :cljs [cljs.test :include-macros true :refer [deftest is use-fixtures testing]])
-            [reifyhealth.specmonstah.test-data :as td]
-            [reifyhealth.specmonstah.core :as sm]
-            [reifyhealth.specmonstah.spec-gen :as sg]))
+            [donut.datapotato.test-data :as td]
+            [donut.datapotato.core :as sm]
+            [donut.datapotato.spec-gen :as sg]))
 
 (def gen-data-db (atom []))
 (def gen-data-cycle-db (atom []))

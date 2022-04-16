@@ -1,6 +1,6 @@
 (ns short-sweet
-  (:require [reifyhealth.specmonstah.core :as sm]
-            [reifyhealth.specmonstah.spec-gen :as sg]
+  (:require [donut.datapotato.core :as sm]
+            [donut.datapotato.spec-gen :as sg]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]))
 
@@ -29,7 +29,7 @@
 (s/def ::like (s/keys :req-un [::id ::post-id ::created-by-id]))
 
 ;; ---
-;; The schema defines specmonstah `ent-types`, which roughly
+;; The schema defines datapotato `ent-types`, which roughly
 ;; correspond to db tables. It also defines the `:spec` for generting
 ;; ents of that type, and defines ent `relations` that specify how
 ;; ents reference each other

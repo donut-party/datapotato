@@ -1,6 +1,6 @@
-(ns reifyhealth.infomercial
-  (:require [reifyhealth.specmonstah.core :as sm]
-            [reifyhealth.specmonstah.spec-gen :as sg]
+(ns donut.infomercial
+  (:require [donut.datapotato.core :as sm]
+            [donut.datapotato.spec-gen :as sg]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
             [loom.attr :as lat]))

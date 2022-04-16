@@ -1,23 +1,22 @@
 <img align="right" src="docs/small-monstahs.png">
 
-# Specmonstah
+# Datapotato
 
-* [Short Sweet Example](https://sweet-tooth.gitbook.io/specmonstah/#short-sweet-example)
-* [Infomercial](https://sweet-tooth.gitbook.io/specmonstah/infomercial)
-* [Tutorial](https://sweet-tooth.gitbook.io/specmonstah/tutorial)
-* [Interactive Demo](https://reifyhealth.github.io/specmonstah/)
+* [Short Sweet Example](https://sweet-tooth.gitbook.io/datapotato/#short-sweet-example)
+* [Infomercial](https://sweet-tooth.gitbook.io/datapotato/infomercial)
+* [Tutorial](https://sweet-tooth.gitbook.io/datapotato/tutorial)
+* [Interactive Demo](https://donut.github.io/datapotato/)
 
 ## Deps
 
 ```clojure
-[reifyhealth/specmonstah "2.0.0"]
+[donut/datapotato "2.0.0"]
 ```
 
 ## Purpose
 
-Specmonstah (Boston for "Specmonster") lets you write test fixtures
-that are clear, concise, and easy to maintain. It's great for
-dramatically reducing test boilerplate.
+Datapotato lets you write test fixtures that are clear, concise, and easy to
+maintain. It's great for dramatically reducing test boilerplate.
 
 Say you want to test a scenario where a forum post has gotten three
 likes by three different users. You'd first have to create a hierarchy
@@ -26,7 +25,7 @@ make sure that all the foreign keys are correct (e.g. the post's
 `:topic-id` is set to the topic's `:id`) and that everything is inserted
 in the right order.
 
-With Specmonstah, all you have to do is **write code like this**:
+With Datapotato, all you have to do is **write code like this**:
 
 ```clojure
 (insert {:like [[3]]})
@@ -53,16 +52,16 @@ displayed):
 
 If you like tools that help you write code that's **clear**,
 **concise**, and **easy to maintain**, then [check out the
-tutorial](https://sweet-tooth.gitbook.io/specmonstah/tutorial) and
-learn how to use Specmonstah :)
+tutorial](https://sweet-tooth.gitbook.io/datapotato/tutorial) and
+learn how to use Datapotato :)
 
 ## Short Sweet Example
 
 If you're more of a _gimme fun now_ kind of person, then try out this
-little interactive example. First, clone Specmonstah:
+little interactive example. First, clone Datapotato:
 
 ```
-git clone https://github.com/reifyhealth/specmonstah.git
+git clone https://github.com/donut-power/datapotato.git
 ```
 
 Open `examples/short-sweet/short_sweet.clj` in your favorite editor
@@ -78,8 +77,8 @@ todos or todo lists?
 
 ```clojure
 (ns short-sweet
-  (:require [reifyhealth.specmonstah.core :as sm]
-            [reifyhealth.specmonstah.spec-gen :as sg]
+  (:require [donut.datapotato.core :as sm]
+            [donut.datapotato.spec-gen :as sg]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]))
 
@@ -108,7 +107,7 @@ todos or todo lists?
 (s/def ::like (s/keys :req-un [::id ::post-id ::created-by-id]))
 
 ;; ---
-;; The schema defines specmonstah `ent-types`, which roughly
+;; The schema defines datapotato `ent-types`, which roughly
 ;; correspond to db tables. It also defines the `:spec` for generting
 ;; ents of that type, and defines ent `relations` that specify how
 ;; ents reference each other
@@ -178,9 +177,9 @@ todos or todo lists?
 
 This is meant as a quick reference. If none of the terms below make
 sense, [check out the
-tutorial](https://sweet-tooth.gitbook.io/specmonstah/tutorial).
+tutorial](https://sweet-tooth.gitbook.io/datapotato/tutorial).
 
-In Specmonstah, you _add ents_ to an _ent db_ using a _schema_ and
+In Datapotato, you _add ents_ to an _ent db_ using a _schema_ and
 _query_. You associate ents with attributes (and perform side effects
 like db insertion) using _visiting functions_.
 
@@ -201,8 +200,8 @@ A schema is a map of _ent types_ to _ent type schemas_:
 ```
 
 * Every ent type schema must have a `:prefix` key. This is used to
-  name the ents Specmonstah generates.
-* `:spec` is used by the `reifyhealth.specmonstah.spec-gen/spec-gen`
+  name the ents Datapotato generates.
+* `:spec` is used by the `donut.datapotato.spec-gen/spec-gen`
   visiting function to generate values for ents using clojure.spec
 * `:relations` specify how ents of different types reference each other
 * `:constraints` provide additional rules around ent generation and visitation:
@@ -211,7 +210,7 @@ A schema is a map of _ent types_ to _ent type schemas_:
     each reference a distinct `:user`.
   * `:coll` indicates that the given attribute can reference multiple
     ents. [See the
-    tutorial](https://sweet-tooth.gitbook.io/specmonstah/tutorial/11-collect-constraint-vector-of-foreign-keys)
+    tutorial](https://sweet-tooth.gitbook.io/datapotato/tutorial/11-collect-constraint-vector-of-foreign-keys)
   * `:required` is used to indicate ent sort order when your ent graph has a cycle
 
 You can also add arbitrary keys to the schema matching the
@@ -229,7 +228,7 @@ You specify ents to add to an _ent db_ using a _query_:
 Above, `{:like [[3]]}` is a query meaning "Add 3 likes to the ent db,
 as well as the hierarchy of ents necessary for 3 likes to be present."
 
-When you add ents to the ent db, that means that Specmonstah has
+When you add ents to the ent db, that means that Datapotato has
 created a graph node to represent the ent and added it an internal
 graph that represents all their ents and their relationships.
 
