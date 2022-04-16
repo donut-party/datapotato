@@ -841,6 +841,19 @@
    merge-overwrites
    assoc-referenced-vals])
 
+(defn wrap-insert-gen-data-visiting-fn
+  "Takes generated data stored as an attributed under `source-key` and inserts it
+  using `inserting-visiting-fn`. Respects overwrites and ensures that referenced
+  vals are assoc'd in before inserting."
+  [source-key inserting-visiting-fn]
+  (fn [db opts]
+    (reduce (fn [visit-val visiting-fn]
+              (visiting-fn db (assoc opts :visit-val visit-val)))
+            (source-key opts)
+            [merge-overwrites
+             assoc-referenced-vals
+             inserting-visiting-fn])))
+
 ;; -----------------
 ;; views
 ;; -----------------

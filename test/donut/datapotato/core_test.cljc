@@ -698,6 +698,10 @@
          (-> (sm/add-ents {:schema td/schema} {:todo [[1]]})
              (sm/relation-attrs :t0 :tl0)))))
 
+;; -----------------
+;; visiting w/ referenced vals
+;; -----------------
+
 (deftest test-assoc-referenced-vals
   (let [gen-id (fn [db {:keys [ent-name] :as v}]
                  {:id (str ent-name "-id")})]
@@ -740,6 +744,30 @@
                                             sm/merge-overwrites
                                             sm/assoc-referenced-vals])
                  (sm/attr-map :test)))))))
+
+(deftest test-wrap-gen-data-visiting-fn
+  (let [gen-id (sm/wrap-gen-data-visiting-fn
+                (fn [db {:keys [ent-name] :as v}]
+                  {:id (str ent-name "-id")}))]
+    (is (= {:custom-user {:id ":overwritten-id"}
+            :tl0         {:id            ":tl0-id"
+                          :created-by-id ":visiting-overwritten-id"
+                          :updated-by-id ":overwritten-id"}}
+           (-> (sm/add-ents
+                {:schema td/schema}
+                {:user      [[:custom-user {:test {:id ":overwritten-id"}}]]
+                 :todo-list [[1 {:refs {:created-by-id :custom-user
+                                        :updated-by-id :custom-user}
+                                 :test {:created-by-id ":visiting-overwritten-id"}}]]})
+               (sm/visit-ents-once :test gen-id)
+               (sm/attr-map :test))))))
+
+(deftest test-wrap-insert-gen-data-visiting-fn
+  (let [inserted (atom [])
+        gen-id   (sm/wrap-gen-data-visiting-fn
+                  (fn [_db {:keys [ent-name]}]
+                    {:id (str ent-name "-id")}))
+
 
 ;; -----------------
 ;; view tests
