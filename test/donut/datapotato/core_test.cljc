@@ -777,13 +777,30 @@
          {:user      [[:custom-user {:gen {:id ":overwritten-id"}}]]
           :todo-list [[1 {:refs {:created-by-id :custom-user
                                  :updated-by-id :custom-user}
-                          :gen  {:created-by-id ":visiting-overwritten-id"}}]]})
+                          :gen  {:created-by-id ":this-wont-be-used"}}]]})
         (sm/visit-ents-once :gen gen-id)
         (sm/visit-ents-once :insert insert))
 
     (is (= [{:id ":overwritten-id"}
             {:id            ":tl0-id"
-             :created-by-id ":visiting-overwritten-id"
+             :created-by-id ":overwritten-id"
+             :updated-by-id ":overwritten-id"}]
+           @inserted))
+
+    (reset! inserted [])
+
+    (-> (sm/add-ents
+         {:schema td/schema}
+         {:user      [[:custom-user {:gen {:id ":overwritten-id"}}]]
+          :todo-list [[1 {:refs   {:created-by-id :custom-user
+                                   :updated-by-id :custom-user}
+                          :insert {:created-by-id ":this-will-be-used"}}]]})
+        (sm/visit-ents-once :gen gen-id)
+        (sm/visit-ents-once :insert insert))
+
+    (is (= [{:id ":overwritten-id"}
+            {:id            ":tl0-id"
+             :created-by-id ":this-will-be-used"
              :updated-by-id ":overwritten-id"}]
            @inserted))))
 
