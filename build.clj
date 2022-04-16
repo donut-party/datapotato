@@ -13,7 +13,7 @@
             [org.corfield.build :as bb]))
 
 (def lib 'donut/datapotato)
-(def version "3.0.0")
+(def version (format "3.0.0.alpha-%s" (b/git-count-revs nil)))
 
 (defn deploy "Deploy the JAR to Clojars"
   [opts]
