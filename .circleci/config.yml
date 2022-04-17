@@ -4,7 +4,7 @@ jobs:
     environment:
       - _JAVA_OPTIONS: "-Xms512m -Xmx1024m"
     docker:
-      - image: circleci/clojure:openjdk-8-tools-deps-1.10.3.1087-buster
+      - image: circleci/clojure:openjdk-8-tools-deps-buster-node
     steps:
       - checkout
       - run:
