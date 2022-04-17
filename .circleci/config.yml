@@ -34,7 +34,7 @@ jobs:
             - ./
   deploy:
     docker:
-      - image: circleci/openjdk:8-jdk-node
+      - image: circleci/clojure:openjdk-8-tools-deps-buster-node
     steps:
       - checkout
       - restore_cache:
