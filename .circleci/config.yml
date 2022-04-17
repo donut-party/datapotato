@@ -11,6 +11,9 @@ jobs:
           name: test clj
           command: clojure -X:test
       - run:
+          name: test cljs
+          command: clojure -X:test-cljs
+      - run:
           name: Install bb
           command: |
             sudo bash < <(curl -s https://raw.githubusercontent.com/babashka/babashka/master/install)
@@ -57,10 +60,3 @@ workflows:
                 - main
           requires:
             - test-and-build
-  test:
-    jobs:
-      - test-and-build:
-          filters:
-            branches:
-              ignore:
-                - main
