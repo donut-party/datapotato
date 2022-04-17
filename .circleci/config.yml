@@ -58,5 +58,6 @@ workflows:
             branches:
               only:
                 - main
+                - v3.0.0
           requires:
             - test-and-build
