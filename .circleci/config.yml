@@ -44,8 +44,6 @@ jobs:
       - run:
           name: Deploy to clojars
           command: |
-            CLOJARS_USERNAME=$TODO \
-            CLOJARS_PASSWORD=$TODO \
             clojure -T:build deploy
 
 workflows:
