@@ -214,7 +214,7 @@
 
 (defn relation-attrs-with-constraint
   "Given an ent name, return all relation attributes which include the constraint."
-  [db ent-name constraint]
+  [db ent-name _constraint]
   (->> (ent-schema db ent-name)
        :constraints
        (medley/filter-vals (fn [attr-constraints] (contains? attr-constraints :coll)))
@@ -275,7 +275,7 @@
 (defn bound-descendants?
   "Check whether `query-relations` contains bindings that apply to any
   descendants of `related-ent-type`"
-  [{:keys [types schema relation-graph]} query-bindings related-ent-type]
+  [{:keys [relation-graph]} query-bindings related-ent-type]
   (not-empty (set/intersection (disj (set (lg/nodes (ld/subgraph-reachable-from relation-graph related-ent-type))) related-ent-type)
                                (set (keys query-bindings)))))
 
@@ -374,7 +374,7 @@
   "Check that the refs value supplied in a query is a collection if the
   relation type is collection, or a keyword if the relation type is
   unary. If the reference is omit, no further validation is required."
-  [{:keys [schema data] :as db} ent-name relation-attr query-term]
+  [db ent-name relation-attr query-term]
   (let [coll-attr?                      (coll-relation-attr? db ent-name relation-attr)
         {:keys [qr-constraint qr-term]} (conformed-query-opts query-term relation-attr)]
     (cond (or (nil? qr-constraint) (= :omit qr-constraint)) nil ;; noop
@@ -531,7 +531,7 @@
 
 (defn throw-invalid-spec
   [arg-name spec data]
-  (if-not (s/valid? spec data)
+  (when-not (s/valid? spec data)
     (throw (ex-info (str arg-name " is invalid") {::s/explain-data (s/explain-data spec data)}))))
 
 (defn identical-prefixes
@@ -629,8 +629,7 @@
 (defn related-ents-by-attr
   "All ents related to ent via relation-attr"
   [{:keys [data] :as db} ent-name relation-attr]
-  (let [{:keys [constraints]} (ent-schema db ent-name)
-        related-ents          (lg/successors data ent-name)]
+  (let [related-ents (lg/successors data ent-name)]
     (if (coll-relation-attr? db ent-name relation-attr)
       (->> related-ents
            (map #(ent-related-by-attr? db ent-name % relation-attr))
@@ -841,10 +840,12 @@
    merge-overwrites
    assoc-referenced-vals])
 
-(defn wrap-insert-gen-data-visiting-fn
+(defn wrap-incremental-insert-visiting-fn
   "Takes generated data stored as an attributed under `source-key` and inserts it
-  using `inserting-visiting-fn`. Respects overwrites and ensures that referenced
-  vals are assoc'd in before inserting."
+  using `inserting-visiting-fn`.
+
+  Respects overwrites and ensures that referenced vals are assoc'd in before
+  inserting. Useful when dealing with db-generated ids."
   [source-key inserting-visiting-fn]
   (fn [db opts]
     (reduce (fn [visit-val visiting-fn]
@@ -865,7 +866,7 @@
   "Produce a map where each key is a node and its value is a graph
   attr on that node"
   ([db attr] (attr-map db attr (ents db)))
-  ([{:keys [data] :as db} attr ents]
+  ([{:keys [data] :as _db} attr ents]
    (->> ents
         (reduce (fn [m ent] (assoc m ent (lat/attr data ent attr)))
                 {})

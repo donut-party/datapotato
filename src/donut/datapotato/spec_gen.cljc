@@ -30,7 +30,6 @@
   (-> (ent-db-spec-gen db query)
       (sm/attr-map spec-gen-visit-key)))
 
-
 ;; -----------------
 ;; deprecated fns
 ;; -----------------

@@ -767,7 +767,7 @@
         gen-id   (sm/wrap-gen-data-visiting-fn
                   (fn [_db {:keys [ent-name]}]
                     {:id (str ent-name "-id")}))
-        insert   (sm/wrap-insert-gen-data-visiting-fn
+        insert   (sm/wrap-incremental-insert-visiting-fn
                   :gen
                   (fn [_db {:keys [visit-val]}]
                     (swap! inserted conj visit-val)
