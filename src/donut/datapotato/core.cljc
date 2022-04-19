@@ -831,7 +831,7 @@
                           (set))]
     (with-meta merged {::overwritten changed-keys})))
 
-(defn wrap-gen-data-visiting-fn
+(defn wrap-generate-visiting-fn
   "Useful when writing visiting fns where data generated for ent A needs to be
   referenced by ent B."
   [data-generating-visiting-fn]
