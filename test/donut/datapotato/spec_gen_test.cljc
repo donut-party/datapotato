@@ -2,7 +2,7 @@
   (:require #?(:clj [clojure.test :refer [deftest is use-fixtures testing]]
                :cljs [cljs.test :include-macros true :refer [deftest is use-fixtures testing]])
             [donut.datapotato.test-data :as td]
-            [donut.datapotato.core :as sm]
+            [donut.datapotato.core :as dd]
             [donut.datapotato.spec-gen :as sg]))
 
 (def gen-data-db (atom []))
@@ -94,14 +94,14 @@
 
 (deftest test-spec-gen-omit
   (testing "Ref not created and attr is not present when omitted"
-    (let [gen (sg/ent-db-spec-gen-attr {:schema td/schema} {:todo-list [[:_ {:refs {:created-by-id ::sm/omit
-                                                                                    :updated-by-id ::sm/omit}}]]})]
+    (let [gen (sg/ent-db-spec-gen-attr {:schema td/schema} {:todo-list [[:_ {:refs {:created-by-id ::dd/omit
+                                                                                    :updated-by-id ::dd/omit}}]]})]
       (is (ids-present? gen))
       (is (only-has-ents? gen #{:tl0}))
       (is (= [:id] (keys (:tl0 gen))))))
   
   (testing "Ref is created when at least 1 field references it, but omitted attrs are still not present"
-    (let [gen (sg/ent-db-spec-gen-attr {:schema td/schema} {:todo-list [[:_ {:refs {:updated-by-id ::sm/omit}}]]})]
+    (let [gen (sg/ent-db-spec-gen-attr {:schema td/schema} {:todo-list [[:_ {:refs {:updated-by-id ::dd/omit}}]]})]
       (is (td/submap? {:u0 {:user-name "Luigi"}} gen))
       (is (ids-present? gen))
       (is (ids-match? gen
@@ -110,13 +110,13 @@
       (is (= [:id :created-by-id] (keys (:tl0 gen))))))
   
   (testing "Overwriting value of omitted ref with custom value"
-    (let [gen (sg/ent-db-spec-gen-attr {:schema td/schema} {:todo-list [[:_ {:refs     {:updated-by-id ::sm/omit}
+    (let [gen (sg/ent-db-spec-gen-attr {:schema td/schema} {:todo-list [[:_ {:refs     {:updated-by-id ::dd/omit}
                                                                              :spec-gen {:updated-by-id 42}}]]})]
       (is (ids-present? gen))
       (is (= 42 (-> gen :tl0 :updated-by-id)))))
 
   (testing "Overwriting value of omitted ref with nil"
-    (let [gen (sg/ent-db-spec-gen-attr {:schema td/schema} {:todo-list [[:_ {:refs     {:updated-by-id ::sm/omit}
+    (let [gen (sg/ent-db-spec-gen-attr {:schema td/schema} {:todo-list [[:_ {:refs     {:updated-by-id ::dd/omit}
                                                                              :spec-gen {:updated-by-id nil}}]]})]
       (is (ids-present? gen))
       (is (= nil (-> gen :tl0 :updated-by-id))))))
@@ -189,7 +189,7 @@
 
 (deftest test-insert-gen-data
   (-> (sg/ent-db-spec-gen {:schema td/schema} {:todo [[1]]})
-      (sm/visit-ents-once :inserted-data insert))
+      (dd/visit-ents-once :inserted-data insert))
 
   ;; gen data is something like:
   ;; [[:user :u0 {:id 1 :user-name "Luigi"}]
@@ -222,9 +222,9 @@
   (testing "Given a db with a todo already added, next call adds a new
   todo that references the same todo list and user"
     (let [db1 (-> (sg/ent-db-spec-gen {:schema td/schema} {:todo [[1]]})
-                  (sm/visit-ents-once :inserted-data insert))]
+                  (dd/visit-ents-once :inserted-data insert))]
       (-> (sg/ent-db-spec-gen db1 {:todo [[1]]})
-          (sm/visit-ents-once :inserted-data insert))
+          (dd/visit-ents-once :inserted-data insert))
 
       (let [gen-data @gen-data-db]
         (is (= (set (map #(take 2 %) gen-data))
@@ -237,7 +237,7 @@
           (is (td/submap? {:u0 {:user-name "Luigi"}
                            :t0 {:todo-title "write unit tests"}
                            :t1 {:todo-title "write unit tests"}}
-                           ent-map))
+                          ent-map))
           (is (ids-present? ent-map))
           (is (ids-match? ent-map
                           {:tl0 {:created-by-id [:u0 :id]
@@ -252,12 +252,12 @@
 (defn insert-cycle
   [db {:keys [ent-name visit-key]}]
   (swap! gen-data-cycle-db conj ent-name)
-  (sm/ent-attr db ent-name sg/spec-gen-visit-key))
+  (dd/ent-attr db ent-name sg/spec-gen-visit-key))
 
 (deftest handle-cycles-with-constraints-and-reordering
   (testing "todo-list is inserted before todo because todo requires todo-list"
     (-> (sg/ent-db-spec-gen {:schema td/cycle-schema} {:todo [[1]]})
-        (sm/visit-ents :insert-cycle insert-cycle))
+        (dd/visit-ents :insert-cycle insert-cycle))
     (is (= @gen-data-cycle-db
            [:tl0 :t0]))))
 
@@ -274,11 +274,11 @@
     (is (thrown-with-msg? #?(:clj clojure.lang.ExceptionInfo
                              :cljs js/Object)
                           #"Can't sort ents: check for cycles in ent type relations"
-                          (-> (sm/add-ents {:schema {:todo      {:spec        ::todo
+                          (-> (dd/add-ents {:schema {:todo      {:spec        ::todo
                                                                  :relations   {:todo-list-id [:todo-list :id]}
                                                                  :prefix      :t}
                                                      :todo-list {:spec        ::todo-list
                                                                  :relations   {:first-todo-id [:todo :id]}
                                                                  :prefix      :tl}}}
                                            {:todo [[1]]})
-                              (sm/visit-ents :insert-cycle insert-cycle))))))
+                              (dd/visit-ents :insert-cycle insert-cycle))))))

@@ -3,15 +3,15 @@
    [clojure.spec.alpha :as s]
    [clojure.spec.gen.alpha :as gen]
    [clojure.data :as data]
-   [donut.datapotato.core :as sm]))
+   [donut.datapotato.core :as dd]))
 
 (def spec-gen-visit-key :spec-gen)
 
 (def spec-gen
-  (sm/wrap-gen-data-visiting-fn
+  (dd/wrap-generate-visiting-fn
    (fn [db {:keys [ent-name]}]
      (-> db
-         (sm/ent-schema ent-name)
+         (dd/ent-schema ent-name)
          :spec
          s/gen
          gen/generate))))
@@ -20,15 +20,15 @@
   "Convenience function to build a new db using the spec-gen mapper
   and the default attr-key"
   [db query]
-  (-> (sm/add-ents db query)
-      (sm/visit-ents-once spec-gen-visit-key spec-gen)))
+  (-> (dd/add-ents db query)
+      (dd/visit-ents-once spec-gen-visit-key spec-gen)))
 
 (defn ent-db-spec-gen-attr
   "Convenience function to return a map of `{ent-name gen-data}` using
   the db returned by `ent-db-spec-gen`"
   [db query]
   (-> (ent-db-spec-gen db query)
-      (sm/attr-map spec-gen-visit-key)))
+      (dd/attr-map spec-gen-visit-key)))
 
 ;; -----------------
 ;; deprecated fns
@@ -39,7 +39,7 @@
 
 (defn ^:deprecated omit-relation?
   [db ent-name reference-key]
-  (sm/omit? (get-in (sm/query-opts db ent-name) [:refs reference-key])))
+  (dd/omit? (get-in (dd/query-opts db ent-name) [:refs reference-key])))
 
 (defn ^:deprecated reset-relations
   "The generated data will generate values agnostic of any constraints that may
@@ -48,7 +48,7 @@
   Next, it will remove any dummy ID's generated for an `:omit` relation. The
   updated ent-data map will be returned."
   [db ent-name ent-data]
-  (let [coll-attrs (sm/relation-attrs-with-constraint db ent-name :coll)]
+  (let [coll-attrs (dd/relation-attrs-with-constraint db ent-name :coll)]
     (into {}
           (comp (map (fn [[k v]] (if (coll-attrs k) [k []] [k v])))
                 (map (fn [[k v]] (when-not (omit-relation? db ent-name k) [k v]))))
@@ -57,14 +57,14 @@
 (defn ^:deprecated spec-gen-generate-ent-val
   "First pass function, uses spec to generate a val for every entity"
   [db {:keys [ent-name]}]
-  (let [{:keys [spec]} (sm/ent-schema db ent-name)]
+  (let [{:keys [spec]} (dd/ent-schema db ent-name)]
     (->> (gen/generate (s/gen spec))
          (reset-relations db ent-name))))
 
 (defn ^:deprecated spec-gen-generate-ent-
   "First pass function, uses spec to generate a val for every entity"
   [db {:keys [ent-name]}]
-  (let [{:keys [spec]} (sm/ent-schema db ent-name)]
+  (let [{:keys [spec]} (dd/ent-schema db ent-name)]
     (->> (gen/generate (s/gen spec))
          (reset-relations db ent-name))))
 
@@ -79,15 +79,15 @@
 (defn ^:deprecated spec-gen-assoc-relations
   "Next, look up referenced attributes and assign them"
   [db {:keys [ent-name visit-key visit-val]}]
-  (let [{:keys [constraints]} (sm/ent-schema db ent-name)
+  (let [{:keys [constraints]} (dd/ent-schema db ent-name)
         skip-keys             (:overwritten (meta visit-val) #{})]
-    (->> (sm/referenced-ent-attrs db ent-name)
+    (->> (dd/referenced-ent-attrs db ent-name)
          (filter (comp (complement skip-keys) second))
          (reduce (fn [ent-data [referenced-ent relation-attr]]
                    (assoc-relation ent-data
                                    relation-attr
-                                   (get-in (sm/ent-attr db referenced-ent visit-key)
-                                           (:path (sm/query-relation db ent-name relation-attr)))
+                                   (get-in (dd/ent-attr db referenced-ent visit-key)
+                                           (:path (dd/query-relation db ent-name relation-attr)))
                                    constraints))
                  visit-val))))
 
