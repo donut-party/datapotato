@@ -762,6 +762,26 @@
                (dd/visit-ents-once :test gen-id)
                (dd/attr-map :test))))))
 
+(deftest test-wrap-gen-data-visiting-fn-overwrites
+  (let [gen-id      (dd/wrap-generate-visiting-fn
+                     (fn [_db {:keys [ent-name] :as v}]
+                       {:id (str ent-name "-id")}))
+        test-schema (assoc-in td/schema [:user :test :overwrites] {:id ":schema-overwrite"})]
+    (is (= {:custom-user   {:id ":overwritten-id"}
+            :custom-user-2 {:id ":schema-overwrite"}
+            :tl0           {:id            ":tl0-id"
+                            :created-by-id ":visiting-overwritten-id"
+                            :updated-by-id ":overwritten-id"}}
+           (-> (dd/add-ents
+                {:schema test-schema}
+                {:user      [[:custom-user {:test {:id ":overwritten-id"}}]
+                             [:custom-user-2]]
+                 :todo-list [[1 {:refs {:created-by-id :custom-user
+                                        :updated-by-id :custom-user}
+                                 :test {:created-by-id ":visiting-overwritten-id"}}]]})
+               (dd/visit-ents-once :test gen-id)
+               (dd/attr-map :test))))))
+
 (deftest test-wrap-incremental-insert-visiting-fn
   (let [inserted (atom [])
         gen-id   (dd/wrap-generate-visiting-fn

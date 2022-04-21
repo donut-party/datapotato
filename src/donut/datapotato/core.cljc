@@ -816,10 +816,11 @@
   "Overwrites generated data with what's found in schema-opts or
   visit-query-opts."
   [_db {:keys [visit-val visit-query-opts schema-opts]}]
-  (let [merged (cond-> visit-val
+  (let [schema-overwrites (:overwrites schema-opts)
+        merged (cond-> visit-val
                  ;; the schema can include vals to merge into each ent
-                 (fn? schema-opts)  schema-opts
-                 (map? schema-opts) (merge schema-opts)
+                 (fn? schema-overwrites)  schema-overwrites
+                 (map? schema-overwrites) (merge schema-overwrites)
 
                  ;; visit query opts can also specify merge vals
                  (fn? visit-query-opts)  visit-query-opts
