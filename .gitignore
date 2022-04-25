@@ -1,6 +1,7 @@
 *.jar
 *cider-repl*
 .DS_Store
+.clj-kondo
 .cpcache
 .lein*
 .nrepl*
