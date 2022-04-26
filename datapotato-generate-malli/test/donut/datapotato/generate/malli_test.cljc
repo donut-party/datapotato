@@ -2,7 +2,7 @@
   (:require
    #?(:clj [clojure.test :refer [deftest is use-fixtures testing]]
       :cljs [cljs.test :include-macros true :refer [deftest is use-fixtures testing]])
-   [donut.datapotato.test-data :as td]
+   [donut.datapotato.malli-test-data :as td]
    [donut.datapotato.core :as dd]
    [donut.datapotato.generate.malli :as dgm]))
 
@@ -268,7 +268,7 @@
            [:tl0 :t0]))))
 
 (deftest handles-cycle-ids
-  (testing "spec-gen correctly sets foreign keys for cycles"
+  (testing "generate correctly sets foreign keys for cycles"
     (let [gen (dgm/generate-attr-map {:schema td/cycle-schema} {:todo [[1]]})]
       (is (ids-present? gen))
       (is (ids-match? gen

@@ -2,7 +2,7 @@
   (:require
    #?(:clj [clojure.test :refer [deftest is use-fixtures testing]]
       :cljs [cljs.test :include-macros true :refer [deftest is use-fixtures testing]])
-   [donut.datapotato.test-data :as td]
+   [donut.datapotato.spec-test-data :as td]
    [donut.datapotato.core :as dd]
    [donut.datapotato.generate.spec :as dgs]))
 
@@ -251,7 +251,7 @@
                                  :todo-list-id  [:tl0 :id]}})))))))
 
 (defn insert-cycle
-  [db {:keys [ent-name visit-key]}]
+  [db {:keys [ent-name]}]
   (swap! gen-data-cycle-db conj ent-name)
   (dd/ent-attr db ent-name dgs/visit-key))
 
