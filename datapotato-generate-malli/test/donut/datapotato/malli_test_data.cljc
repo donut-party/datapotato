@@ -53,7 +53,6 @@
       (assoc-in [:todo-list-watch :generate :schema] TodoListWatch)
       (assoc-in [:project :generate :schema] Project)))
 
-
 (def cycle-schema
   (-> td/cycle-schema
       (assoc-in [:user :generate :schema] User)

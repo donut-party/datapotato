@@ -4,49 +4,19 @@
    [next.jdbc :as jdbc]
    [next.jdbc.sql :as sql]
    [donut.datapotato.generate.malli :as ddgm]
-   [donut.datapotato.insert.next-jdbc :as ddin]))
+   [donut.datapotato.insert.next-jdbc :as ddin]
+   [donut.datapotato.malli-test-data :as td]))
 
 (def db-spec
   {:dbtype         "sqlite"
    :connection-uri "jdbc:sqlite::memory:"})
 
-(def ID pos-int?)
-
-(def User
-  [:map
-   [:id ID]
-   [:username [:enum "Luigi"]]])
-
-(def Todo
-  [:map
-   [:id ID]
-   [:todo-title string?]
-   [:created-by-id ID]
-   [:updated-by-id ID]])
-
-
-(def TodoList
-  [:map
-   [:id ID]
-   [:created-by-id ID]
-   [:updated-by-id ID]])
 
 (def schema
-  {:user      {:generate {:schema User}
-               :insert   {:table-name "users"}
-               :prefix   :u}
-   :todo      {:generate  {:schema     Todo
-                           :overwrites {:todo-title "write unit tests"}}
-               :insert    {:table-name "todos"}
-               :relations {:created-by-id [:user :id]
-                           :updated-by-id [:user :id]
-                           :todo-list-id  [:todo-list :id]}
-               :prefix    :t}
-   :todo-list {:generate  {:schema TodoList}
-               :insert    {:table-name "todo_lists"}
-               :relations {:created-by-id [:user :id]
-                           :updated-by-id [:user :id]}
-               :prefix    :tl}})
+  (-> td/schema
+      (assoc-in [:user :insert :table-name] "users")
+      (assoc-in [:todo :insert :table-name] "todos")
+      (assoc-in [:todo-list :insert :table-name] "todo_lists")))
 
 (defn gen-insert
   [ent-db db query]
