@@ -11,7 +11,6 @@
   {:dbtype         "sqlite"
    :connection-uri "jdbc:sqlite::memory:"})
 
-
 (def schema
   (-> td/schema
       (assoc-in [:user :insert :table-name] "users")
@@ -36,5 +35,7 @@
   (with-open [conn (jdbc/get-connection db-spec)]
     (create-tables conn)
     (gen-insert {:schema schema} conn {:user [[2]]})
-    (is (= [#:users{:id 1}]
-           (sql/query conn ["SELECT * FROM users"])))))
+    (is (= [#:users{:id 1 :username "Luigi"}
+            #:users{:id 2 :username "Luigi"}]
+           (sql/query conn ["SELECT * FROM users"])))
+    (reset! td/id-seq 0)))

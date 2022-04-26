@@ -1,6 +1,7 @@
 (ns donut.datapotato.malli-test-data
   (:require
    [clojure.data :as data]
+   [clojure.test.check.generators :as gen :include-macros true]
    [donut.datapotato.test-data :as td]))
 
 ;; Test helper functions
@@ -9,7 +10,12 @@
   [m1 m2]
   (nil? (first (data/diff m1 m2))))
 
-(def ID pos-int?)
+(def id-seq (atom 0))
+(def monotonic-id-gen
+  (gen/fmap (fn [_] (swap! id-seq inc)) (gen/return nil)))
+
+(def ID
+  [:and {:gen/gen monotonic-id-gen} pos-int?])
 
 (def User
   [:map
