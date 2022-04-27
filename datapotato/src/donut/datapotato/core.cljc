@@ -759,6 +759,98 @@
                        visit-fns)
                  ents))))
 
+
+;; -----------------
+;; views
+;; -----------------
+
+;; convenience functions for getting projections of the ent db,
+;; considering the ent db has a lot of loom bookkeeping
+
+(defn attr-map
+  "Produce a map where each key is a node and its value is a graph
+  attr on that node"
+  ([db attr] (attr-map db attr (ents db)))
+  ([{:keys [data] :as _db} attr ents]
+   (->> ents
+        (reduce (fn [m ent] (assoc m ent (lat/attr data ent attr)))
+                {})
+        (into (sorted-map)))))
+
+(defn query-ents
+  "Get seq of nodes that are explicitly defined in the query"
+  [{:keys [data] :as _db}]
+  (->> (:attrs data)
+       (filter (fn [[_ent-name attrs]] (:top-level (meta (:query-term attrs)))))
+       (map first)))
+
+(defn ents-by-type
+  "Given a db, returns a map of ent-type to a set of entities of that
+  type. Optionally pass in a seq of the ents that should be included."
+  ([db] (ents-by-type db (ents db)))
+  ([db ents]
+   (reduce-kv (fn [m k v] (update m v (fnil conj #{}) k))
+              {}
+              (select-keys (attr-map db :ent-type) ents))))
+
+(s/fdef ents-by-type
+  :args (s/cat :db ::db :ent-names (s/? (s/coll-of ::ent-name)))
+  :ret (s/map-of ::ent-type (s/coll-of ::ent-name)))
+
+(defn ent-relations
+  "Given a db and an ent, returns a map of relation attr to ent-name."
+  [db ent]
+  (let [relations (get-in db [:data :attrs ent :loom.attr/edge-attrs])]
+    (apply merge-with
+           set/union
+           {}
+           (for [[ref-ent {:keys [relation-attrs]}] relations
+                 relation-attr relation-attrs]
+             {relation-attr (if (coll-relation-attr? db ent relation-attr)
+                              #{ref-ent} ref-ent)}))))
+
+(s/fdef ent-relations
+  :args (s/cat :db ::db :ent-name ::ent-name)
+  :ret  (s/map-of ::ent-attr (s/or :unary ::ent-name
+                                   :coll (s/coll-of ::ent-name))))
+
+(defn all-ent-relations
+  "Given a db, returns a map of ent-type to map of entity relations.
+
+  An example return value is:
+  {:patient {:p0 {:created-by :u0
+                  :updated-by :u1}
+             :p1 {:created-by :u0
+                  :updated-by :u2}}
+   :user {:u0 {:friends-with :u0}}}"
+  ([db]
+   (all-ent-relations db (ents db)))
+  ([db ents]
+   (reduce-kv (fn [ents-by-type ent-type ents]
+                (assoc ents-by-type ent-type
+                       (into {}
+                             (map (fn [ent]
+                                    [ent (ent-relations db ent)]))
+                             ents)))
+              {}
+              (ents-by-type db ents))))
+
+(s/fdef all-ent-relations
+  :args (s/cat :db ::db :ent-names (s/? (s/coll-of ::ent-name)))
+  :ret  (s/map-of ::ent-type
+                  (s/map-of ::ent-name
+                            (s/map-of ::ent-attr ::ent-name))))
+
+#?(:bb
+   nil
+   :clj
+   (do
+     (require '[loom.io :as lio])
+     (defn view
+       "View with loom"
+       [{:keys [data]}]
+       (lio/view data))))
+
 ;; -----------------
 ;; visiting w/ referenced vals
 ;; -----------------
@@ -856,93 +948,21 @@
              assoc-referenced-vals
              inserting-visiting-fn])))
 
-;; -----------------
-;; views
-;; -----------------
+(def ^:const generate-visit-key :generate)
 
-;; convenience functions for getting projections of the ent db,
-;; considering the ent db has a lot of loom bookkeeping
+(defn generate
+  [db query]
+  (let [base-generator (:generator db)
+        visiting-fn    (wrap-generate-visiting-fn
+                        (fn [db {:keys [ent-name]}]
+                          (let [{:keys [schema generator]} (generate-visit-key (ent-schema db ent-name))
+                                generator                  (or generator base-generator)]
+                            (generator schema))))]
+    (-> (add-ents db query)
+        (visit-ents-once generate-visit-key visiting-fn))))
 
-(defn attr-map
-  "Produce a map where each key is a node and its value is a graph
-  attr on that node"
-  ([db attr] (attr-map db attr (ents db)))
-  ([{:keys [data] :as _db} attr ents]
-   (->> ents
-        (reduce (fn [m ent] (assoc m ent (lat/attr data ent attr)))
-                {})
-        (into (sorted-map)))))
-
-(defn query-ents
-  "Get seq of nodes that are explicitly defined in the query"
-  [{:keys [data] :as _db}]
-  (->> (:attrs data)
-       (filter (fn [[_ent-name attrs]] (:top-level (meta (:query-term attrs)))))
-       (map first)))
-
-(defn ents-by-type
-  "Given a db, returns a map of ent-type to a set of entities of that
-  type. Optionally pass in a seq of the ents that should be included."
-  ([db] (ents-by-type db (ents db)))
-  ([db ents]
-   (reduce-kv (fn [m k v] (update m v (fnil conj #{}) k))
-              {}
-              (select-keys (attr-map db :ent-type) ents))))
-
-(s/fdef ents-by-type
-  :args (s/cat :db ::db :ent-names (s/? (s/coll-of ::ent-name)))
-  :ret (s/map-of ::ent-type (s/coll-of ::ent-name)))
-
-(defn ent-relations
-  "Given a db and an ent, returns a map of relation attr to ent-name."
-  [db ent]
-  (let [relations (get-in db [:data :attrs ent :loom.attr/edge-attrs])]
-    (apply merge-with
-           set/union
-           {}
-           (for [[ref-ent {:keys [relation-attrs]}] relations
-                 relation-attr relation-attrs]
-             {relation-attr (if (coll-relation-attr? db ent relation-attr)
-                              #{ref-ent} ref-ent)}))))
-
-(s/fdef ent-relations
-  :args (s/cat :db ::db :ent-name ::ent-name)
-  :ret  (s/map-of ::ent-attr (s/or :unary ::ent-name
-                                   :coll (s/coll-of ::ent-name))))
-
-(defn all-ent-relations
-  "Given a db, returns a map of ent-type to map of entity relations.
-
-  An example return value is:
-  {:patient {:p0 {:created-by :u0
-                  :updated-by :u1}
-             :p1 {:created-by :u0
-                  :updated-by :u2}}
-   :user {:u0 {:friends-with :u0}}}"
-  ([db]
-   (all-ent-relations db (ents db)))
-  ([db ents]
-   (reduce-kv (fn [ents-by-type ent-type ents]
-                (assoc ents-by-type ent-type
-                       (into {}
-                             (map (fn [ent]
-                                    [ent (ent-relations db ent)]))
-                             ents)))
-              {}
-              (ents-by-type db ents))))
-
-(s/fdef all-ent-relations
-  :args (s/cat :db ::db :ent-names (s/? (s/coll-of ::ent-name)))
-  :ret  (s/map-of ::ent-type
-                  (s/map-of ::ent-name
-                            (s/map-of ::ent-attr ::ent-name))))
-
-#?(:bb
-   nil
-   :clj
-   (do
-     (require '[loom.io :as lio])
-     (defn view
-       "View with loom"
-       [{:keys [data]}]
-       (lio/view data))))
+(defn generate-attr-map
+  [db query]
+  (-> db
+      (generate query)
+      (attr-map generate-visit-key)))

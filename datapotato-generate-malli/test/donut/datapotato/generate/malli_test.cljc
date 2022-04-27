@@ -4,7 +4,8 @@
       :cljs [cljs.test :include-macros true :refer [deftest is use-fixtures testing]])
    [donut.datapotato.test-data :as td]
    [donut.datapotato.core :as dd]
-   [donut.datapotato.generate.malli :as dgm]))
+   [donut.datapotato.generate.malli :as dgm]
+   [malli.generator :as mg]))
 
 ;;---
 ;; schemas
@@ -116,7 +117,10 @@
           matches))
 
 (deftest test-spec-gen
-  (let [gen (dgm/generate-attr-map {:schema schema} {:todo-list [[1]]})]
+  (let [gen (dd/generate-attr-map
+             {:schema schema
+              :generator mg/generate}
+             {:todo-list [[1]]})]
     (is (td/submap? {:u0 {:username "Luigi"}}
                     gen))
     (is (ids-present? gen))
