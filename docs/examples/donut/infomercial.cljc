@@ -1,9 +1,8 @@
 (ns donut.infomercial
-  (:require [donut.datapotato.core :as sm]
+  (:require [donut.datapotato.core :as dd]
             [donut.datapotato.spec-gen :as sg]
             [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
-            [loom.attr :as lat]))
+            [clojure.spec.gen.alpha :as gen]))
 
 (def id-seq (atom 0))
 (s/def ::id (s/with-gen pos-int? #(gen/fmap (fn [_] (swap! id-seq inc)) (gen/return nil))))
@@ -72,7 +71,7 @@
   (reset! id-seq 0)
   (reset! mock-db [])
   (-> (sg/ent-db-spec-gen {:schema schema} query)
-      (sm/visit-ents-once :inserted-data insert*)))
+      (dd/visit-ents-once :inserted-data insert*)))
 
 (insert {:post [[1]]})
 @mock-db
