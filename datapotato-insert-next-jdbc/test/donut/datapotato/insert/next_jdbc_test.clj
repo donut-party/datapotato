@@ -4,15 +4,16 @@
    [next.jdbc :as jdbc]
    [next.jdbc.sql :as sql]
    [donut.datapotato.generate.malli :as ddgm]
+   [donut.datapotato.generate.malli-test :as ddgmt]
    [donut.datapotato.insert.next-jdbc :as ddin]
-   [donut.datapotato.malli-test-data :as td]))
+   [donut.datapotato.test-data :as td]))
 
 (def db-spec
   {:dbtype         "sqlite"
    :connection-uri "jdbc:sqlite::memory:"})
 
 (def schema
-  (-> td/schema
+  (-> ddgmt/schema
       (assoc-in [:user :insert :table-name] "users")
       (assoc-in [:todo :insert :table-name] "todos")
       (assoc-in [:todo-list :insert :table-name] "todo_lists")))

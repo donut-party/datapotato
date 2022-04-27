@@ -1,10 +1,74 @@
 (ns donut.datapotato.generate.spec-test
   (:require
+   [clojure.spec.alpha :as s]
    #?(:clj [clojure.test :refer [deftest is use-fixtures testing]]
       :cljs [cljs.test :include-macros true :refer [deftest is use-fixtures testing]])
-   [donut.datapotato.spec-test-data :as td]
+   [clojure.test.check.generators :as gen :include-macros true]
+   [donut.datapotato.test-data :as td]
    [donut.datapotato.core :as dd]
    [donut.datapotato.generate.spec :as dgs]))
+
+;;---
+;; specs
+;;---
+
+(s/def ::id (s/with-gen pos-int? (constantly td/monotonic-id-gen)))
+
+(s/def ::user-name #{"Luigi"})
+(s/def ::user (s/keys :req-un [::id ::user-name]))
+
+(s/def ::created-by-id ::id)
+(s/def ::updated-by-id ::id)
+
+(s/def ::todo-title string?)
+(s/def ::todo (s/keys :req-un [::id ::todo-title ::created-by-id ::updated-by-id]))
+
+(s/def ::todo-id ::id)
+(s/def ::attachment (s/keys :req-un [::id ::todo-id ::created-by-id ::updated-by-id]))
+
+(s/def ::todo-list (s/keys :req-un [::id ::created-by-id ::updated-by-id]))
+
+(s/def ::todo-list-id ::id)
+(s/def ::watcher-id ::id)
+(s/def ::todo-list-watch (s/keys :req-un [::id ::todo-list-id ::watcher-id]))
+
+;; In THE REAL WORLD todo-list would probably have a project-id,
+;; rather than project having some coll of :todo-list-ids
+(s/def ::todo-list-ids (s/coll-of ::todo-list-id))
+(s/def ::project (s/keys :req-un [::id ::todo-list-ids ::created-by-id ::updated-by-id]))
+
+(def schema
+  (-> td/schema
+      (assoc-in [:user :generate :spec] ::user)
+      (assoc-in [:todo :generate :spec] ::todo)
+      (assoc-in [:todo-list :generate :spec] ::todo-list)
+      (assoc-in [:todo-list-watch :generate :spec] ::todo-list-watch)
+      (assoc-in [:project :generate :spec] ::project)))
+
+
+(def cycle-schema
+  (-> td/cycle-schema
+      (assoc-in [:user :generate :spec] ::user)
+      (assoc-in [:todo :generate :spec] ::user)
+      (assoc-in [:todo-list :generate :spec] ::todo-list)))
+
+(s/def ::topic-category (s/keys :req-un [::id]))
+
+(s/def ::topic-category-id ::id)
+(s/def ::topic (s/keys :req-un [::id ::topic-category-id]))
+
+(s/def ::watched-id ::id)
+(s/def ::watch (s/keys :req-un [::id ::watched-id]))
+
+(def polymorphic-schema
+  (-> td/polymorphic-schema
+      (assoc-in [:topic-category :generate :spec] ::topic-category)
+      (assoc-in [:topic :generate :spec] ::todo)
+      (assoc-in [:watch :generate :spec] ::watch)))
+
+;;---
+;; helpers
+;;---
 
 (def gen-data-db (atom []))
 (def gen-data-cycle-db (atom []))
@@ -14,7 +78,7 @@
   (reset! gen-data-cycle-db [])
   (f))
 
-(use-fixtures :each td/test-fixture reset-dbs)
+(use-fixtures :each reset-dbs)
 
 (defn ids-present?
   [generated]
@@ -39,7 +103,7 @@
           matches))
 
 (deftest test-spec-gen
-  (let [gen (dgs/generate-attr-map {:schema td/schema} {:todo-list [[1]]})]
+  (let [gen (dgs/generate-attr-map {:schema schema} {:todo-list [[1]]})]
     (is (td/submap? {:u0 {:user-name "Luigi"}} gen))
     (is (ids-present? gen))
     (is (ids-match? gen
@@ -48,7 +112,7 @@
     (is (only-has-ents? gen #{:tl0 :u0}))))
 
 (deftest test-spec-gen-nested
-  (let [gen (dgs/generate-attr-map {:schema td/schema} {:project [[:_ {:refs {:todo-list-ids 3}}]]})]
+  (let [gen (dgs/generate-attr-map {:schema schema} {:project [[:_ {:refs {:todo-list-ids 3}}]]})]
     (is (td/submap? {:u0 {:user-name "Luigi"}} gen))
     (is (ids-present? gen))
     (is (ids-match? gen
@@ -67,7 +131,7 @@
 
 (deftest test-spec-gen-manual-attr
   (testing "Manual attribute setting for non-reference field"
-    (let [gen (dgs/generate-attr-map {:schema td/schema} {:todo [[:_ {:generate {:todo-title "pet the dog"}}]]})]
+    (let [gen (dgs/generate-attr-map {:schema schema} {:todo [[:_ {:generate {:todo-title "pet the dog"}}]]})]
       (is (td/submap? {:u0 {:user-name "Luigi"}
                        :t0 {:todo-title "pet the dog"}}
                       gen))
@@ -81,7 +145,7 @@
       (is (only-has-ents? gen #{:tl0 :t0 :u0}))))
 
   (testing "Manual attribute setting for reference field"
-    (let [gen (dgs/generate-attr-map {:schema td/schema} {:todo [[:_ {:generate {:created-by-id 1}}]]})]
+    (let [gen (dgs/generate-attr-map {:schema schema} {:todo [[:_ {:generate {:created-by-id 1}}]]})]
       (is (td/submap? {:u0 {:user-name "Luigi"}
                        :t0 {:created-by-id 1}}
                       gen))
@@ -95,14 +159,14 @@
 
 (deftest test-spec-gen-omit
   (testing "Ref not created and attr is not present when omitted"
-    (let [gen (dgs/generate-attr-map {:schema td/schema} {:todo-list [[:_ {:refs {:created-by-id ::dd/omit
-                                                                                  :updated-by-id ::dd/omit}}]]})]
+    (let [gen (dgs/generate-attr-map {:schema schema} {:todo-list [[:_ {:refs {:created-by-id ::dd/omit
+                                                                               :updated-by-id ::dd/omit}}]]})]
       (is (ids-present? gen))
       (is (only-has-ents? gen #{:tl0}))
       (is (= [:id] (keys (:tl0 gen))))))
 
   (testing "Ref is created when at least 1 field references it, but omitted attrs are still not present"
-    (let [gen (dgs/generate-attr-map {:schema td/schema} {:todo-list [[:_ {:refs {:updated-by-id ::dd/omit}}]]})]
+    (let [gen (dgs/generate-attr-map {:schema schema} {:todo-list [[:_ {:refs {:updated-by-id ::dd/omit}}]]})]
       (is (td/submap? {:u0 {:user-name "Luigi"}} gen))
       (is (ids-present? gen))
       (is (ids-match? gen
@@ -111,38 +175,38 @@
       (is (= [:id :created-by-id] (keys (:tl0 gen))))))
 
   (testing "Overwriting value of omitted ref with custom value"
-    (let [gen (dgs/generate-attr-map {:schema td/schema} {:todo-list [[:_ {:refs     {:updated-by-id ::dd/omit}
-                                                                           :generate {:updated-by-id 42}}]]})]
+    (let [gen (dgs/generate-attr-map {:schema schema} {:todo-list [[:_ {:refs     {:updated-by-id ::dd/omit}
+                                                                        :generate {:updated-by-id 42}}]]})]
       (is (ids-present? gen))
       (is (= 42 (-> gen :tl0 :updated-by-id)))))
 
   (testing "Overwriting value of omitted ref with nil"
-    (let [gen (dgs/generate-attr-map {:schema td/schema} {:todo-list [[:_ {:refs     {:updated-by-id ::dd/omit}
-                                                                           :generate {:updated-by-id nil}}]]})]
+    (let [gen (dgs/generate-attr-map {:schema schema} {:todo-list [[:_ {:refs     {:updated-by-id ::dd/omit}
+                                                                        :generate {:updated-by-id nil}}]]})]
       (is (ids-present? gen))
       (is (= nil (-> gen :tl0 :updated-by-id))))))
 
 (deftest overwriting
   (testing "Overwriting generated value with query map"
-    (let [gen (dgs/generate-attr-map {:schema td/schema} {:todo-list [[:_ {:generate {:updated-by-id 42}}]]})]
+    (let [gen (dgs/generate-attr-map {:schema schema} {:todo-list [[:_ {:generate {:updated-by-id 42}}]]})]
       (is (ids-present? gen))
       (is (= 42 (-> gen :tl0 :updated-by-id)))))
 
   (testing "Overwriting generated value with query fn"
-    (let [gen (dgs/generate-attr-map {:schema td/schema} {:todo-list [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
+    (let [gen (dgs/generate-attr-map {:schema schema} {:todo-list [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
       (is (ids-present? gen))
       (is (= :foo (-> gen :tl0 :updated-by-id)))))
 
   (testing "Overwriting generated value with schema map"
     (let [gen (dgs/generate-attr-map
-               {:schema (assoc-in td/schema [:todo :generate :overwrites :todo-title] "schema title")}
+               {:schema (assoc-in schema [:todo :generate :overwrites :todo-title] "schema title")}
                {:todo [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
       (is (ids-present? gen))
       (is (= "schema title" (-> gen :t0 :todo-title)))))
 
   (testing "Overwriting generated value with schema fn"
     (let [gen (dgs/generate-attr-map
-               {:schema (assoc-in td/schema [:todo :generate :overwrites] #(assoc % :todo-title "boop whooop"))}
+               {:schema (assoc-in schema [:todo :generate :overwrites] #(assoc % :todo-title "boop whooop"))}
                {:todo [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
       (is (ids-present? gen))
       (is (= "boop whooop" (-> gen :t0 :todo-title))))))
@@ -150,7 +214,7 @@
 (deftest test-idempotency
   (testing "Gen traversal won't replace already generated data with newly generated data"
     (let [gen-fn     #(dgs/generate % {:todo [[:t0 {:generate {:todo-title "pet the dog"}}]]})
-          first-pass (gen-fn {:schema td/schema})]
+          first-pass (gen-fn {:schema schema})]
       (is (= (:data first-pass)
              (:data (gen-fn first-pass)))))))
 
@@ -158,7 +222,7 @@
 (deftest test-coll-relval-order
   (testing "When a relation has a `:coll` constraint, order its vals correctly")
   (let [gen (dgs/generate-attr-map
-             {:schema td/schema}
+             {:schema schema}
              {:project [[:_ {:refs {:todo-list-ids 3}}]]})]
     (is (td/submap? {:u0 {:user-name "Luigi"}} gen))
     (is (ids-present? gen))
@@ -170,7 +234,7 @@
 
 (deftest test-sets-custom-relation-val
   (let [gen (dgs/generate-attr-map
-             {:schema td/schema}
+             {:schema schema}
              {:user      [[:custom-user {:generate {:id 100}}]]
               :todo-list [[:custom-tl {:refs {:created-by-id :custom-user
                                               :updated-by-id :custom-user}}]]})]
@@ -189,7 +253,7 @@
   (swap! gen-data-db conj [(:ent-type attrs) ent-name (dgs/visit-key attrs)]))
 
 (deftest test-insert-gen-data
-  (-> (dgs/generate {:schema td/schema} {:todo [[1]]})
+  (-> (dgs/generate {:schema schema} {:todo [[1]]})
       (dd/visit-ents-once :inserted-data insert))
 
   ;; gen data is something like:
@@ -222,7 +286,7 @@
 (deftest inserts-novel-data
   (testing "Given a db with a todo already added, next call adds a new
   todo that references the same todo list and user"
-    (let [db1 (-> (dgs/generate {:schema td/schema} {:todo [[1]]})
+    (let [db1 (-> (dgs/generate {:schema schema} {:todo [[1]]})
                   (dd/visit-ents-once :inserted-data insert))]
       (-> (dgs/generate db1 {:todo [[1]]})
           (dd/visit-ents-once :inserted-data insert))
@@ -257,14 +321,14 @@
 
 (deftest handle-cycles-with-constraints-and-reordering
   (testing "todo-list is inserted before todo because todo requires todo-list"
-    (-> (dgs/generate {:schema td/cycle-schema} {:todo [[1]]})
+    (-> (dgs/generate {:schema cycle-schema} {:todo [[1]]})
         (dd/visit-ents :insert-cycle insert-cycle))
     (is (= @gen-data-cycle-db
            [:tl0 :t0]))))
 
 (deftest handles-cycle-ids
   (testing "spec-gen correctly sets foreign keys for cycles"
-    (let [gen (dgs/generate-attr-map {:schema td/cycle-schema} {:todo [[1]]})]
+    (let [gen (dgs/generate-attr-map {:schema cycle-schema} {:todo [[1]]})]
       (is (ids-present? gen))
       (is (ids-match? gen
                       {:t0  {:todo-list-id [:tl0 :id]}

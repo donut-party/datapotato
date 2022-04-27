@@ -1,6 +1,12 @@
 (ns donut.datapotato.test-data
   (:require
-   [clojure.data :as data]))
+   [clojure.data :as data]
+   [clojure.test.check.generators :as gen :include-macros true]))
+
+(def id-seq (atom 0))
+(def monotonic-id-gen
+  (gen/fmap (fn [_] (swap! id-seq inc)) (gen/return nil)))
+
 
 ;; Test helper functions
 (defn submap?
