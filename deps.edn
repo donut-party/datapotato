@@ -2,12 +2,8 @@
  {:test
   {:extra-paths ["test"
                  "datapotato/test"
-                 "datapotato-generate-malli/test"
-                 "datapotato-generate-schema/test"
                  "datapotato-insert-next-jdbc/test"]
    :extra-deps  {club.donutpower/datapotato                  {:local/root "datapotato"}
-                 club.donutpower/datapotato-generate-malli   {:local/root "datapotato-generate-malli"}
-                 club.donutpower/datapotato-generate-spec    {:local/root "datapotato-generate-spec"}
                  club.donutpower/datapotato-insert-next-jdbc {:local/root "datapotato-insert-next-jdbc"}
                  com.github.seancorfield/next.jdbc           {:mvn/version "1.2.737"}
                  io.github.cognitect-labs/test-runner        {:git/tag "v0.5.0" :git/sha "48c3c67"}

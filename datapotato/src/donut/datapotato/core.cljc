@@ -964,7 +964,7 @@
                                                               (:generator ent-schema-generate)
                                                               base-generator)]
                             (when-not generator
-                              (throw (ex-info "No generator specified. Try adding a :generate key to db" {})))
+                              (throw (ex-info "No generator specified. Try adding a :generator key to db" {})))
                             (when-not schema
                               (throw (ex-info "No generate schema provided" {})))
                             (generator schema))))]
