@@ -1,4 +1,4 @@
-(ns donut.datapotato.test-data
+(ns donut.datapotato.test-schemas
   (:require
    [clojure.data :as data]
    [clojure.test.check.generators :as gen :include-macros true]))

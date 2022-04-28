@@ -1,6 +1,7 @@
 {:aliases
  {:test
-  {:extra-paths ["datapotato/test"
+  {:extra-paths ["test"
+                 "datapotato/test"
                  "datapotato-generate-malli/test"
                  "datapotato-generate-schema/test"
                  "datapotato-insert-next-jdbc/test"]

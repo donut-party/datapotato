@@ -645,23 +645,23 @@
     [referenced-ent relation-attr]))
 
 #?(:bb
-    ;; Copied from la/topsort since bb can't load the loom.alg ns
+   ;; Copied from la/topsort since bb can't load the loom.alg ns
    (defn topsort
-   "Topological sort of a directed acyclic graph (DAG). Returns nil if
+     "Topological sort of a directed acyclic graph (DAG). Returns nil if
       g contains any cycles."
-   ([g]
-    (loop [seen #{}
-           result ()
-           [n & ns] (seq (lg/nodes g))]
-      (if-not n
-        result
-        (if (seen n)
-          (recur seen result ns)
-          (when-let [cresult (lgen/topsort-component
-                              (lg/successors g) n seen seen)]
-            (recur (into seen cresult) (concat cresult result) ns))))))
-   ([g start]
-    (lgen/topsort-component (lg/successors g) start))))
+     ([g]
+      (loop [seen #{}
+             result ()
+             [n & ns] (seq (lg/nodes g))]
+        (if-not n
+          result
+          (if (seen n)
+            (recur seen result ns)
+            (when-let [cresult (lgen/topsort-component
+                                (lg/successors g) n seen seen)]
+              (recur (into seen cresult) (concat cresult result) ns))))))
+     ([g start]
+      (lgen/topsort-component (lg/successors g) start))))
 
 (defn topsort-ents
   [{:keys [data]}]
@@ -954,9 +954,18 @@
   [db query]
   (let [base-generator (:generator db)
         visiting-fn    (wrap-generate-visiting-fn
-                        (fn [db {:keys [ent-name]}]
-                          (let [{:keys [schema generator]} (generate-visit-key (ent-schema db ent-name))
-                                generator                  (or generator base-generator)]
+                        (fn [db {:keys [ent-name visit-query-opts]}]
+                          (let [ent-schema-generate       (generate-visit-key (ent-schema db ent-name))
+                                visit-query-opts-generate (generate-visit-key visit-query-opts)
+                                schema                    (or (:schema visit-query-opts-generate)
+                                                              (:schema ent-schema-generate))
+                                generator                 (or (:generator visit-query-opts-generate)
+                                                              (:generator ent-schema-generate)
+                                                              base-generator)]
+                            (when-not generator
+                              (throw (ex-info "No generator specified. Try adding a :generate key to db" {})))
+                            (when-not schema
+                              (throw (ex-info "No generate schema provided" {})))
                             (generator schema))))]
     (-> (add-ents db query)
         (visit-ents-once generate-visit-key visiting-fn))))
