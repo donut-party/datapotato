@@ -951,6 +951,7 @@
 (def ^:const generate-visit-key :generate)
 
 (defn generate
+  "Use a generator to generate data for each ent"
   [db query]
   (let [base-generator (:generator db)
         visiting-fn    (wrap-generate-visiting-fn
