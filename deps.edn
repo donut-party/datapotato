@@ -1,7 +1,6 @@
 {:aliases
  {:test
-  {:extra-paths ["test"
-                 "datapotato/test"
+  {:extra-paths ["datapotato/test"
                  "datapotato-insert-next-jdbc/test"]
    :extra-deps  {club.donutpower/datapotato                  {:local/root "datapotato"}
                  club.donutpower/datapotato-insert-next-jdbc {:local/root "datapotato-insert-next-jdbc"}
@@ -11,7 +10,6 @@
                  org.clojure/test.check                      {:mvn/version "0.9.0"}
                  org.xerial/sqlite-jdbc                      {:mvn/version "3.36.0.3"}}
    :exec-fn     cognitect.test-runner.api/test}
-
   :test-cljs
   {:extra-paths ["test"]
    :extra-deps  {org.clojure/test.check  {:mvn/version "0.9.0"}
