@@ -27,8 +27,14 @@
        username text NOT NULL
     )"]))
 
+(defmacro with-conn
+  [conn-name & body]
+  `(with-open [~conn-name (jdbc/get-connection db-spec)]
+     (reset! ts/id-seq 0)
+     ~@body))
+
 (deftest inserts-generated-data
-  (with-open [conn (jdbc/get-connection db-spec)]
+  (with-conn conn
     (create-tables conn)
     (ddin/generate-insert {:schema        schema
                            :generator     mg/generate
@@ -36,5 +42,4 @@
                           {:user [[2]]})
     (is (= [#:users{:id 1 :username "Luigi"}
             #:users{:id 2 :username "Luigi"}]
-           (sql/query conn ["SELECT * FROM users"])))
-    (reset! ts/id-seq 0)))
+           (sql/query conn ["SELECT * FROM users"])))))

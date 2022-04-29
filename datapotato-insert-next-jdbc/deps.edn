@@ -5,12 +5,12 @@
 
  :aliases
  {:test
-  {:extra-paths ["test" "../test" "../datapotato-generate-malli/test"]
-   :extra-deps  {club.donutpower/datapotato-generate-malli {:mvn/version "0.0.0.alpha-11"}
-                 com.github.seancorfield/next.jdbc         {:mvn/version "1.2.737"}
-                 io.github.cognitect-labs/test-runner      {:git/tag "v0.5.0" :git/sha "48c3c67"}
-                 metosin/malli                             {:mvn/version "0.7.5"}
-                 org.xerial/sqlite-jdbc                    {:mvn/version "3.36.0.3"}}
+  {:extra-paths ["test" "../test" "../datapotato/test"]
+   :extra-deps  {club.donutpower/datapotato           {:local/root "../"}
+                 com.github.seancorfield/next.jdbc    {:mvn/version "1.2.737"}
+                 io.github.cognitect-labs/test-runner {:git/tag "v0.5.0" :git/sha "48c3c67"}
+                 metosin/malli                        {:mvn/version "0.7.5"}
+                 org.xerial/sqlite-jdbc               {:mvn/version "3.36.0.3"}}
    :exec-fn     cognitect.test-runner.api/test}
 
   :build
