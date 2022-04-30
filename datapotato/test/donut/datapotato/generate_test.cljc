@@ -258,11 +258,11 @@
 
    "spec"
    {:schema    spec-schema
-    :generator spec-generator}
+    :generate {:generator spec-generator}}
 
    "malli"
    {:schema    malli-schema
-    :generator malli-generator}))
+    :generate {:generator malli-generator}}))
 
 (deftest test-spec-gen-nested
   (ct/do-template
@@ -288,12 +288,12 @@
        (is (only-has-ents? gen #{:tl0 :tl1 :tl2 :u0 :p0}))))
 
    "spec"
-   {:schema    spec-schema
-    :generator spec-generator}
+   {:schema   spec-schema
+    :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
-    :generator malli-generator}))
+   {:schema   malli-schema
+    :generate {:generator malli-generator}}))
 
 (deftest test-spec-gen-manual-attr
   (ct/do-template
@@ -331,12 +331,12 @@
          (is (only-has-ents? gen #{:tl0 :t0 :u0})))))
 
    "spec"
-   {:schema    spec-schema
-    :generator spec-generator}
+   {:schema   spec-schema
+    :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
-    :generator malli-generator}
+   {:schema   malli-schema
+    :generate {:generator malli-generator}}
    ))
 
 (deftest test-spec-gen-omit
@@ -380,12 +380,12 @@
          (is (= nil (-> gen :tl0 :updated-by-id))))))
 
    "spec"
-   {:schema    spec-schema
-    :generator spec-generator}
+   {:schema   spec-schema
+    :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
-    :generator malli-generator}
+   {:schema   malli-schema
+    :generate {:generator malli-generator}}
 
    ))
 
@@ -422,12 +422,12 @@
          (is (= "boop whooop" (-> gen :t0 :todo-title))))))
 
    "spec"
-   {:schema    spec-schema
-    :generator spec-generator}
+   {:schema   spec-schema
+    :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
-    :generator malli-generator}
+   {:schema   malli-schema
+    :generate {:generator malli-generator}}
 
    ))
 
@@ -442,12 +442,12 @@
                 (:data (gen-fn first-pass)))))))
 
    "spec"
-   {:schema    spec-schema
-    :generator spec-generator}
+   {:schema   spec-schema
+    :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
-    :generator malli-generator}
+   {:schema   malli-schema
+    :generate {:generator malli-generator}}
    ))
 
 
@@ -467,12 +467,12 @@
        (is (only-has-ents? gen #{:tl0 :tl1 :tl2 :u0 :p0}))))
 
    "spec"
-   {:schema    spec-schema
-    :generator spec-generator}
+   {:schema   spec-schema
+    :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
-    :generator malli-generator}
+   {:schema   malli-schema
+    :generate {:generator malli-generator}}
    ))
 
 (deftest test-sets-custom-relation-val
@@ -494,12 +494,12 @@
        (is (only-has-ents? gen #{:custom-tl :custom-user}))))
 
    "spec"
-   {:schema    spec-schema
-    :generator spec-generator}
+   {:schema   spec-schema
+    :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
-    :generator malli-generator}
+   {:schema   malli-schema
+    :generate {:generator malli-generator}}
    ))
 
 ;; testing inserting
@@ -542,12 +542,12 @@
                                 :updated-by-id [:u0 :id]
                                 :todo-list-id  [:tl0 :id]}})))))
    "spec"
-   {:schema    spec-schema
-    :generator spec-generator}
+   {:schema   spec-schema
+    :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
-    :generator malli-generator}
+   {:schema   malli-schema
+    :generate {:generator malli-generator}}
    ))
 
 (deftest test-inserts-novel-data
@@ -585,12 +585,12 @@
                                     :todo-list-id  [:tl0 :id]}})))))))
 
    "spec"
-   {:schema    spec-schema
-    :generator spec-generator}
+   {:schema   spec-schema
+    :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
-    :generator malli-generator}
+   {:schema   malli-schema
+    :generate {:generator malli-generator}}
    ))
 
 ;;---
@@ -616,12 +616,12 @@
               @gen-data-cycle-db))))
 
    "spec"
-   {:schema    spec-cycle-schema
-    :generator spec-generator}
+   {:schema   spec-cycle-schema
+    :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-cycle-schema
-    :generator malli-generator}
+   {:schema   malli-cycle-schema
+    :generate {:generator malli-generator}}
    ))
 
 (deftest test-handles-cycle-ids
@@ -638,12 +638,12 @@
                           :tl0 {:first-todo-id [:t0 :id]}})))))
 
    "spec"
-   {:schema    spec-cycle-schema
-    :generator spec-generator}
+   {:schema   spec-cycle-schema
+    :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-cycle-schema
-    :generator malli-generator}
+   {:schema   malli-cycle-schema
+    :generate {:generator malli-generator}}
    ))
 
 (deftest test-throws-exception-on-2nd-map-ent-attr-try

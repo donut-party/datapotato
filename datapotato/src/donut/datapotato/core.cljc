@@ -953,7 +953,7 @@
 (defn generate
   "Use a generator to generate data for each ent"
   [db query]
-  (let [base-generator (:generator db)
+  (let [base-generator (get-in db [:generate :generator])
         visiting-fn    (wrap-generate-visiting-fn
                         (fn [db {:keys [ent-name visit-query-opts]}]
                           (let [ent-schema-generate       (generate-visit-key (ent-schema db ent-name))
@@ -964,7 +964,7 @@
                                                               (:generator ent-schema-generate)
                                                               base-generator)]
                             (when-not generator
-                              (throw (ex-info "No generator specified. Try adding a :generator key to db" {})))
+                              (throw (ex-info "No generator specified. Try adding [:generate :generator] to db" {})))
                             (when-not schema
                               (throw (ex-info "No generate schema provided" {})))
                             (generator schema))))]
