@@ -9,8 +9,7 @@
    [donut.datapotato.insert.next-jdbc :as ddin]
    [malli.generator :as mg]
    [next.jdbc :as jdbc]
-   [next.jdbc.sql :as sql]
-   [clojure.set :as set]))
+   [next.jdbc.sql :as sql]))
 
 (def db-spec
   {:dbtype         "sqlite"
