@@ -9,7 +9,8 @@
    [donut.datapotato.insert.next-jdbc :as ddin]
    [malli.generator :as mg]
    [next.jdbc :as jdbc]
-   [next.jdbc.sql :as sql]))
+   [next.jdbc.sql :as sql]
+   [clojure.set :as set]))
 
 (def db-spec
   {:dbtype         "sqlite"
@@ -86,15 +87,15 @@
 (defmacro with-conn
   [conn-name & body]
   `(with-open [~conn-name (jdbc/get-connection db-spec)]
+     (create-tables ~conn-name)
      (reset! ddgt/id-seq 0)
      ~@body))
 
 (deftest inserts-simple-generated-data
   (with-conn conn
-    (create-tables conn)
-    (ddin/generate-insert {:schema        schema
-                           :generator     mg/generate
-                           :get-insert-db (constantly conn)}
+    (ddin/generate-insert {:schema   schema
+                           :generate {:generator mg/generate}
+                           :insert   {:get-insert-db (constantly conn)}}
                           {:user [[2]]})
     (is (= [#:users{:id 1 :username "Luigi"}
             #:users{:id 2 :username "Luigi"}]
@@ -102,22 +103,27 @@
 
 (deftest inserts-generated-data-hierarchy
   (with-conn conn
-    (create-tables conn)
-    (let [attrs (ddin/generate-insert {:schema   schema
-                                       :generate {:generator mg/generate}
-                                       :insert   {:get-insert-db (constantly conn)
-                                                  :get-inserted  identity}}
-                                      {:todo [[2]]})]
-      (is (= {:t0  {}
-              :t1  {}
-              :tl0 {}
-              :u0  {}}
-             attrs)))
+    (ddin/generate-insert
+     {:schema   schema
+      :generate {:generator mg/generate}
+      :insert   {:get-insert-db (constantly conn)
+                 :get-inserted  (fn [{:keys [db table-name insert-result]}]
+                                  (->> (sql/query db [(str "SELECT * FROM " table-name
+                                                           "  WHERE rowid = ?")
+                                                      (-> insert-result vals first)])
+                                       first
+                                       (reduce-kv (fn [m k v]
+                                                    (assoc m
+                                                           (-> k name keyword)
+                                                           v))
+                                                  {})))}}
+     {:todo [[2]]})
+
     (is (= [#:users{:id 1 :username "Luigi"}]
            (sql/query conn ["SELECT * FROM users"])))
 
     (is (= [#:todos{:id            5,
-                    :todo_list_id  nil
+                    :todo_list_id  2
                     :todo_title    "write unit tests"
                     :created_by_id 1
                     :updated_by_id 1}

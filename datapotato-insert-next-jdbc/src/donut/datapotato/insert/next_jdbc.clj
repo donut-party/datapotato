@@ -9,12 +9,16 @@
   [{:keys [insert] :as ent-db}
    {:keys [ent-name visit-val]}]
   (let [{:keys [get-insert-db get-inserted]} insert
-        get-inserted                         (or get-inserted (fn [_ v] v))
-        db                                   (get-insert-db)]
-    (->> (jsql/insert! db
-                       (get-in (dd/ent-schema ent-db ent-name) [visit-key :table-name])
-                       visit-val)
-         (get-inserted db))))
+        get-inserted                         (or get-inserted (fn [{:keys [insert-result]}]
+                                                                insert-result))
+        db                                   (get-insert-db)
+        table-name                           (get-in (dd/ent-schema ent-db ent-name) [visit-key :table-name])
+        insert-result                        (jsql/insert! db
+                                                           table-name
+                                                           visit-val)]
+    (get-inserted {:db            db
+                   :table-name    table-name
+                   :insert-result insert-result})))
 
 (def insert-generated
   (dd/wrap-incremental-insert-visiting-fn :generate perform-insert))
