@@ -108,15 +108,9 @@
       :generate {:generator mg/generate}
       :insert   {:get-insert-db (constantly conn)
                  :get-inserted  (fn [{:keys [db table-name insert-result]}]
-                                  (->> (sql/query db [(str "SELECT * FROM " table-name
-                                                           "  WHERE rowid = ?")
-                                                      (-> insert-result vals first)])
-                                       first
-                                       (reduce-kv (fn [m k v]
-                                                    (assoc m
-                                                           (-> k name keyword)
-                                                           v))
-                                                  {})))}}
+                                  (first (sql/query db [(str "SELECT * FROM " table-name
+                                                             "  WHERE rowid = ?")
+                                                        (-> insert-result vals first)])))}}
      {:todo [[2]]})
 
     (is (= [#:users{:id 1 :username "Luigi"}]

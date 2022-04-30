@@ -16,9 +16,14 @@
         insert-result                        (jsql/insert! db
                                                            table-name
                                                            visit-val)]
-    (get-inserted {:db            db
-                   :table-name    table-name
-                   :insert-result insert-result})))
+    (->> (get-inserted {:db            db
+                        :table-name    table-name
+                        :insert-result insert-result})
+         (reduce-kv (fn [m k v]
+                      (assoc m
+                             (-> k name keyword)
+                             v))
+                    {}))))
 
 (def insert-generated
   (dd/wrap-incremental-insert-visiting-fn :generate perform-insert))
