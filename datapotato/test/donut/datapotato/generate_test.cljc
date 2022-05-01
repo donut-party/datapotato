@@ -428,7 +428,6 @@
    "malli"
    {:schema   malli-schema
     :generate {:generator malli-generator}}
-
    ))
 
 (deftest test-idempotency
