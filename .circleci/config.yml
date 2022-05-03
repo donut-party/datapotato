@@ -19,7 +19,7 @@ jobs:
             sudo bash < <(curl -s https://raw.githubusercontent.com/babashka/babashka/master/install)
       - run:
           name: Run bb tests
-          command: bb test
+          command: cd datapotato && bb test
       - run:
           name: Build
           command: clojure -T:build jar
