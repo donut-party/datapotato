@@ -5,6 +5,15 @@
 
 (def visit-key :insert)
 
+(defn un-ns-keywords
+  [m]
+  (reduce-kv (fn [m k v]
+               (assoc m
+                      (-> k name keyword)
+                      v))
+             {}
+             m))
+
 (defn perform-insert
   [{:keys [insert] :as ent-db}
    {:keys [ent-name ent-type visit-val]}]
@@ -22,14 +31,9 @@
                                                 :ent-type ent-type})))
 
     (let [insert-result (jsql/insert! db table-name visit-val)]
-      (->> (get-inserted {:db            db
-                          :table-name    table-name
-                          :insert-result insert-result})
-           (reduce-kv (fn [m k v]
-                        (assoc m
-                               (-> k name keyword)
-                               v))
-                      {})))))
+      (get-inserted {:db            db
+                     :table-name    table-name
+                     :insert-result insert-result}))))
 
 (def insert-generated
   (dd/wrap-incremental-insert-visiting-fn :generate perform-insert))
