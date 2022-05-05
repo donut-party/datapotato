@@ -7,5 +7,6 @@
 .nrepl*
 cljs-test-runner-out
 node_modules
+scratch.cljc
 target
 tmp
