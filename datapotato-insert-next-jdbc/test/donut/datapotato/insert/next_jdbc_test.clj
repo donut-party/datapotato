@@ -20,40 +20,40 @@
 
 (def User
   [:map
-   [:id ID]
-   [:username [:enum "Luigi"]]])
+   [:users/id ID]
+   [:users/username [:enum "Luigi"]]])
 
 (def Todo
   [:map
-   [:id ID]
-   [:todo_title string?]
-   [:created_by_id ID]
-   [:updated_by_id ID]])
+   [:todos/id ID]
+   [:todos/todo_title string?]
+   [:todos/created_by_id ID]
+   [:todos/updated_by_id ID]])
 
 
 (def TodoList
   [:map
-   [:id ID]
-   [:created_by_id ID]
-   [:updated_by_id ID]])
+   [:todo_lists/id ID]
+   [:todo_lists/created_by_id ID]
+   [:todo_lists/updated_by_id ID]])
 
 
 (def schema
-  {:user            {:prefix   :u
-                     :generate {:schema User}
-                     :insert   {:table-name "users"}}
-   :todo            {:generate  {:overwrites {:todo_title "write unit tests"}
-                                 :schema     Todo}
-                     :insert    {:table-name "todos"}
-                     :relations {:created_by_id [:user :id]
-                                 :updated_by_id [:user :id]
-                                 :todo_list_id  [:todo-list :id]}
-                     :prefix    :t}
-   :todo-list       {:generate  {:schema TodoList}
-                     :insert    {:table-name "todo_lists"}
-                     :relations {:created_by_id [:user :id]
-                                 :updated_by_id [:user :id]}
-                     :prefix    :tl}})
+  {:user      {:prefix   :u
+               :generate {:schema User}
+               :insert   {:table-name "users"}}
+   :todo      {:generate  {:overwrites {:todos/todo_title "write unit tests"}
+                           :schema     Todo}
+               :insert    {:table-name "todos"}
+               :relations {:todos/created_by_id [:user :users/id]
+                           :todos/updated_by_id [:user :users/id]
+                           :todos/todo_list_id  [:todo-list :todo_lists/id]}
+               :prefix    :t}
+   :todo-list {:generate  {:schema TodoList}
+               :insert    {:table-name "todo_lists"}
+               :relations {:todo_lists/created_by_id [:user :users/id]
+                           :todo_lists/updated_by_id [:user :users/id]}
+               :prefix    :tl}})
 
 (defn create-tables
   [conn]

@@ -1,11 +1,12 @@
 (ns donut.datapotato.core-test
-  (:require #?(:clj [clojure.test :refer [deftest is are use-fixtures testing]]
-               :cljs [cljs.test :include-macros true :refer [deftest is are use-fixtures testing]])
-            [clojure.spec.test.alpha :as stest]
-            [donut.datapotato.test-data :as td]
-            [donut.datapotato.core :as dd]
-            [loom.graph :as lg]
-            [loom.attr :as lat]))
+  (:require
+   #?(:clj [clojure.test :refer [deftest is are use-fixtures testing]]
+      :cljs [cljs.test :include-macros true :refer [deftest is are use-fixtures testing]])
+   [clojure.spec.test.alpha :as stest]
+   [donut.datapotato.test-data :as td]
+   [donut.datapotato.core :as dd]
+   [loom.graph :as lg]
+   [loom.attr :as lat]))
 
 (use-fixtures :each td/test-fixture)
 
