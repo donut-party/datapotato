@@ -8,10 +8,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: test clj
+          name: cd datapotato
+          command: cd datapotato
+      - run:
+          name: test datapotato clj
           command: clojure -X:test
       - run:
-          name: test cljs
+          name: test datapotato cljs
           command: clojure -X:test-cljs
       - run:
           name: Install bb
@@ -19,9 +22,18 @@ jobs:
             sudo bash < <(curl -s https://raw.githubusercontent.com/babashka/babashka/master/install)
       - run:
           name: Run bb tests
-          command: cd datapotato && bb test
+          command: bb test
       - run:
-          name: Build
+          name: Build datapotato
+          command: clojure -T:build jar
+      - run:
+          name: cd datapotato-insert-next-jdbc
+          command: cd datapotato-insert-next-jdbc
+      - run:
+          name: test datapotato-insert-next-jdbc clj
+          command: clojure -X:test
+      - run:
+          name: Build datapotato-insert-next-jdbc
           command: clojure -T:build jar
       - save-cache:
           paths:
@@ -42,9 +54,11 @@ jobs:
       - attach_workspace:
           at: ./
       - run:
-          name: Deploy to clojars
-          command: |
-            clojure -T:build deploy
+          name: Deploy datapotato to clojars
+          command: cd datapotato && clojure -T:build deploy
+      - run:
+          name: Deploy datapotato-insert-next-jdbc to clojars
+          command: cd ../datapotato-insert-next-jdbc && clojure -T:build deploy
 
 workflows:
   version: 2
