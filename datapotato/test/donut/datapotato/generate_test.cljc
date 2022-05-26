@@ -1,9 +1,10 @@
 (ns donut.datapotato.generate-test
+  #?(:cljs (:require-macros [clojure.template :as ct]))
   (:require
    [clojure.data :as data]
    [clojure.spec.alpha :as s]
    [clojure.spec.gen.alpha :as sg]
-   [clojure.template :as ct]
+   #?(:clj [clojure.template :as ct])
    [clojure.test.check.generators :as gen :include-macros true]
    #?(:clj [clojure.test :refer [deftest is are use-fixtures testing]]
       :cljs [cljs.test :include-macros true :refer [deftest is are use-fixtures testing]])

@@ -16,7 +16,8 @@
   :test-cljs
   {:extra-paths ["test"]
    :extra-deps  {org.clojure/test.check  {:mvn/version "0.9.0"}
-                 olical/cljs-test-runner {:mvn/version "3.8.0"}}
+                 olical/cljs-test-runner {:mvn/version "3.8.0"}
+                 metosin/malli           {:mvn/version "0.7.5"}}
    :exec-fn     cljs-test-runner.main/-main}
 
   :build
