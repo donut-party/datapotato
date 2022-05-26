@@ -9,8 +9,19 @@
 
 ## Deps
 
-```clojure
-[donut/datapotato "2.0.0"]
+[![Clojars Project](https://img.shields.io/clojars/v/club.donutpower/datapotato.svg)](https://clojars.org/club.donutpower/datapotato)
+
+
+**deps.edn**
+
+``` clojure
+club.donutpower/datapotato {:mvn/version "0.0.0.337"}
+```
+
+**leiningen**
+
+``` clojure
+[club.donutpower/datapotato "0.0.0.337"]
 ```
 
 ## Purpose
