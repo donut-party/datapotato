@@ -9,8 +9,8 @@
    #?(:clj [clojure.test :refer [deftest is are use-fixtures testing]]
       :cljs [cljs.test :include-macros true :refer [deftest is are use-fixtures testing]])
    [donut.datapotato.core :as dd]
-   #?(:clj [malli.generator :as mg]
-      :cljs [malli.generator :as mg])
+   #?@(:bb []
+       :default [[malli.generator :as mg]])
    ))
 
 
@@ -165,9 +165,8 @@
       (assoc-in [:watch :generate :schema] ::watch)))
 
 (def spec-generator (comp sg/generate s/gen))
-#?(:bb nil
-   :default (def malli-generator mg/generate))
-
+(def malli-generator #?(:bb nil
+                        :default mg/generate))
 
 ;;---
 ;; malli
@@ -264,7 +263,7 @@
    {:schema    spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb nil
+   #?@(:bb []
        :default
        ["malli"
         {:schema    malli-schema
@@ -297,7 +296,7 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb nil
+   #?@(:bb []
        :default
        ["malli"
         {:schema    malli-schema
@@ -342,7 +341,7 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb nil
+   #?@(:bb []
        :default
        ["malli"
         {:schema    malli-schema
@@ -393,7 +392,7 @@
     :generate {:generator spec-generator}}
 
 
-   #?@(:bb nil
+   #?@(:bb []
        :default
        ["malli"
         {:schema    malli-schema
@@ -435,7 +434,7 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb nil
+   #?@(:bb []
        :default
        ["malli"
         {:schema    malli-schema
@@ -455,9 +454,11 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   "malli"
-   {:schema   malli-schema
-    :generate {:generator malli-generator}}
+   #?@(:bb []
+       :default
+       ["malli"
+        {:schema   malli-schema
+         :generate {:generator malli-generator}}])
    ))
 
 
@@ -480,7 +481,7 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb nil
+   #?@(:bb []
        :default
        ["malli"
         {:schema    malli-schema
@@ -508,7 +509,7 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb nil
+   #?@(:bb []
        :default
        ["malli"
         {:schema    malli-schema
@@ -557,7 +558,7 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb nil
+   #?@(:bb []
        :default
        ["malli"
         {:schema    malli-schema
@@ -601,7 +602,7 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb nil
+   #?@(:bb []
        :default
        ["malli"
         {:schema    malli-schema
@@ -633,7 +634,7 @@
    {:schema   spec-cycle-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb nil
+   #?@(:bb []
        :default
        ["malli"
         {:schema    malli-cycle-schema
@@ -656,7 +657,7 @@
    {:schema   spec-cycle-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb nil
+   #?@(:bb []
        :default
        ["malli"
         {:schema    malli-cycle-schema
