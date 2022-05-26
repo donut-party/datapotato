@@ -28,7 +28,7 @@ jobs:
           command: cd datapotato-insert-next-jdbc && clojure -X:test
       - run:
           name: Build datapotato-insert-next-jdbc
-          command: cd datapotato-insert-next-jdbc clojure -T:build jar
+          command: cd datapotato-insert-next-jdbc && clojure -T:build jar
       - save-cache:
           paths:
             - ~/bin
