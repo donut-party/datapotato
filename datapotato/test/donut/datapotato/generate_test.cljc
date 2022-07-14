@@ -8,7 +8,7 @@
    [clojure.test.check.generators :as gen :include-macros true]
    #?(:clj [clojure.test :refer [deftest is are use-fixtures testing]]
       :cljs [cljs.test :include-macros true :refer [deftest is are use-fixtures testing]])
-   [donut.datapotato.core :as dd]
+   [donut.datapotato.core :as dc]
    #?@(:bb []
        :default [[malli.generator :as mg]])
    ))
@@ -248,7 +248,7 @@
   (ct/do-template
    [generator-name ent-db]
    (testing generator-name
-     (let [gen (dd/generate-attr-map
+     (let [gen (dc/generate-attr-map
                 ent-db
                 {:todo-list [[1]]})]
        (is (submap? {:u0 {:username "Luigi"}}
@@ -273,7 +273,7 @@
   (ct/do-template
    [generator-name ent-db]
    (testing generator-name
-     (let [gen (dd/generate-attr-map
+     (let [gen (dc/generate-attr-map
                 ent-db
                 {:project [[:_ {:refs {:todo-list-ids 3}}]]})]
        (is (submap? {:u0 {:username "Luigi"}} gen))
@@ -307,7 +307,7 @@
    [generator-name ent-db]
    (testing generator-name
      (testing "Manual attribute setting for non-reference field"
-       (let [gen (dd/generate-attr-map
+       (let [gen (dc/generate-attr-map
                   ent-db
                   {:todo [[:_ {:generate {:todo-title "pet the dog"}}]]})]
          (is (submap? {:u0 {:username "Luigi"}
@@ -323,7 +323,7 @@
          (is (only-has-ents? gen #{:tl0 :t0 :u0}))))
 
      (testing "Manual attribute setting for reference field"
-       (let [gen (dd/generate-attr-map
+       (let [gen (dc/generate-attr-map
                   ent-db
                   {:todo [[:_ {:generate {:created-by-id 1}}]]})]
          (is (submap? {:u0 {:username "Luigi"}
@@ -352,18 +352,18 @@
    [generator-name ent-db]
    (testing generator-name
      (testing "Ref not created and attr is not present when omitted"
-       (let [gen (dd/generate-attr-map
+       (let [gen (dc/generate-attr-map
                   ent-db
-                  {:todo-list [[:_ {:refs {:created-by-id ::dd/omit
-                                           :updated-by-id ::dd/omit}}]]})]
+                  {:todo-list [[:_ {:refs {:created-by-id ::dc/omit
+                                           :updated-by-id ::dc/omit}}]]})]
          (is (ids-present? gen))
          (is (only-has-ents? gen #{:tl0}))
          (is (= [:id] (keys (:tl0 gen))))))
 
      (testing "Ref is created when at least 1 field references it, but omitted attrs are still not present"
-       (let [gen (dd/generate-attr-map
+       (let [gen (dc/generate-attr-map
                   ent-db
-                  {:todo-list [[:_ {:refs {:updated-by-id ::dd/omit}}]]})]
+                  {:todo-list [[:_ {:refs {:updated-by-id ::dc/omit}}]]})]
          (is (submap? {:u0 {:username "Luigi"}} gen))
          (is (ids-present? gen))
          (is (ids-match? gen
@@ -372,17 +372,17 @@
          (is (= [:id :created-by-id] (keys (:tl0 gen))))))
 
      (testing "Overwriting value of omitted ref with custom value"
-       (let [gen (dd/generate-attr-map
+       (let [gen (dc/generate-attr-map
                   ent-db
-                  {:todo-list [[:_ {:refs     {:updated-by-id ::dd/omit}
+                  {:todo-list [[:_ {:refs     {:updated-by-id ::dc/omit}
                                     :generate {:updated-by-id 42}}]]})]
          (is (ids-present? gen))
          (is (= 42 (-> gen :tl0 :updated-by-id)))))
 
      (testing "Overwriting value of omitted ref with nil"
-       (let [gen (dd/generate-attr-map
+       (let [gen (dc/generate-attr-map
                   ent-db
-                  {:todo-list [[:_ {:refs     {:updated-by-id ::dd/omit}
+                  {:todo-list [[:_ {:refs     {:updated-by-id ::dc/omit}
                                     :generate {:updated-by-id nil}}]]})]
          (is (ids-present? gen))
          (is (= nil (-> gen :tl0 :updated-by-id))))))
@@ -403,28 +403,28 @@
    [generator-name ent-db]
    (testing generator-name
      (testing "Overwriting generated value with query map"
-       (let [gen (dd/generate-attr-map
+       (let [gen (dc/generate-attr-map
                   ent-db
                   {:todo-list [[:_ {:generate {:updated-by-id 42}}]]})]
          (is (ids-present? gen))
          (is (= 42 (-> gen :tl0 :updated-by-id)))))
 
      (testing "Overwriting generated value with query fn"
-       (let [gen (dd/generate-attr-map
+       (let [gen (dc/generate-attr-map
                   ent-db
                   {:todo-list [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
          (is (ids-present? gen))
          (is (= :foo (-> gen :tl0 :updated-by-id)))))
 
      (testing "Overwriting generated value with schema map"
-       (let [gen (dd/generate-attr-map
+       (let [gen (dc/generate-attr-map
                   (assoc-in ent-db [:schema :todo :generate :overwrites :todo-title] "schema title")
                   {:todo [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
          (is (ids-present? gen))
          (is (= "schema title" (-> gen :t0 :todo-title)))))
 
      (testing "Overwriting generated value with schema fn"
-       (let [gen (dd/generate-attr-map
+       (let [gen (dc/generate-attr-map
                   (assoc-in ent-db [:schema :todo :generate :overwrites] #(assoc % :todo-title "boop whooop"))
                   {:todo [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
          (is (ids-present? gen))
@@ -445,7 +445,7 @@
    [generator-name ent-db]
    (testing generator-name
      (testing "Gen traversal won't replace already generated data with newly generated data"
-       (let [gen-fn     #(dd/generate % {:todo [[:t0 {:generate {:todo-title "pet the dog"}}]]})
+       (let [gen-fn     #(dc/generate % {:todo [[:t0 {:generate {:todo-title "pet the dog"}}]]})
              first-pass (gen-fn ent-db)]
          (is (= (:data first-pass)
                 (:data (gen-fn first-pass)))))))
@@ -466,7 +466,7 @@
   (ct/do-template
    [generator-name ent-db]
    (testing "When a relation has a `:coll` constraint, order its vals correctly"
-     (let [gen (dd/generate-attr-map
+     (let [gen (dc/generate-attr-map
                 ent-db
                 {:project [[:_ {:refs {:todo-list-ids 3}}]]})]
        (is (submap? {:u0 {:username "Luigi"}} gen))
@@ -491,7 +491,7 @@
   (ct/do-template
    [generator-name ent-db]
    (testing generator-name
-     (let [gen (dd/generate-attr-map
+     (let [gen (dc/generate-attr-map
                 ent-db
                 {:user      [[:custom-user {:generate {:id 100}}]]
                  :todo-list [[:custom-tl {:refs {:created-by-id :custom-user
@@ -525,8 +525,8 @@
    [generator-name ent-db]
    (testing generator-name
      (reset-dbs*)
-     (-> (dd/generate ent-db {:todo [[1]]})
-         (dd/visit-ents-once :inserted-data insert))
+     (-> (dc/generate ent-db {:todo [[1]]})
+         (dc/visit-ents-once :inserted-data insert))
 
      ;; gen data is something like:
      ;; [[:user :u0 {:id 1 :username "Luigi"}]
@@ -570,10 +570,10 @@
    (testing generator-name
      (testing "Given a db with a todo already added, next call adds a new
   todo that references the same todo list and user"
-       (let [db1 (-> (dd/generate ent-db {:todo [[1]]})
-                     (dd/visit-ents-once :inserted-data insert))]
-         (-> (dd/generate db1 {:todo [[1]]})
-             (dd/visit-ents-once :inserted-data insert))
+       (let [db1 (-> (dc/generate ent-db {:todo [[1]]})
+                     (dc/visit-ents-once :inserted-data insert))]
+         (-> (dc/generate db1 {:todo [[1]]})
+             (dc/visit-ents-once :inserted-data insert))
 
          (let [gen-data @gen-data-db]
            (is (= (set (map #(take 2 %) gen-data))
@@ -615,7 +615,7 @@
 (defn insert-cycle
   [db {:keys [ent-name]}]
   (swap! gen-data-cycle-db conj ent-name)
-  (dd/ent-attr db ent-name :generate))
+  (dc/ent-attr db ent-name :generate))
 
 (deftest test-handle-cycles-with-constraints-and-reordering
   (ct/do-template
@@ -623,10 +623,10 @@
    (testing generator-name
      (testing "todo-list is inserted before todo because todo requires todo-list"
        (reset! gen-data-cycle-db [])
-       (-> (dd/generate
+       (-> (dc/generate
             ent-db
             {:todo [[1]]})
-           (dd/visit-ents :insert-cycle insert-cycle))
+           (dc/visit-ents :insert-cycle insert-cycle))
        (is (= [:tl0 :t0]
               @gen-data-cycle-db))))
 
@@ -645,7 +645,7 @@
    [generator-name ent-db]
    (testing generator-name
      (testing "generate correctly sets foreign keys for cycles"
-       (let [gen (dd/generate-attr-map
+       (let [gen (dc/generate-attr-map
                   ent-db
                   {:todo [[1]]})]
          (is (ids-present? gen))
@@ -668,11 +668,11 @@
     (is (thrown-with-msg? #?(:clj clojure.lang.ExceptionInfo
                              :cljs js/Object)
                           #"Can't sort ents: check for cycles in ent type relations"
-                          (-> (dd/add-ents {:schema {:todo      {:spec      ::todo
+                          (-> (dc/add-ents {:schema {:todo      {:spec      ::todo
                                                                  :relations {:todo-list-id [:todo-list :id]}
                                                                  :prefix    :t}
                                                      :todo-list {:spec      ::todo-list
                                                                  :relations {:first-todo-id [:todo :id]}
                                                                  :prefix    :tl}}}
                                            {:todo [[1]]})
-                              (dd/visit-ents :insert-cycle insert-cycle))))))
+                              (dc/visit-ents :insert-cycle insert-cycle))))))

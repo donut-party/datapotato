@@ -5,8 +5,8 @@
       {:exclude [(donut.datapotato.insert.next-jdbc-test/with-conn [conn])]}}}}
   (:require
    [clojure.test :refer [deftest is]]
-   [donut.datapotato.generate-test :as ddgt]
-   [donut.datapotato.insert.next-jdbc :as ddin]
+   [donut.datapotato.generate-test :as dgt]
+   [donut.datapotato.insert.next-jdbc :as din]
    [malli.generator :as mg]
    [next.jdbc :as jdbc]
    [next.jdbc.sql :as sql]))
@@ -16,7 +16,7 @@
    :connection-uri "jdbc:sqlite::memory:"})
 
 (def ID
-  [:and {:gen/gen ddgt/monotonic-id-gen} pos-int?])
+  [:and {:gen/gen dgt/monotonic-id-gen} pos-int?])
 
 (def User
   [:map
@@ -87,22 +87,22 @@
   [conn-name & body]
   `(with-open [~conn-name (jdbc/get-connection db-spec)]
      (create-tables ~conn-name)
-     (reset! ddgt/id-seq 0)
+     (reset! dgt/id-seq 0)
      ~@body))
 
 (deftest inserts-simple-generated-data
   (with-conn conn
-    (ddin/generate-insert {:schema   schema
-                           :generate {:generator mg/generate}
-                           :insert   {:get-insert-db (constantly conn)}}
-                          {:user [[2]]})
+    (din/generate-insert {:schema   schema
+                          :generate {:generator mg/generate}
+                          :insert   {:get-insert-db (constantly conn)}}
+                         {:user [[2]]})
     (is (= [#:users{:id 1 :username "Luigi"}
             #:users{:id 2 :username "Luigi"}]
            (sql/query conn ["SELECT * FROM users"])))))
 
 (deftest inserts-generated-data-hierarchy
   (with-conn conn
-    (ddin/generate-insert
+    (din/generate-insert
      {:schema   schema
       :generate {:generator mg/generate}
       :insert   {:get-insert-db (constantly conn)

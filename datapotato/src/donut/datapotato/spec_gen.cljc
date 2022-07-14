@@ -2,16 +2,16 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
             [clojure.data :as data]
-            [donut.datapotato.core :as dd]))
+            [donut.datapotato.core :as dc]))
 
 (def spec-gen-visit-key :spec-gen)
 
-(s/def ::ent-attrs (s/map-of ::dd/ent-attr ::dd/any))
+(s/def ::ent-attrs (s/map-of ::dc/ent-attr ::dc/any))
 
 (defn omit-relation?
   [db ent-name visit-key]
-  (let [{{ref visit-key} :refs} (dd/query-opts db ent-name)]
-    (dd/omit? ref)))
+  (let [{{ref visit-key} :refs} (dc/query-opts db ent-name)]
+    (dc/omit? ref)))
 
 (defn reset-relations
   "The generated data will generate values agnostic of any constraints that may
@@ -20,7 +20,7 @@
   Next, it will remove any dummy ID's generated for an `:omit` relation. The
   updated ent-data map will be returned."
   [db ent-name ent-data]
-  (let [coll-attrs (dd/relation-attrs-with-constraint db ent-name :coll)]
+  (let [coll-attrs (dc/relation-attrs-with-constraint db ent-name :coll)]
     (into {}
           (comp (map (fn [[k v]] (if (coll-attrs k) [k []] [k v])))
                 (map (fn [[k v]] (if-not (omit-relation? db ent-name k) [k v]))))
@@ -29,7 +29,7 @@
 (defn spec-gen-generate-ent-val
   "First pass function, uses spec to generate a val for every entity"
   [db {:keys [ent-name]}]
-  (let [{:keys [spec]} (dd/ent-schema db ent-name)]
+  (let [{:keys [spec]} (dc/ent-schema db ent-name)]
     (->> (gen/generate (s/gen spec))
          (reset-relations db ent-name))))
 
@@ -44,15 +44,15 @@
 (defn spec-gen-assoc-relations
   "Next, look up referenced attributes and assign them"
   [db {:keys [ent-name visit-key visit-val]}]
-  (let [{:keys [constraints]} (dd/ent-schema db ent-name)
+  (let [{:keys [constraints]} (dc/ent-schema db ent-name)
         skip-keys             (:overwritten (meta visit-val))]
-    (->> (dd/referenced-ent-attrs db ent-name)
+    (->> (dc/referenced-ent-attrs db ent-name)
          (filter (comp (complement skip-keys) second))
          (reduce (fn [ent-data [referenced-ent relation-attr]]
                    (assoc-relation ent-data
                                    relation-attr
-                                   (get-in (dd/ent-attr db referenced-ent visit-key)
-                                           (:path (dd/query-relation db ent-name relation-attr)))
+                                   (get-in (dc/ent-attr db referenced-ent visit-key)
+                                           (:path (dc/query-relation db ent-name relation-attr)))
                                    constraints))
                  visit-val))))
 
@@ -80,12 +80,12 @@
   "Convenience function to build a new db using the spec-gen mapper
   and the default attr-key"
   [db query]
-  (-> (dd/add-ents db query)
-      (dd/visit-ents-once spec-gen-visit-key spec-gen)))
+  (-> (dc/add-ents db query)
+      (dc/visit-ents-once spec-gen-visit-key spec-gen)))
 
 (defn ent-db-spec-gen-attr
   "Convenience function to return a map of `{ent-name gen-data}` using
   the db returned by `ent-db-spec-gen`"
   [db query]
   (-> (ent-db-spec-gen db query)
-      (dd/attr-map spec-gen-visit-key)))
+      (dc/attr-map spec-gen-visit-key)))

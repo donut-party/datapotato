@@ -1,6 +1,6 @@
 (ns donut.datapotato.insert.next-jdbc
   (:require
-   [donut.datapotato.core :as dd]
+   [donut.datapotato.core :as dc]
    [next.jdbc.sql :as jsql]))
 
 (def visit-key :insert)
@@ -21,7 +21,7 @@
         get-inserted                         (or get-inserted (fn [{:keys [insert-result]}]
                                                                 insert-result))
         db                                   (get-insert-db)
-        table-name                           (get-in (dd/ent-schema ent-db ent-name) [visit-key :table-name])]
+        table-name                           (get-in (dc/ent-schema ent-db ent-name) [visit-key :table-name])]
 
     (when-not db
       (throw (ex-info "get-insert-db did not return db" {:db db})))
@@ -36,15 +36,15 @@
                      :insert-result insert-result}))))
 
 (def insert-generated
-  (dd/wrap-incremental-insert-visiting-fn :generate perform-insert))
+  (dc/wrap-incremental-insert-visiting-fn :generate perform-insert))
 
 (defn insert [ent-db]
   (-> ent-db
-      (dd/visit-ents-once visit-key insert-generated)
-      (dd/attr-map visit-key)))
+      (dc/visit-ents-once visit-key insert-generated)
+      (dc/attr-map visit-key)))
 
 (defn generate-insert
   [ent-db query]
   (-> ent-db
-      (dd/generate query)
+      (dc/generate query)
       (insert)))
