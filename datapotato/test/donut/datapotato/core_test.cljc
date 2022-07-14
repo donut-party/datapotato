@@ -746,7 +746,7 @@
                                             dc/assoc-referenced-vals])
                  (dc/attr-map :test)))))))
 
-(deftest test-wrap-gen-data-visiting-fn
+(deftest test-wrap-generate-visiting-fn
   (let [gen-id (dc/wrap-generate-visiting-fn
                 (fn [_db {:keys [ent-name] :as v}]
                   {:id (str ent-name "-id")}))]
@@ -763,7 +763,7 @@
                (dc/visit-ents-once :test gen-id)
                (dc/attr-map :test))))))
 
-(deftest test-wrap-gen-data-visiting-fn-overwrites
+(deftest test-wrap-generate-visiting-fn-overwrites
   (let [gen-id      (dc/wrap-generate-visiting-fn
                      (fn [_db {:keys [ent-name] :as v}]
                        {:id (str ent-name "-id")}))
