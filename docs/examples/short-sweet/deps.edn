@@ -1,3 +1,4 @@
-{:deps {org.clojure/clojure        {:mvn/version "1.10.0"}
-        club.donutpower/datapotato {:mvn/version "2.0.0"}
-        org.clojure/test.check     {:mvn/version "0.9.0"}}}
+{:paths ["."]
+ :deps  {org.clojure/clojure        {:mvn/version "1.10.0"}
+         club.donutpower/datapotato {:local/root "../../../datapotato"}
+         org.clojure/test.check     {:mvn/version "0.9.0"}}}

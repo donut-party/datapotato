@@ -243,7 +243,11 @@
 
 (defn query-opts
   [{:keys [data]} ent-name]
-  (second (lat/attr data ent-name :query-term)))
+  (let [query-term      (lat/attr data ent-name :query-term)
+        query-term-type (first (s/conform ::query-term query-term))]
+    (case query-term-type
+      :query-term.orig (second query-term)
+      :query-term.new  query-term)))
 
 (defn relation-graph
   "A graph of the type dependencies in a schema. If entities of type

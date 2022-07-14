@@ -29,21 +29,19 @@ club.donutpower/datapotato {:mvn/version "0.0.0.337"}
 Datapotato lets you write test fixtures that are clear, concise, and easy to
 maintain. It's great for dramatically reducing test boilerplate.
 
-Say you want to test a scenario where a forum post has gotten three
-likes by three different users. You'd first have to create a hierarchy
-of records for the post, topic, topic category, and users. You have to
-make sure that all the foreign keys are correct (e.g. the post's
-`:topic-id` is set to the topic's `:id`) and that everything is inserted
-in the right order.
+Say you want to test a scenario where a forum post has gotten three likes by
+three different users. You'd first have to create a hierarchy of records for the
+post, topic, topic category, and users. You have to make sure that all the
+foreign keys are correct (e.g. the post's `:topic-id` is set to the topic's
+`:id`) and that everything is inserted in the right order.
 
 With Datapotato, all you have to do is **write code like this**:
 
 ```clojure
-(insert {:like [[3]]})
+(insert {:like [{:num 3}]})
 ```
 
-and **these records get inserted** in a database (in the order
-displayed):
+and **these records get inserted** in a database (in the order displayed):
 
 ```clojure
 [[:user {:id 1 :username "T2TD3pAB79X5"}]
@@ -61,10 +59,10 @@ displayed):
  [:like {:id 21 :post-id 10 :created-by-id 20}]]
 ```
 
-If you like tools that help you write code that's **clear**,
-**concise**, and **easy to maintain**, then [check out the
-tutorial](https://sweet-tooth.gitbook.io/datapotato/tutorial) and
-learn how to use Datapotato :)
+If you like tools that help you write code that's **clear**, **concise**, and
+**easy to maintain**, then [check out the
+tutorial](https://sweet-tooth.gitbook.io/datapotato/tutorial) and learn how to
+use Datapotato :)
 
 ## Short Sweet Example
 

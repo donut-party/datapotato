@@ -6,8 +6,8 @@
    [clojure.spec.gen.alpha :as sg]
    #?(:clj [clojure.template :as ct])
    [clojure.test.check.generators :as gen :include-macros true]
-   #?(:clj [clojure.test :refer [deftest is are use-fixtures testing]]
-      :cljs [cljs.test :include-macros true :refer [deftest is are use-fixtures testing]])
+   #?(:clj [clojure.test :refer [deftest is use-fixtures testing]]
+      :cljs [cljs.test :include-macros true :refer [deftest is use-fixtures testing]])
    [donut.datapotato.core :as dc]
    #?@(:bb []
        :default [[malli.generator :as mg]])
