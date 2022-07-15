@@ -93,12 +93,13 @@
                                                                    "  WHERE rowid = ?")
                                                               (-> insert-result vals first)])))
               :perform-insert din/perform-insert
-              :get-connection (fn [] din/*connection*)}})
+              :get-connection (fn [] din/*connection*)
+              :setup          (fn [connection]
+                                (create-tables connection)
+                                (reset! dgt/id-seq 0))}})
 
 (deftest inserts-simple-generated-data
   (din/with-db ent-db
-    (create-tables din/*connection*)
-    (reset! dgt/id-seq 0)
     (dc/insert ent-db {:user [[2]]})
     (is (= [#:users{:id 1 :username "Luigi"}
             #:users{:id 2 :username "Luigi"}]
@@ -106,8 +107,6 @@
 
 (deftest inserts-generated-data-hierarchy
   (din/with-db ent-db
-    (create-tables din/*connection*)
-    (reset! dgt/id-seq 0)
     (dc/insert ent-db {:todo [[2]]})
     (is (= [#:users{:id 1 :username "Luigi"}]
            (sql/query din/*connection* ["SELECT * FROM users"])))

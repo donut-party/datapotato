@@ -32,5 +32,8 @@
      (with-open [conn# (or (get-in ent-db# [:insert :connection])
                            (jdbc/get-connection (get-in ent-db# [:insert :db-spec])))]
        (binding [*connection* conn#]
-         (when-let [setup# (get-in ent-db# [:insert :setup])])
-         ~@body))))
+         (when-let [setup# (get-in ent-db# [:insert :setup])]
+           (setup# conn#))
+         (try ~@body
+              (finally (when-let [teardown# (get-in ent-db# [:insert :teardown])]
+                         (teardown# conn#))))))))
