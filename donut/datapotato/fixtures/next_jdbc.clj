@@ -13,8 +13,7 @@
 (defmethod get-inserted
   "sqlite"
   [{:keys [connection table-name insert-result]}]
-  (first (sql/query connection [(str "SELECT * FROM " table-name
-                                     "  WHERE rowid = ?")
+  (first (sql/query connection [(str "SELECT * FROM " table-name "  WHERE rowid = ?")
                                 (-> insert-result vals first)])))
 
 (defn perform-insert
