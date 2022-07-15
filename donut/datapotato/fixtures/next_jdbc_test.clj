@@ -1,13 +1,9 @@
-(ns donut.datapotato.insert.next-jdbc-test
-  {:clj-kondo/config
-   '{:linters
-     {:unresolved-symbol
-      {:exclude [(donut.datapotato.insert.next-jdbc-test/with-conn [conn])]}}}}
+(ns donut.datapotato.fixtures.next-jdbc-test
   (:require
    [clojure.test :refer [deftest is]]
    [donut.datapotato.core :as dc]
    [donut.datapotato.generate-test :as dgt]
-   [donut.datapotato.insert.next-jdbc :as din]
+   [donut.datapotato.fixtures.next-jdbc :as din]
    [malli.generator :as mg]
    [next.jdbc :as jdbc]
    [next.jdbc.sql :as sql]))
@@ -42,16 +38,16 @@
 (def schema
   {:user      {:prefix   :u
                :generate {:schema User}
-               :insert   {:table-name "users"}}
+               :fixtures {:table-name "users"}}
    :todo      {:generate  {:overwrites {:todos/todo_title "write unit tests"}
                            :schema     Todo}
-               :insert    {:table-name "todos"}
+               :fixtures  {:table-name "todos"}
                :relations {:todos/created_by_id [:user :users/id]
                            :todos/updated_by_id [:user :users/id]
                            :todos/todo_list_id  [:todo-list :todo_lists/id]}
                :prefix    :t}
    :todo-list {:generate  {:schema TodoList}
-               :insert    {:table-name "todo_lists"}
+               :fixtures  {:table-name "todo_lists"}
                :relations {:todo_lists/created_by_id [:user :users/id]
                            :todo_lists/updated_by_id [:user :users/id]}
                :prefix    :tl}})
@@ -87,11 +83,7 @@
 (def ent-db
   {:schema   schema
    :generate {:generator mg/generate}
-   :insert   {:db-spec        db-spec
-              :get-inserted   (fn [{:keys [connection table-name insert-result]}]
-                                (first (sql/query connection [(str "SELECT * FROM " table-name
-                                                                   "  WHERE rowid = ?")
-                                                              (-> insert-result vals first)])))
+   :fixtures {:connectable    db-spec
               :perform-insert din/perform-insert
               :get-connection (fn [] din/*connection*)
               :setup          (fn [connection]
@@ -99,15 +91,15 @@
                                 (reset! dgt/id-seq 0))}})
 
 (deftest inserts-simple-generated-data
-  (din/with-db ent-db
-    (dc/insert ent-db {:user [[2]]})
+  (din/with-fixtures ent-db
+    (dc/insert-fixtures ent-db {:user [{:num 2}]})
     (is (= [#:users{:id 1 :username "Luigi"}
             #:users{:id 2 :username "Luigi"}]
            (sql/query din/*connection* ["SELECT * FROM users"])))))
 
 (deftest inserts-generated-data-hierarchy
-  (din/with-db ent-db
-    (dc/insert ent-db {:todo [[2]]})
+  (din/with-fixtures ent-db
+    (dc/insert-fixtures ent-db {:todo [{:num 2}]})
     (is (= [#:users{:id 1 :username "Luigi"}]
            (sql/query din/*connection* ["SELECT * FROM users"])))
 

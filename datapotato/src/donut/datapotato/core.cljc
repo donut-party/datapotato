@@ -1022,10 +1022,10 @@
       (attr-map generate-visit-key)))
 
 ;;---
-;; inserting
+;; fixtures
 ;;---
 
-(def ^:const insert-visit-key :insert)
+(def ^:const fixtures-visit-key :fixtures)
 
 (defn wrap-incremental-insert-visiting-fn
   "Takes generated data stored as an attributed under `source-key` and inserts it
@@ -1042,19 +1042,19 @@
              assoc-referenced-vals
              inserting-visiting-fn])))
 
-(defn insert*
-  [{{:keys [perform-insert]} insert-visit-key
-    :as ent-db}]
-  (let [connection (or (get-in ent-db [:insert :connection])
-                       ((get-in ent-db [:insert :get-connection])))]
-    (visit-ents-once (assoc-in ent-db [:insert :connection] connection)
-                     insert-visit-key
+(defn insert-fixtures*
+  [{{:keys [perform-insert]} fixtures-visit-key
+    :as                      ent-db}]
+  (let [connection (or (get-in ent-db [fixtures-visit-key :connection])
+                       ((get-in ent-db [fixtures-visit-key :get-connection])))]
+    (visit-ents-once (assoc-in ent-db [fixtures-visit-key :connection] connection)
+                     fixtures-visit-key
                      (wrap-incremental-insert-visiting-fn generate-visit-key perform-insert))))
 
-(defn insert
+(defn insert-fixtures
   [ent-db query]
   (-> ent-db
       (add-ents query)
       generate*
-      insert*
-      (attr-map insert-visit-key)))
+      insert-fixtures*
+      (attr-map fixtures-visit-key)))
