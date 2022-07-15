@@ -5,6 +5,7 @@
       {:exclude [(donut.datapotato.insert.next-jdbc-test/with-conn [conn])]}}}}
   (:require
    [clojure.test :refer [deftest is]]
+   [donut.datapotato.core :as dc]
    [donut.datapotato.generate-test :as dgt]
    [donut.datapotato.insert.next-jdbc :as din]
    [malli.generator :as mg]
@@ -90,28 +91,27 @@
      (reset! dgt/id-seq 0)
      ~@body))
 
+(defn ent-db
+  [conn]
+  {:schema   schema
+   :generate {:generator mg/generate}
+   :insert   {:get-conn       (constantly conn)
+              :get-inserted   (fn [{:keys [conn table-name insert-result]}]
+                                (first (sql/query conn [(str "SELECT * FROM " table-name
+                                                             "  WHERE rowid = ?")
+                                                        (-> insert-result vals first)])))
+              :perform-insert din/perform-insert}})
+
 (deftest inserts-simple-generated-data
   (with-conn conn
-    (din/generate-insert {:schema   schema
-                          :generate {:generator mg/generate}
-                          :insert   {:get-insert-db (constantly conn)}}
-                         {:user [[2]]})
+    (dc/insert (ent-db conn) {:user [[2]]})
     (is (= [#:users{:id 1 :username "Luigi"}
             #:users{:id 2 :username "Luigi"}]
            (sql/query conn ["SELECT * FROM users"])))))
 
 (deftest inserts-generated-data-hierarchy
   (with-conn conn
-    (din/generate-insert
-     {:schema   schema
-      :generate {:generator mg/generate}
-      :insert   {:get-insert-db (constantly conn)
-                 :get-inserted  (fn [{:keys [db table-name insert-result]}]
-                                  (first (sql/query db [(str "SELECT * FROM " table-name
-                                                             "  WHERE rowid = ?")
-                                                        (-> insert-result vals first)])))}}
-     {:todo [[2]]})
-
+    (dc/insert (ent-db conn) {:todo [[2]]})
     (is (= [#:users{:id 1 :username "Luigi"}]
            (sql/query conn ["SELECT * FROM users"])))
 

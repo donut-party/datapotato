@@ -3,48 +3,24 @@
    [donut.datapotato.core :as dc]
    [next.jdbc.sql :as jsql]))
 
-(def visit-key :insert)
-
-(defn un-ns-keywords
-  [m]
-  (reduce-kv (fn [m k v]
-               (assoc m
-                      (-> k name keyword)
-                      v))
-             {}
-             m))
-
 (defn perform-insert
   [{:keys [insert] :as ent-db}
    {:keys [ent-name ent-type visit-val]}]
-  (let [{:keys [get-insert-db get-inserted]} insert
-        get-inserted                         (or get-inserted (fn [{:keys [insert-result]}]
-                                                                insert-result))
-        db                                   (get-insert-db)
-        table-name                           (get-in (dc/ent-schema ent-db ent-name) [visit-key :table-name])]
+  (let [{:keys [get-conn get-inserted]} insert
+        get-inserted                    (or get-inserted (fn [{:keys [insert-result]}]
+                                                           insert-result))
+        conn                            (get-conn)
+        table-name                      (get-in (dc/ent-schema ent-db ent-name)
+                                                [dc/insert-visit-key :table-name])]
 
-    (when-not db
-      (throw (ex-info "get-insert-db did not return db" {:db db})))
+    (when-not conn
+      (throw (ex-info "db-conn did not return a connection" {:conn conn})))
 
     (when-not table-name
       (throw (ex-info "no table name provided" {:ent-name ent-name
                                                 :ent-type ent-type})))
 
-    (let [insert-result (jsql/insert! db table-name visit-val)]
-      (get-inserted {:db            db
+    (let [insert-result (jsql/insert! conn table-name visit-val)]
+      (get-inserted {:conn          conn
                      :table-name    table-name
                      :insert-result insert-result}))))
-
-(def insert-generated
-  (dc/wrap-incremental-insert-visiting-fn :generate perform-insert))
-
-(defn insert [ent-db]
-  (-> ent-db
-      (dc/visit-ents-once visit-key insert-generated)
-      (dc/attr-map visit-key)))
-
-(defn generate-insert
-  [ent-db query]
-  (-> ent-db
-      (dc/generate query)
-      (insert)))

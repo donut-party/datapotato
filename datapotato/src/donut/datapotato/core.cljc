@@ -1034,7 +1034,7 @@
   Respects overwrites and ensures that referenced vals are assoc'd in before
   inserting. Useful when dealing with db-generated ids."
   [source-key inserting-visiting-fn]
-  (fn [ent-db opts]
+  (fn incremental-insert-visiting-fn [ent-db opts]
     (reduce (fn [visit-val visiting-fn]
               (visiting-fn ent-db (assoc opts :visit-val visit-val)))
             (source-key opts)
@@ -1043,7 +1043,7 @@
              inserting-visiting-fn])))
 
 (defn insert*
-  [{{:keys [perform-insert]} :insert-generated
+  [{{:keys [perform-insert]} insert-visit-key
     :as ent-db}]
   (visit-ents-once ent-db
                    insert-visit-key
