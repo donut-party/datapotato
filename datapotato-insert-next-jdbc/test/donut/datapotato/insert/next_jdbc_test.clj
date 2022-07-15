@@ -95,11 +95,11 @@
   [conn]
   {:schema   schema
    :generate {:generator mg/generate}
-   :insert   {:get-conn       (constantly conn)
-              :get-inserted   (fn [{:keys [conn table-name insert-result]}]
-                                (first (sql/query conn [(str "SELECT * FROM " table-name
-                                                             "  WHERE rowid = ?")
-                                                        (-> insert-result vals first)])))
+   :insert   {:connectable    conn
+              :get-inserted   (fn [{:keys [connectable table-name insert-result]}]
+                                (first (sql/query connectable [(str "SELECT * FROM " table-name
+                                                                    "  WHERE rowid = ?")
+                                                               (-> insert-result vals first)])))
               :perform-insert din/perform-insert}})
 
 (deftest inserts-simple-generated-data
