@@ -237,7 +237,7 @@ under the key `schema-opts`.
 You specify ents to add to an _ent db_ using a _query_:
 
 ```clojure
-(sm/add-ents {:schema schema} {:like [{:num 3}})
+(dc/add-ents {:schema schema} {:like [{:num 3}})
 ```
 
 Above, `{:like [{:num 3}}` is a query meaning "Add 3 likes to the ent db, as
@@ -256,8 +256,8 @@ You can apply a function to each ent's graph node in topologically sorted
 placed before the `:post` in the sort.)
 
 ```clojure
-(-> (sm/add-ents {:schema good-schema} {:like [{:num 3}})
-    (sm/visit-ents :prn (fn [db {:keys [ent-name ent-type]}]
+(-> (dc/add-ents {:schema good-schema} {:like [{:num 3}})
+    (dc/visit-ents :prn (fn [db {:keys [ent-name ent-type]}]
                           (prn [ent-name ent-type]))))
 [:u1 :user]
 [:p0 :post]
@@ -268,7 +268,7 @@ placed before the `:post` in the sort.)
 [:l2 :like]
 ```
 
-In the example above, `sm/visit-ents` is used to apply an anonymous function to
+In the example above, `dc/visit-ents` is used to apply an anonymous function to
 every ent, printing the ent's name and type. The `:prn` key is called the _visit
 key_. The return value of the visiting function is associated with each ent node
 using the visit key.

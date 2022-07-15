@@ -932,3 +932,13 @@
                            :cljs js/Object)
                         #"Query-relations for unary attrs must be a keyword"
                         (dc/add-ents {:schema td/schema} {:attachment [[:_ {:refs {:todo-id [:t0 :t1]}}]]}))))
+
+;; -----------------
+;; new syntax
+;; -----------------
+
+(deftest new-syntax-ent-name
+  (is (= #{:bill}
+         (-> (dc/add-ents {:schema td/schema} {:user [{:num      1
+                                                       :ent-name :bill}]})
+             (dc/ents)))))

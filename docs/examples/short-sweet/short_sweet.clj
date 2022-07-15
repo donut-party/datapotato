@@ -80,6 +80,8 @@
 
 ;; Return a map of user entities and their spec-generated data
 (dc/generate-attr-map ent-db {:user [{:num 3}]})
+(dc/generate-attr-map ent-db [{:type :user
+                               :num  3}])
 
 ;; You can specify a username and id
 (dc/generate-attr-map ent-db {:user [{:num      1

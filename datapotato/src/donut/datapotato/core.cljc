@@ -208,7 +208,7 @@
   (s/map-of ::ent-type (s/coll-of ::query-term)))
 
 ;; db specs
-(s/def ::db
+(s/def ::ent-db
   (s/keys :req-un [::schema]))
 
 
@@ -226,8 +226,8 @@
 
 (defn relation-attrs-with-constraint
   "Given an ent name, return all relation attributes which include the constraint."
-  [db ent-name _constraint]
-  (->> (ent-schema db ent-name)
+  [ent-db ent-name _constraint]
+  (->> (ent-schema ent-db ent-name)
        :constraints
        (medley/filter-vals (fn [attr-constraints] (contains? attr-constraints :coll)))
        keys
@@ -312,29 +312,29 @@
 ;; related ents
 ;; -----------------
 (defn ent-relation-constraints
-  [db ent relation-attr]
-  (-> db
+  [ent-db ent relation-attr]
+  (-> ent-db
       (ent-schema ent)
       (get-in [:constraints relation-attr])))
 
 (defn coll-relation-attr?
   "Given a db, ent, and relation-attr, determines whether the relation is
   a coll attr."
-  [db ent relation-attr]
-  (contains? (ent-relation-constraints db ent relation-attr) :coll))
+  [ent-db ent relation-attr]
+  (contains? (ent-relation-constraints ent-db ent relation-attr) :coll))
 
 (s/fdef coll-relation-attr?
-  :args (s/cat :db ::db :ent-name ::ent-name :ent-attr ::ent-attr)
+  :args (s/cat :ent-db ::ent-db :ent-name ::ent-name :ent-attr ::ent-attr)
   :ret boolean?)
 
 (defn uniq-relation-attr?
   "Given a db, ent, and relation-attr, determines whether the relation is
   a uniq attr."
-  [db ent relation-attr]
-  (contains? (ent-relation-constraints db ent relation-attr) :uniq))
+  [ent-db ent relation-attr]
+  (contains? (ent-relation-constraints ent-db ent relation-attr) :uniq))
 
 (s/fdef uniq-relation-attr?
-  :args (s/cat :db ::db :ent-name ::ent-name :ent-attr ::ent-attr)
+  :args (s/cat :ent-db ::ent-db :ent-name ::ent-name :ent-attr ::ent-attr)
   :ret boolean?)
 
 (defn add-edge-with-id
@@ -390,8 +390,8 @@
   "Check that the refs value supplied in a query is a collection if the
   relation type is collection, or a keyword if the relation type is
   unary. If the reference is omit, no further validation is required."
-  [db ent-name relation-attr query-term]
-  (let [coll-attr?                      (coll-relation-attr? db ent-name relation-attr)
+  [ent-db ent-name relation-attr query-term]
+  (let [coll-attr?                      (coll-relation-attr? ent-db ent-name relation-attr)
         {:keys [qr-constraint qr-term]} (conformed-query-opts query-term relation-attr)]
     (cond (or (nil? qr-constraint) (= :omit qr-constraint)) nil ;; noop
 
@@ -405,10 +405,10 @@
 
 (defn related-ents
   "Returns all related ents for an ent's relation-attr"
-  [{:keys [schema data] :as db} ent-name relation-attr related-ent-type query-term]
+  [{:keys [schema data] :as ent-db} ent-name relation-attr related-ent-type query-term]
   (let [{:keys [qr-constraint qr-type qr-term bind]} (conformed-query-opts query-term relation-attr)]
 
-    (validate-related-ents-query db ent-name relation-attr query-term)
+    (validate-related-ents-query ent-db ent-name relation-attr query-term)
 
     (b/cond (= qr-constraint :omit) []
             (= qr-type :num)  (mapv (partial numeric-node-name schema related-ent-type) (range qr-term))
@@ -417,22 +417,22 @@
             :let [bn (get bind related-ent-type)]
             bn   [bn]
 
-            :let [has-bound-descendants? (bound-descendants? db bind related-ent-type)
-                  uniq?                  (uniq-relation-attr? db ent-name relation-attr)
+            :let [has-bound-descendants? (bound-descendants? ent-db bind related-ent-type)
+                  uniq?                  (uniq-relation-attr? ent-db ent-name relation-attr)
                   ent-index              (lat/attr data ent-name :index)]
-            (and has-bound-descendants? uniq?) [(bound-relation-attr-name db ent-name related-ent-type ent-index)]
-            has-bound-descendants?             [(bound-relation-attr-name db ent-name related-ent-type 0)]
+            (and has-bound-descendants? uniq?) [(bound-relation-attr-name ent-db ent-name related-ent-type ent-index)]
+            has-bound-descendants?             [(bound-relation-attr-name ent-db ent-name related-ent-type 0)]
             uniq?                              [(numeric-node-name schema related-ent-type ent-index)]
-            related-ent-type                   [(default-node-name db related-ent-type)]
+            related-ent-type                   [(default-node-name ent-db related-ent-type)]
             :else                              [])))
 
 (defn query-relation
   "Returns the conformed relation for an ent's relation-attr. Handles
   polymorphic relations."
-  [db ent-name relation-attr]
-  (let [{:keys [relations ref-types]} (ent-schema db ent-name)
+  [ent-db ent-name relation-attr]
+  (let [{:keys [relations ref-types]} (ent-schema ent-db ent-name)
         [relation-type relation]      (s/conform ::relation (relation-attr relations))
-        ent-query-opts                (query-opts db ent-name)]
+        ent-query-opts                (query-opts ent-db ent-name)]
     (case relation-type
       :monotype-relation    relation
       :polymorphic-relation (let [polymorphic-type-choice (or (get-in ent-query-opts [:ref-types relation-attr])
@@ -448,12 +448,12 @@
                               polymorphic-relation))))
 
 (s/fdef query-relation
-  :args (s/cat :db ::db :ent-name ::ent-name :relation-attr ::ent-attr)
+  :args (s/cat :ent-db ::ent-db :ent-name ::ent-name :relation-attr ::ent-attr)
   :ret ::conformed-relation)
 
 (defn add-related-ents
-  [{:keys [data] :as db} ent-name ent-type query-term]
-  (let [relation-schema (:relations (ent-schema db ent-name))]
+  [ent-db ent-name query-term]
+  (let [relation-schema (:relations (ent-schema ent-db ent-name))]
     (reduce (fn [db relation-attr]
               (let [related-ent-type (:ent-type (query-relation db ent-name relation-attr))]
                 (reduce (fn [db related-ent]
@@ -466,14 +466,14 @@
                               (update :data add-edge-with-id ent-name related-ent relation-attr)))
                         db
                         (related-ents db ent-name relation-attr related-ent-type query-term))))
-            db
+            ent-db
             (keys relation-schema))))
 
 (defn add-ent
   "Add an ent, and its related ents, to the ent-db"
-  [{:keys [data] :as db} ent-name ent-type query-term]
+  [{:keys [data] :as ent-db} ent-name ent-type query-term]
   ;; don't try to add an ent if it's already been added
-  (let [ent-name  (if (= ent-name :_) (incrementing-node-name db ent-type) ent-name)]
+  (let [ent-name  (if (= ent-name :_) (incrementing-node-name ent-db ent-type) ent-name)]
     ;; check both that the node exists and that it has the type
     ;; attribute: it's possible for the node to be added as an edge in
     ;; `add-related-ents`, without all the additional attributes below
@@ -482,8 +482,8 @@
     ;; this prevents the attributes added below from being overwritten
     (if (and ((lg/nodes data) ent-name)
              (lat/attr data ent-name :type))
-      db
-      (-> db
+      ent-db
+      (-> ent-db
           (update :data (fn [data]
                           (-> data
                               (lg/add-edges [ent-type ent-name])
@@ -492,12 +492,12 @@
                               (lat/add-attr ent-name :index (ent-index data ent-type))
                               (lat/add-attr ent-name :ent-type ent-type)
                               (lat/add-attr ent-name :query-term query-term))))
-          (add-related-ents ent-name ent-type query-term)))))
+          (add-related-ents ent-name query-term)))))
 
 (defn add-n-ents
   "Used when a query is something like [3]"
-  [db ent-type num-ents query-term]
-  (loop [db db
+  [ent-db ent-type num-ents query-term]
+  (loop [db ent-db
          n  num-ents]
     (if (zero? n)
       db
@@ -533,7 +533,7 @@
           :query-term.new  (conform-query-term-new conformed-query-term))]
     (when (and (> num 1)
                (not= :_ ent-name))
-      (throw (ex-info "You can't specify both :ent-name and :num in a query term" {:query-term query-term})))
+      (throw (ex-info "You can't specify both :ent-name and a :num > 1 in a query term" {:query-term query-term})))
 
     query-opts))
 
@@ -541,7 +541,7 @@
   "A query is composed of ent-type-queries, where each ent-type-query
   specifies the ents that should be created for that type. This
   function adds the ents for an ent-type-query."
-  [db ent-type-query ent-type]
+  [ent-db ent-type-query ent-type]
   (reduce (fn [db query-term]
             ;; top-level meta is used to track which ents are
             ;; specified explicitly in a query
@@ -551,7 +551,7 @@
               (if (> num 1)
                 (add-n-ents db ent-type num query-term)
                 (add-ent db ent-name ent-type query-term))))
-          db
+          ent-db
           ent-type-query))
 
 (defn add-ref-ents
@@ -560,19 +560,19 @@
   ents which are automatically generated in order to satisfy
   relations. This function adds those ref ents if an ent of the same
   name doesn't exist already."
-  [db]
-  (loop [{:keys [ref-ents] :as db} db]
+  [ent-db]
+  (loop [{:keys [ref-ents] :as ent-db} ent-db]
     (if (empty? ref-ents)
-      db
+      ent-db
       (recur (reduce (fn [db [ent-name ent-type query-term]]
                        (add-ent db ent-name ent-type query-term))
-                     (assoc db :ref-ents [])
+                     (assoc ent-db :ref-ents [])
                      ref-ents)))))
 
 (defn init-db
-  [{:keys [schema] :as db} query]
+  [{:keys [schema] :as ent-db} query]
   (let [rg (relation-graph schema)]
-    (-> db
+    (-> ent-db
         (update :data #(or % (lg/digraph)))
         (update :queries conj query)
         (assoc :relation-graph rg
@@ -624,7 +624,7 @@
 (defn add-ents
   "Produce a new db with an ent graph that contains all ents specified
   by query"
-  [{:keys [schema] :as db} query]
+  [{:keys [schema] :as ent-db} query]
   ;; validations
   (let [isr (invalid-schema-relations schema)]
     (assert (empty? isr)
@@ -642,17 +642,17 @@
     (assert (empty? diff)
             (str "The following ent types are in your query but aren't defined in your schema: " diff)))
 
-  (throw-invalid-spec "db" ::db db)
+  (throw-invalid-spec "db" ::ent-db ent-db)
   (throw-invalid-spec "query" ::query query)
   ;; end validations
 
-  (let [db (init-db db query)]
+  (let [ent-db (init-db ent-db query)]
     (->> (reduce (fn [db ent-type]
                    (if-let [ent-type-query (ent-type query)]
                      (add-ent-type-query db ent-type-query ent-type)
                      db))
-                 db
-                 (:types db))
+                 ent-db
+                 (:types ent-db))
          (add-ref-ents))))
 
 ;; -----------------
@@ -672,26 +672,26 @@
 
 (defn ent-related-by-attr?
   "Is ent A related to ent B by the given relation-attr?"
-  [db ent-name related-ent relation-attr]
-  (and (contains? (relation-attrs db ent-name related-ent) relation-attr)
+  [ent-db ent-name related-ent relation-attr]
+  (and (contains? (relation-attrs ent-db ent-name related-ent) relation-attr)
        related-ent))
 
 (defn related-ents-by-attr
   "All ents related to ent via relation-attr"
-  [{:keys [data] :as db} ent-name relation-attr]
+  [{:keys [data] :as ent-db} ent-name relation-attr]
   (let [related-ents (lg/successors data ent-name)]
-    (if (coll-relation-attr? db ent-name relation-attr)
+    (if (coll-relation-attr? ent-db ent-name relation-attr)
       (->> related-ents
-           (map #(ent-related-by-attr? db ent-name % relation-attr))
+           (map #(ent-related-by-attr? ent-db ent-name % relation-attr))
            (filter identity))
-      (some #(ent-related-by-attr? db ent-name % relation-attr)
+      (some #(ent-related-by-attr? ent-db ent-name % relation-attr)
             related-ents))))
 
 (defn referenced-ent-attrs
   "seq of [referenced-ent relation-attr]"
-  [{:keys [data] :as db} ent-name]
+  [{:keys [data] :as ent-db} ent-name]
   (for [referenced-ent (sort-by #(lat/attr data % :index) (lg/successors data ent-name))
-        relation-attr  (relation-attrs db ent-name referenced-ent)]
+        relation-attr  (relation-attrs ent-db ent-name referenced-ent)]
     [referenced-ent relation-attr]))
 
 #?(:bb
@@ -731,8 +731,8 @@
 (defn prune-required
   "Updates ent graph, removing edges going from a 'required' ent to the
   'requiring' ent, thus eliminating cycles."
-  [{:keys [data] :as db} required-attrs]
-  (assoc db :data
+  [{:keys [data] :as ent-db} required-attrs]
+  (assoc ent-db :data
          (reduce-kv (fn [g ent-type attrs]
                       (reduce (fn [g requiring-ent]
                                 (reduce (fn [g required-ent]
@@ -747,59 +747,59 @@
                     required-attrs)))
 
 (defn sort-by-required
-  [db]
-  (topsort-ents (prune-required db (required-attrs db))))
+  [ent-db]
+  (topsort-ents (prune-required ent-db (required-attrs ent-db))))
 
 (defn sort-ents
   "Attempts to topsort ents. If that's not possible (cycles present),
   uses `sort-by-required` to resolve ordering of ents in cycle"
-  [db]
-  (let [sorted (or (seq (topsort-ents db))
-                   (sort-by-required db))]
-    (when (and (empty? sorted) (not-empty (ents db)))
+  [ent-db]
+  (let [sorted (or (seq (topsort-ents ent-db))
+                   (sort-by-required ent-db))]
+    (when (and (empty? sorted) (not-empty (ents ent-db)))
       (throw (ex-info "Can't sort ents: check for cycles in ent type relations. If a cycle is present, use the :required constraint to indicate ordering."
                       {})))
     sorted))
 
 (defn visit-fn-data
   "When a visit fn is called, it's passed this map as its second argument"
-  [db ent visit-key]
-  (let [attrs  (ent-attrs db ent)
-        q-opts (query-opts db ent)
+  [ent-db ent visit-key]
+  (let [attrs  (ent-attrs ent-db ent)
+        q-opts (query-opts ent-db ent)
         base   {:ent-name         ent
                 :attrs            attrs
                 :visit-val        (visit-key attrs)
                 :visit-key        visit-key
                 :query-opts       q-opts
                 :visit-query-opts (visit-key q-opts)
-                :schema-opts      (visit-key (ent-schema db ent))}]
+                :schema-opts      (visit-key (ent-schema ent-db ent))}]
     (merge attrs base)))
 
 (defn visit-ents
   "Perform `visit-fns` on ents, storing return value as a graph
   attribute under `visit-key`"
-  ([db visit-key visit-fns]
-   (visit-ents db visit-key visit-fns (sort-ents db)))
-  ([db visit-key visit-fns ents]
+  ([ent-db visit-key visit-fns]
+   (visit-ents ent-db visit-key visit-fns (sort-ents ent-db)))
+  ([ent-db visit-key visit-fns ents]
    (let [visit-fns (if (sequential? visit-fns) visit-fns [visit-fns])]
-     (reduce (fn [db [visit-fn ent]]
-               (update db :data lat/add-attr ent visit-key (visit-fn db (visit-fn-data db ent visit-key))))
-             db
+     (reduce (fn [ent-db [visit-fn ent]]
+               (update ent-db :data lat/add-attr ent visit-key (visit-fn ent-db (visit-fn-data ent-db ent visit-key))))
+             ent-db
              (for [visit-fn visit-fns ent ents] [visit-fn ent])))))
 
 (defn visit-ents-once
   "Like `visit-ents` but doesn't call `visit-fn` if the ent already
   has a `visit-key` attribute"
-  ([db visit-key visit-fns]
-   (visit-ents-once db visit-key visit-fns (sort-ents db)))
-  ([db visit-key visit-fns ents]
+  ([ent-db visit-key visit-fns]
+   (visit-ents-once ent-db visit-key visit-fns (sort-ents ent-db)))
+  ([ent-db visit-key visit-fns ents]
    (let [skip-ents (->> ents
                         (filter (fn [ent]
-                                  (let [ent-attrs (get-in db [:data :attrs ent])]
+                                  (let [ent-attrs (get-in ent-db [:data :attrs ent])]
                                     (contains? ent-attrs visit-key))))
                         (set))
          visit-fns (if (sequential? visit-fns) visit-fns [visit-fns])]
-     (visit-ents db
+     (visit-ents ent-db
                  visit-key
                  (mapv (fn [visit-fn]
                          (fn [db {:keys [ent-name visit-val] :as visit-data}]
@@ -820,8 +820,8 @@
 (defn attr-map
   "Produce a map where each key is a node and its value is a graph
   attr on that node"
-  ([db attr] (attr-map db attr (ents db)))
-  ([{:keys [data] :as _db} attr ents]
+  ([ent-db attr] (attr-map ent-db attr (ents ent-db)))
+  ([{:keys [data]} attr ents]
    (->> ents
         (reduce (fn [m ent] (assoc m ent (lat/attr data ent attr)))
                 {})
@@ -829,7 +829,7 @@
 
 (defn query-ents
   "Get seq of nodes that are explicitly defined in the query"
-  [{:keys [data] :as _db}]
+  [{:keys [data]}]
   (->> (:attrs data)
        (filter (fn [[_ent-name attrs]] (:top-level (meta (:query-term attrs)))))
        (map first)))
@@ -837,30 +837,30 @@
 (defn ents-by-type
   "Given a db, returns a map of ent-type to a set of entities of that
   type. Optionally pass in a seq of the ents that should be included."
-  ([db] (ents-by-type db (ents db)))
-  ([db ents]
+  ([ent-db] (ents-by-type ent-db (ents ent-db)))
+  ([ent-db ents]
    (reduce-kv (fn [m k v] (update m v (fnil conj #{}) k))
               {}
-              (select-keys (attr-map db :ent-type) ents))))
+              (select-keys (attr-map ent-db :ent-type) ents))))
 
 (s/fdef ents-by-type
-  :args (s/cat :db ::db :ent-names (s/? (s/coll-of ::ent-name)))
+  :args (s/cat :ent-db ::ent-db :ent-names (s/? (s/coll-of ::ent-name)))
   :ret (s/map-of ::ent-type (s/coll-of ::ent-name)))
 
 (defn ent-relations
   "Given a db and an ent, returns a map of relation attr to ent-name."
-  [db ent]
-  (let [relations (get-in db [:data :attrs ent :loom.attr/edge-attrs])]
+  [ent-db ent]
+  (let [relations (get-in ent-db [:data :attrs ent :loom.attr/edge-attrs])]
     (apply merge-with
            set/union
            {}
            (for [[ref-ent {:keys [relation-attrs]}] relations
                  relation-attr relation-attrs]
-             {relation-attr (if (coll-relation-attr? db ent relation-attr)
+             {relation-attr (if (coll-relation-attr? ent-db ent relation-attr)
                               #{ref-ent} ref-ent)}))))
 
 (s/fdef ent-relations
-  :args (s/cat :db ::db :ent-name ::ent-name)
+  :args (s/cat :ent-db ::ent-db :ent-name ::ent-name)
   :ret  (s/map-of ::ent-attr (s/or :unary ::ent-name
                                    :coll (s/coll-of ::ent-name))))
 
@@ -873,20 +873,20 @@
              :p1 {:created-by :u0
                   :updated-by :u2}}
    :user {:u0 {:friends-with :u0}}}"
-  ([db]
-   (all-ent-relations db (ents db)))
-  ([db ents]
+  ([ent-db]
+   (all-ent-relations ent-db (ents ent-db)))
+  ([ent-db ents]
    (reduce-kv (fn [ents-by-type ent-type ents]
                 (assoc ents-by-type ent-type
                        (into {}
                              (map (fn [ent]
-                                    [ent (ent-relations db ent)]))
+                                    [ent (ent-relations ent-db ent)]))
                              ents)))
               {}
-              (ents-by-type db ents))))
+              (ents-by-type ent-db ents))))
 
 (s/fdef all-ent-relations
-  :args (s/cat :db ::db :ent-names (s/? (s/coll-of ::ent-name)))
+  :args (s/cat :ent-db ::ent-db :ent-names (s/? (s/coll-of ::ent-name)))
   :ret  (s/map-of ::ent-type
                   (s/map-of ::ent-name
                             (s/map-of ::ent-attr ::ent-name))))
@@ -906,8 +906,8 @@
 ;; -----------------
 
 (defn omit-relation?
-  [db ent-name reference-key]
-  (-> db
+  [ent-db ent-name reference-key]
+  (-> ent-db
       (query-opts ent-name)
       (get-in [:refs reference-key])
       omit?))
@@ -918,11 +918,11 @@
   constraints. First, it will remove any dummy ID's for a `:coll` relation.
   Next, it will remove any dummy ID's generated for an `:omit` relation. The
   updated ent-data map will be returned."
-  [db {:keys [ent-name visit-val]}]
-  (let [coll-attrs (relation-attrs-with-constraint db ent-name :coll)]
+  [ent-db {:keys [ent-name visit-val]}]
+  (let [coll-attrs (relation-attrs-with-constraint ent-db ent-name :coll)]
     (into {}
           (comp (map (fn [[k v]] (if (coll-attrs k) [k []] [k v])))
-                (map (fn [[k v]] (when-not (omit-relation? db ent-name k) [k v]))))
+                (map (fn [[k v]] (when-not (omit-relation? ent-db ent-name k) [k v]))))
           visit-val)))
 
 (defn assoc-referenced-val
@@ -941,23 +941,23 @@
    :post {:relations {:created-by [:user :id]}}}
 
   a :post's `:created-by` key gets set to the `:id` of the :user it references."
-  [db {:keys [ent-name visit-key visit-val]}]
-  (let [{:keys [constraints]} (ent-schema db ent-name)
+  [ent-db {:keys [ent-name visit-key visit-val]}]
+  (let [{:keys [constraints]} (ent-schema ent-db ent-name)
         skip-keys             (::overwritten (meta visit-val) #{})]
-    (->> (referenced-ent-attrs db ent-name)
+    (->> (referenced-ent-attrs ent-db ent-name)
          (filter (comp (complement skip-keys) second))
          (reduce (fn [ent-data [referenced-ent relation-attr]]
                    (assoc-referenced-val ent-data
                                          relation-attr
-                                         (get-in (ent-attr db referenced-ent visit-key)
-                                                 (:path (query-relation db ent-name relation-attr)))
+                                         (get-in (ent-attr ent-db referenced-ent visit-key)
+                                                 (:path (query-relation ent-db ent-name relation-attr)))
                                          constraints))
                  visit-val))))
 
 (defn merge-overwrites
   "Overwrites generated data with what's found in schema-opts or
   visit-query-opts."
-  [_db {:keys [visit-val visit-query-opts schema-opts]}]
+  [_ent-db {:keys [visit-val visit-query-opts schema-opts]}]
   (let [schema-overwrites (:overwrites schema-opts)
         merged (cond-> visit-val
                  ;; the schema can include vals to merge into each ent
@@ -974,6 +974,10 @@
                           (set))]
     (with-meta merged {::overwritten changed-keys})))
 
+;;---
+;; generating
+;;---
+
 (defn wrap-generate-visiting-fn
   "Useful when writing visiting fns where data generated for ent A needs to be
   referenced by ent B."
@@ -983,27 +987,12 @@
    merge-overwrites
    assoc-referenced-vals])
 
-(defn wrap-incremental-insert-visiting-fn
-  "Takes generated data stored as an attributed under `source-key` and inserts it
-  using `inserting-visiting-fn`.
-
-  Respects overwrites and ensures that referenced vals are assoc'd in before
-  inserting. Useful when dealing with db-generated ids."
-  [source-key inserting-visiting-fn]
-  (fn [db opts]
-    (reduce (fn [visit-val visiting-fn]
-              (visiting-fn db (assoc opts :visit-val visit-val)))
-            (source-key opts)
-            [merge-overwrites
-             assoc-referenced-vals
-             inserting-visiting-fn])))
-
 (def ^:const generate-visit-key :generate)
 
-(defn generate
+(defn generate*
   "Use a generator to generate data for each ent"
-  [db query]
-  (let [base-generator (get-in db [:generate :generator])
+  [ent-db]
+  (let [base-generator (get-in ent-db [:generate :generator])
         visiting-fn    (wrap-generate-visiting-fn
                         (fn [db {:keys [ent-name visit-query-opts]}]
                           (let [ent-schema-generate       (generate-visit-key (ent-schema db ent-name))
@@ -1018,11 +1007,52 @@
                             (when-not schema
                               (throw (ex-info "No generate schema provided" {})))
                             (generator schema))))]
-    (-> (add-ents db query)
-        (visit-ents-once generate-visit-key visiting-fn))))
+    (visit-ents-once ent-db generate-visit-key visiting-fn)))
+
+(defn generate
+  [ent-db query]
+  (-> ent-db
+      (add-ents query)
+      (generate*)))
 
 (defn generate-attr-map
-  [db query]
-  (-> db
+  [ent-db query]
+  (-> ent-db
       (generate query)
       (attr-map generate-visit-key)))
+
+;;---
+;; inserting
+;;---
+
+(def ^:const insert-visit-key :insert)
+
+(defn wrap-incremental-insert-visiting-fn
+  "Takes generated data stored as an attributed under `source-key` and inserts it
+  using `inserting-visiting-fn`.
+
+  Respects overwrites and ensures that referenced vals are assoc'd in before
+  inserting. Useful when dealing with db-generated ids."
+  [source-key inserting-visiting-fn]
+  (fn [ent-db opts]
+    (reduce (fn [visit-val visiting-fn]
+              (visiting-fn ent-db (assoc opts :visit-val visit-val)))
+            (source-key opts)
+            [merge-overwrites
+             assoc-referenced-vals
+             inserting-visiting-fn])))
+
+(defn insert*
+  [{{:keys [perform-insert]} :insert-generated
+    :as ent-db}]
+  (visit-ents-once ent-db
+                   insert-visit-key
+                   (wrap-incremental-insert-visiting-fn generate-visit-key perform-insert)))
+
+(defn insert
+  [ent-db query]
+  (-> ent-db
+      (add-ents query)
+      generate*
+      insert*
+      (attr-map insert-visit-key)))
