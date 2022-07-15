@@ -84,36 +84,33 @@
     )"])
   )
 
-(defmacro with-conn
-  [conn-name & body]
-  `(with-open [~conn-name (jdbc/get-connection db-spec)]
-     (create-tables ~conn-name)
-     (reset! dgt/id-seq 0)
-     ~@body))
-
-(defn ent-db
-  [conn]
+(def ent-db
   {:schema   schema
    :generate {:generator mg/generate}
-   :insert   {:connectable    conn
-              :get-inserted   (fn [{:keys [connectable table-name insert-result]}]
-                                (first (sql/query connectable [(str "SELECT * FROM " table-name
-                                                                    "  WHERE rowid = ?")
-                                                               (-> insert-result vals first)])))
-              :perform-insert din/perform-insert}})
+   :insert   {:db-spec        db-spec
+              :get-inserted   (fn [{:keys [connection table-name insert-result]}]
+                                (first (sql/query connection [(str "SELECT * FROM " table-name
+                                                                   "  WHERE rowid = ?")
+                                                              (-> insert-result vals first)])))
+              :perform-insert din/perform-insert
+              :get-connection (fn [] din/*connection*)}})
 
 (deftest inserts-simple-generated-data
-  (with-conn conn
-    (dc/insert (ent-db conn) {:user [[2]]})
+  (din/with-db ent-db
+    (create-tables din/*connection*)
+    (reset! dgt/id-seq 0)
+    (dc/insert ent-db {:user [[2]]})
     (is (= [#:users{:id 1 :username "Luigi"}
             #:users{:id 2 :username "Luigi"}]
-           (sql/query conn ["SELECT * FROM users"])))))
+           (sql/query din/*connection* ["SELECT * FROM users"])))))
 
 (deftest inserts-generated-data-hierarchy
-  (with-conn conn
-    (dc/insert (ent-db conn) {:todo [[2]]})
+  (din/with-db ent-db
+    (create-tables din/*connection*)
+    (reset! dgt/id-seq 0)
+    (dc/insert ent-db {:todo [[2]]})
     (is (= [#:users{:id 1 :username "Luigi"}]
-           (sql/query conn ["SELECT * FROM users"])))
+           (sql/query din/*connection* ["SELECT * FROM users"])))
 
     (is (= [#:todos{:id            5,
                     :todo_list_id  2
@@ -125,9 +122,9 @@
                     :todo_title    "write unit tests"
                     :created_by_id 1
                     :updated_by_id 1}]
-           (sql/query conn ["SELECT * FROM todos"])))
+           (sql/query din/*connection* ["SELECT * FROM todos"])))
 
     (is (= [#:todo_lists{:id            2
                          :created_by_id 1
                          :updated_by_id 1}]
-           (sql/query conn ["SELECT * FROM todo_lists"])))))
+           (sql/query din/*connection* ["SELECT * FROM todo_lists"])))))

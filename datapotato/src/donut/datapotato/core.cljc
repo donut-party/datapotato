@@ -1045,9 +1045,11 @@
 (defn insert*
   [{{:keys [perform-insert]} insert-visit-key
     :as ent-db}]
-  (visit-ents-once ent-db
-                   insert-visit-key
-                   (wrap-incremental-insert-visiting-fn generate-visit-key perform-insert)))
+  (let [connection (or (get-in ent-db [:insert :connection])
+                       ((get-in ent-db [:insert :get-connection])))]
+    (visit-ents-once (assoc-in ent-db [:insert :connection] connection)
+                     insert-visit-key
+                     (wrap-incremental-insert-visiting-fn generate-visit-key perform-insert))))
 
 (defn insert
   [ent-db query]
