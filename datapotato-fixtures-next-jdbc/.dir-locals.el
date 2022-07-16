@@ -1,2 +1,2 @@
-((nil
-  (cider-clojure-cli-global-options . "-A:test")))
+((clojure-mode . ((cider-clojure-cli-aliases . ":test")
+                  (cider-preferred-build-tool . clojure-cli))))

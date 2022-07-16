@@ -16,6 +16,17 @@
   (first (sql/query connection [(str "SELECT * FROM " table-name "  WHERE rowid = ?")
                                 (-> insert-result vals first)])))
 
+(defmethod get-inserted
+  "postgres"
+  [{:keys [insert-result]}]
+  insert-result)
+
+(defmethod get-inserted
+  :default
+  [{:keys [insert-result]}]
+  insert-result)
+
+
 (defn perform-insert
   [{{:keys [connection connectable dbtype]} dc/fixtures-visit-key
     :as ent-db}
