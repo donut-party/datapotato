@@ -9,6 +9,10 @@
    [next.jdbc.sql :as sql])
   (:import (io.zonky.test.db.postgres.embedded EmbeddedPostgres)))
 
+;;---
+;; connections for different dbs
+;;---
+
 (def test-connectable (atom nil))
 (defonce embedded-pg (future (EmbeddedPostgres/start)))
 
@@ -29,6 +33,44 @@
     (t)))
 
 (use-fixtures :each with-test-db)
+
+(defn create-tables
+  "used by datapotato's own fixture helper"
+  [conn]
+  (doseq [table-name ["users" "todo_lists" "todos"]]
+    (try
+      (jdbc/execute! conn [(str "DROP TABLE " table-name)])
+      (catch Exception _)))
+
+  (jdbc/execute!
+   conn
+   ["CREATE TABLE users (
+       id integer PRIMARY KEY,
+       username text NOT NULL
+    )"])
+
+  (jdbc/execute!
+   conn
+   ["CREATE TABLE todo_lists (
+       id integer PRIMARY KEY,
+       created_by_id INTEGER,
+       updated_by_id INTEGER
+    )"])
+
+  (jdbc/execute!
+   conn
+   ["CREATE TABLE todos (
+       id integer PRIMARY KEY,
+       todo_list_id INTEGER,
+       todo_title text NOT NULL,
+       created_by_id INTEGER,
+       updated_by_id INTEGER
+    )"])
+  )
+
+;;---
+;; schemas
+;;---
 
 (def ID
   [:and {:gen/gen dgt/monotonic-id-gen} pos-int?])
@@ -70,40 +112,8 @@
                            :todo_lists/updated_by_id [:user :users/id]}
                :prefix    :tl}})
 
-(defn create-tables
-  [conn]
-  (doseq [table-name ["users" "todo_lists" "todos"]]
-    (try
-      (jdbc/execute! conn [(str "DROP TABLE " table-name)])
-      (catch Exception _)))
-
-  (jdbc/execute!
-   conn
-   ["CREATE TABLE users (
-       id integer PRIMARY KEY,
-       username text NOT NULL
-    )"])
-
-  (jdbc/execute!
-   conn
-   ["CREATE TABLE todo_lists (
-       id integer PRIMARY KEY,
-       created_by_id INTEGER,
-       updated_by_id INTEGER
-    )"])
-
-  (jdbc/execute!
-   conn
-   ["CREATE TABLE todos (
-       id integer PRIMARY KEY,
-       todo_list_id INTEGER,
-       todo_title text NOT NULL,
-       created_by_id INTEGER,
-       updated_by_id INTEGER
-    )"])
-  )
-
 (defn ent-db
+  "returns an ent-db. a function so that it can deref test-connectable"
   []
   {:schema   schema
    :generate {:generator mg/generate}
@@ -113,6 +123,11 @@
               :setup          (fn [connection]
                                 (create-tables connection)
                                 (reset! dgt/id-seq 0))}})
+
+
+;;---
+;; tests
+;;---
 
 (deftest inserts-simple-generated-data
   (dfn/with-fixtures (ent-db)
