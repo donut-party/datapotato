@@ -1,6 +1,6 @@
 (ns donut.datapotato.fixtures.next-jdbc-test
   (:require
-   [clojure.test :refer [deftest is]]
+   [clojure.test :refer [deftest is use-fixtures]]
    [donut.datapotato.core :as dc]
    [donut.datapotato.generate-test :as dgt]
    [donut.datapotato.fixtures.next-jdbc :as dfn]
@@ -9,13 +9,26 @@
    [next.jdbc.sql :as sql])
   (:import (io.zonky.test.db.postgres.embedded EmbeddedPostgres)))
 
-(def test-datasource (atom nil))
+(def test-connectable (atom nil))
 (defonce embedded-pg (future (EmbeddedPostgres/start)))
-(reset! test-datasource (.getPostgresDatabase ^EmbeddedPostgres @embedded-pg))
 
-(def db-spec
-  {:dbtype         "sqlite"
-   :connection-uri "jdbc:sqlite::memory:"})
+(def ^:private test-postgres {:dbtype "embedded-postgres" :dbname "clojure_test"})
+(def ^:private test-sqlite-mem {:dbtype "sqlite" :connection-uri "jdbc:sqlite::memory:"})
+
+(def test-db-specs
+  [test-postgres
+   test-sqlite-mem])
+
+(defn with-test-db
+  [t]
+  (doseq [db test-db-specs]
+    (if (= "embedded-postgres" (:dbtype db))
+      (reset! test-connectable
+              (.getPostgresDatabase ^EmbeddedPostgres @embedded-pg))
+      (reset! test-connectable db))
+    (t)))
+
+(use-fixtures :each with-test-db)
 
 (def ID
   [:and {:gen/gen dgt/monotonic-id-gen} pos-int?])
@@ -90,10 +103,11 @@
     )"])
   )
 
-(def ent-db
+(defn ent-db
+  []
   {:schema   schema
    :generate {:generator mg/generate}
-   :fixtures {:connectable    @test-datasource
+   :fixtures {:connectable    @test-connectable
               :perform-insert dfn/perform-insert
               :get-connection (fn [] dfn/*connection*)
               :setup          (fn [connection]
@@ -101,15 +115,15 @@
                                 (reset! dgt/id-seq 0))}})
 
 (deftest inserts-simple-generated-data
-  (dfn/with-fixtures ent-db
-    (dc/insert-fixtures ent-db {:user [{:num 2}]})
+  (dfn/with-fixtures (ent-db)
+    (dc/insert-fixtures (ent-db) {:user [{:num 2}]})
     (is (= [#:users{:id 1 :username "Luigi"}
             #:users{:id 2 :username "Luigi"}]
            (sql/query dfn/*connection* ["SELECT * FROM users"])))))
 
 (deftest inserts-generated-data-hierarchy
-  (dfn/with-fixtures ent-db
-    (dc/insert-fixtures ent-db {:todo [{:num 2}]})
+  (dfn/with-fixtures (ent-db)
+    (dc/insert-fixtures (ent-db) {:todo [{:num 2}]})
     (is (= [#:users{:id 1 :username "Luigi"}]
            (sql/query dfn/*connection* ["SELECT * FROM users"])))
 

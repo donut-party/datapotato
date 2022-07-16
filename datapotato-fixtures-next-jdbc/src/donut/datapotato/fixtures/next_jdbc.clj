@@ -22,6 +22,11 @@
   insert-result)
 
 (defmethod get-inserted
+  "embedded-postgres"
+  [{:keys [insert-result]}]
+  insert-result)
+
+(defmethod get-inserted
   :default
   [{:keys [insert-result]}]
   insert-result)
