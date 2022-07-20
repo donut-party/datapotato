@@ -1046,7 +1046,8 @@
   [{{:keys [perform-insert]} fixtures-visit-key
     :as                      ent-db}]
   (let [connection (or (get-in ent-db [fixtures-visit-key :connection])
-                       ((get-in ent-db [fixtures-visit-key :get-connection])))]
+                       (when-let [get-connection (get-in ent-db [fixtures-visit-key :get-connection])]
+                         (get-connection)))]
     (visit-ents-once (assoc-in ent-db [fixtures-visit-key :connection] connection)
                      fixtures-visit-key
                      (wrap-incremental-insert-visiting-fn generate-visit-key perform-insert))))
