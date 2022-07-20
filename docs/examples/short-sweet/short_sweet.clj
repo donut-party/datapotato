@@ -79,23 +79,23 @@
 ;;-------*****--------
 
 ;; Return a map of user entities and their spec-generated data
-(dc/generate-attr-map ent-db {:user [{:num 3}]})
+(dc/generate-attr-map ent-db {:user [{:count 3}]})
 (dc/generate-attr-map ent-db [{:type :user
-                               :num  3}])
+                               :count  3}])
 
 ;; You can specify a username and id
-(dc/generate-attr-map ent-db {:user [{:num      1
+(dc/generate-attr-map ent-db {:user [{:count      1
                                       :generate {:username "Meeghan"
                                                  :id       100}}]})
 
 ;; Generating a post generates the user the post belongs to, with
 ;; foreign keys correct
-(dc/generate-attr-map ent-db {:post [{:num 1}]})
+(dc/generate-attr-map ent-db {:post [{:count 1}]})
 
 ;; Generating a like also generates a post and user
-(dc/generate-attr-map ent-db {:like [{:num 1}]})
+(dc/generate-attr-map ent-db {:like [{:count 1}]})
 
 ;; The `insert` function shows that records are inserted into the
 ;; simulate "database" (`mock-db`) in correct dependency order:
-(insert {:like [{:num 1}]})
+(insert {:like [{:count 1}]})
 @mock-db

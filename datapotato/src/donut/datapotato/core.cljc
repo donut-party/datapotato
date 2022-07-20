@@ -144,11 +144,11 @@
 ;; -----------------
 
 ;; how many ents to create
-(s/def ::num pos-int?)
+(s/def ::count pos-int?)
 
 (s/def ::coll-query-relations
   (s/or :ent-names (s/coll-of ::ent-name)
-        :num ::num))
+        :count ::count))
 
 (s/def ::unary-query-relations
   (s/or :ent-name ::ent-name))
@@ -176,11 +176,11 @@
   (s/keys :opt-un [::refs
                    ::ref-types
                    ::bind
-                   ::num
+                   ::count
                    ::ent-name]))
 
 (s/def ::ent-id
-  (s/or :num ::num
+  (s/or :count ::count
         :ent-name  ::ent-name))
 
 ;; queries
@@ -197,7 +197,7 @@
          :query-opts (s/? ::query-opts)))
 
 (s/def ::query-term.new
-  (s/or :num ::num
+  (s/or :count ::count
         :query-opts ::query-opts))
 
 (s/def ::query-term
@@ -364,7 +364,7 @@
 
   1. an ent-name for unary relations          (type: `:ent-name`)
   2. a vector of ent-names for coll relations (type: `:ent-names`)
-  3. a number for coll relations              (type: `:num`)
+  3. a number for coll relations              (type: `:count`)
 
   These types are captured by the `::refs` specs, and the specs it
   composes. The type for the supplied query-term is returned as
@@ -411,7 +411,7 @@
     (validate-related-ents-query ent-db ent-name relation-attr query-term)
 
     (b/cond (= qr-constraint :omit) []
-            (= qr-type :num)  (mapv (partial numeric-node-name schema related-ent-type) (range qr-term))
+            (= qr-type :count)  (mapv (partial numeric-node-name schema related-ent-type) (range qr-term))
             (= qr-type :ent-names)  qr-term
             (= qr-type :ent-name)   [qr-term]
             :let [bn (get bind related-ent-type)]
@@ -508,18 +508,18 @@
   [conformed-query-term]
   (let [[ent-id-type ent-id] (:ent-id conformed-query-term)]
     (case ent-id-type
-      :num      {:num      ent-id
-                 :ent-name :_}
-      :ent-name {:num      1
+      :count      {:count      ent-id
+                   :ent-name :_}
+      :ent-name {:count      1
                  :ent-name ent-id})))
 
 (defn conform-query-term-new
   [[query-term-type query-term]]
   (case query-term-type
-    :num        {:num      query-term
+    :count      {:count    query-term
                  :ent-name :_}
     :query-opts (-> query-term
-                    (update :num #(or % 1))
+                    (update :count #(or % 1))
                     (update :ent-name #(or % :_)))))
 
 (defn conform-query-term
@@ -527,13 +527,13 @@
   (let [[query-term-version conformed-query-term]
         (s/conform ::query-term query-term)
 
-        {:keys [num ent-name] :as query-opts}
+        {:keys [count ent-name] :as query-opts}
         (case query-term-version
           :query-term.orig (conform-query-term-orig conformed-query-term)
           :query-term.new  (conform-query-term-new conformed-query-term))]
-    (when (and (> num 1)
+    (when (and (> count 1)
                (not= :_ ent-name))
-      (throw (ex-info "You can't specify both :ent-name and a :num > 1 in a query term" {:query-term query-term})))
+      (throw (ex-info "You can't specify both :ent-name and a :count > 1 in a query term" {:query-term query-term})))
 
     query-opts))
 
@@ -547,9 +547,9 @@
             ;; specified explicitly in a query
 
             (let [query-term             (with-meta query-term {:top-level true})
-                  {:keys [num ent-name]} (conform-query-term query-term)]
-              (if (> num 1)
-                (add-n-ents db ent-type num query-term)
+                  {:keys [count ent-name]} (conform-query-term query-term)]
+              (if (> count 1)
+                (add-n-ents db ent-type count query-term)
                 (add-ent db ent-name ent-type query-term))))
           ent-db
           ent-type-query))

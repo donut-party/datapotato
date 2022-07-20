@@ -38,7 +38,7 @@ foreign keys are correct (e.g. the post's `:topic-id` is set to the topic's
 With Datapotato, all you have to do is **write code like this**:
 
 ```clojure
-(insert {:like [{:num 3}]})
+(insert {:like [{:count 3}]})
 ```
 
 and **these records get inserted** in a database (in the order displayed):
@@ -166,23 +166,23 @@ todos or todo lists?
 ;;-------*****--------
 
 ;; Return a map of user entities and their spec-generated data
-(dc/generate-attr-map ent-db {:user [{:num 3}]})
+(dc/generate-attr-map ent-db {:user [{:count 3}]})
 
 ;; You can specify a username and id
-(dc/generate-attr-map ent-db {:user [{:num      1
+(dc/generate-attr-map ent-db {:user [{:count      1
                                       :generate {:username "Meeghan"
                                                  :id       100}}]})
 
 ;; Generating a post generates the user the post belongs to, with
 ;; foreign keys correct
-(dc/generate-attr-map ent-db {:post [{:num 1}]})
+(dc/generate-attr-map ent-db {:post [{:count 1}]})
 
 ;; Generating a like also generates a post and user
-(dc/generate-attr-map ent-db {:like [{:num 1}]})
+(dc/generate-attr-map ent-db {:like [{:count 1}]})
 
 ;; The `insert` function shows that records are inserted into the
 ;; simulate "database" (`mock-db`) in correct dependency order:
-(insert {:like [{:num 1}]})
+(insert {:like [{:count 1}]})
 @mock-db
 ```
 
@@ -237,10 +237,10 @@ under the key `schema-opts`.
 You specify ents to add to an _ent db_ using a _query_:
 
 ```clojure
-(dc/add-ents {:schema schema} {:like [{:num 3}})
+(dc/add-ents {:schema schema} {:like [{:count 3}})
 ```
 
-Above, `{:like [{:num 3}}` is a query meaning "Add 3 likes to the ent db, as
+Above, `{:like [{:count 3}}` is a query meaning "Add 3 likes to the ent db, as
 well as the hierarchy of ents necessary for 3 likes to be present."
 
 When you add ents to the ent db, that means that Datapotato has created a graph
@@ -256,7 +256,7 @@ You can apply a function to each ent's graph node in topologically sorted
 placed before the `:post` in the sort.)
 
 ```clojure
-(-> (dc/add-ents {:schema good-schema} {:like [{:num 3}})
+(-> (dc/add-ents {:schema good-schema} {:like [{:count 3}})
     (dc/visit-ents :prn (fn [db {:keys [ent-name ent-type]}]
                           (prn [ent-name ent-type]))))
 [:u1 :user]

@@ -939,6 +939,6 @@
 
 (deftest new-syntax-ent-name
   (is (= #{:bill}
-         (-> (dc/add-ents {:schema td/schema} {:user [{:num      1
+         (-> (dc/add-ents {:schema td/schema} {:user [{:count    1
                                                        :ent-name :bill}]})
              (dc/ents)))))
