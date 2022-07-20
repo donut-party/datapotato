@@ -1026,6 +1026,8 @@
 ;;---
 
 (def ^:const fixtures-visit-key :fixtures)
+(def ^:dynamic *connection*)
+(def ^:dynamic *ent-db*)
 
 (defn wrap-incremental-insert-visiting-fn
   "Takes generated data stored as an attributed under `source-key` and inserts it
@@ -1059,3 +1061,18 @@
       generate*
       insert-fixtures*
       (attr-map fixtures-visit-key)))
+
+(defmacro with-fixtures
+  [ent-db & body]
+  `(let [ent-db# ~ent-db]
+     (with-open [conn# (or (get-in ent-db# [:fixtures :connection])
+                           (when-let [get-connection# (get-in ent-db# [:fixtures :get-connection])]
+                             (get-connection# ent-db#)))]
+       (binding [*connection* conn#]
+         (when-let [setup# (get-in ent-db# [:fixtures :setup])]
+           (setup# conn#))
+         (try
+           (binding [*ent-db* (assoc-in ent-db# [:fixtures :connection] conn#)]
+             ~@body)
+           (finally (when-let [teardown# (get-in ent-db# [:fixtures :teardown])]
+                      (teardown# conn#))))))))

@@ -53,7 +53,6 @@
 (def fixture-atom (atom []))
 
 (def ent-db
-  "returns an ent-db. a function so that it can deref test-connectable"
   {:schema   schema
    :generate {:generator mg/generate}
    :fixtures {:perform-insert dfa/perform-insert

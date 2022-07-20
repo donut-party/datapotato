@@ -4,6 +4,16 @@
    [next.jdbc :as jdbc]
    [next.jdbc.sql :as sql]))
 
+(comment
+  ;; keys:
+  ;; dbspec
+  ;; dbtype
+  ;; perform-insert
+  ;; get-inserted
+  ;; setup
+  ;; teardown
+  )
+
 (defmulti get-inserted
   "default for retrieving data from the db after it's been inserted"
   (fn get-inserted-dispatch [{:keys [dbtype connectable]}]
@@ -15,16 +25,6 @@
   [{:keys [connection table-name insert-result]}]
   (first (sql/query connection [(str "SELECT * FROM " table-name "  WHERE rowid = ?")
                                 (-> insert-result vals first)])))
-
-(defmethod get-inserted
-  "postgres"
-  [{:keys [insert-result]}]
-  insert-result)
-
-(defmethod get-inserted
-  "embedded-postgres"
-  [{:keys [insert-result]}]
-  insert-result)
 
 (defmethod get-inserted
   :default
@@ -55,16 +55,6 @@
                       :table-name    table-name
                       :insert-result insert-result}))))
 
-(def ^:dynamic *connection*)
-
-(defmacro with-fixtures
-  [ent-db & body]
-  `(let [ent-db# ~ent-db]
-     (with-open [conn# (or (get-in ent-db# [:fixtures :connection])
-                           (jdbc/get-connection (get-in ent-db# [:fixtures :connectable])))]
-       (binding [*connection* conn#]
-         (when-let [setup# (get-in ent-db# [:fixtures :setup])]
-           (setup# conn#))
-         (try ~@body
-              (finally (when-let [teardown# (get-in ent-db# [:fixtures :teardown])]
-                         (teardown# conn#))))))))
+(def config
+  {:perform-insert perform-insert
+   :get-connection #(jdbc/get-connection (get-in % [:fixtures :dbspec]))})

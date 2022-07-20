@@ -13,7 +13,7 @@
 ;; connections for different dbs
 ;;---
 
-(def test-connectable (atom nil))
+(def test-dbspec (atom nil))
 (defonce embedded-pg (future (EmbeddedPostgres/start)))
 
 (def ^:private test-postgres {:dbtype "embedded-postgres" :dbname "clojure_test"})
@@ -27,9 +27,9 @@
   [t]
   (doseq [db test-db-specs]
     (if (= "embedded-postgres" (:dbtype db))
-      (reset! test-connectable
+      (reset! test-dbspec
               (.getPostgresDatabase ^EmbeddedPostgres @embedded-pg))
-      (reset! test-connectable db))
+      (reset! test-dbspec db))
     (t)))
 
 (use-fixtures :each with-test-db)
@@ -113,34 +113,32 @@
                :prefix    :tl}})
 
 (defn ent-db
-  "returns an ent-db. a function so that it can deref test-connectable"
+  "returns an ent-db. a function so that it can deref test-dbspec"
   []
   {:schema   schema
    :generate {:generator mg/generate}
-   :fixtures {:connectable    @test-connectable
-              :perform-insert dfn/perform-insert
-              :get-connection (fn [] dfn/*connection*)
-              :setup          (fn [connection]
+   :fixtures (merge dfn/config
+                    {:dbspec  @test-dbspec
+                     :setup   (fn [connection]
                                 (create-tables connection)
-                                (reset! dgt/id-seq 0))}})
-
+                                (reset! dgt/id-seq 0))})})
 
 ;;---
 ;; tests
 ;;---
 
 (deftest inserts-simple-generated-data
-  (dfn/with-fixtures (ent-db)
-    (dc/insert-fixtures (ent-db) {:user [{:count 2}]})
+  (dc/with-fixtures (ent-db)
+    (dc/insert-fixtures dc/*ent-db* {:user [{:count 2}]})
     (is (= [#:users{:id 1 :username "Luigi"}
             #:users{:id 2 :username "Luigi"}]
-           (sql/query dfn/*connection* ["SELECT * FROM users"])))))
+           (sql/query dc/*connection* ["SELECT * FROM users"])))))
 
 (deftest inserts-generated-data-hierarchy
-  (dfn/with-fixtures (ent-db)
-    (dc/insert-fixtures (ent-db) {:todo [{:count 2}]})
+  (dc/with-fixtures (ent-db)
+    (dc/insert-fixtures dc/*ent-db* {:todo [{:count 2}]})
     (is (= [#:users{:id 1 :username "Luigi"}]
-           (sql/query dfn/*connection* ["SELECT * FROM users"])))
+           (sql/query dc/*connection* ["SELECT * FROM users"])))
 
     (is (= [#:todos{:id            5,
                     :todo_list_id  2
@@ -152,9 +150,9 @@
                     :todo_title    "write unit tests"
                     :created_by_id 1
                     :updated_by_id 1}]
-           (sql/query dfn/*connection* ["SELECT * FROM todos"])))
+           (sql/query dc/*connection* ["SELECT * FROM todos"])))
 
     (is (= [#:todo_lists{:id            2
                          :created_by_id 1
                          :updated_by_id 1}]
-           (sql/query dfn/*connection* ["SELECT * FROM todo_lists"])))))
+           (sql/query dc/*connection* ["SELECT * FROM todo_lists"])))))
