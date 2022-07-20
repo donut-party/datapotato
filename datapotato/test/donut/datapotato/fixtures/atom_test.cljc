@@ -65,7 +65,7 @@
 ;;---
 
 (deftest inserts-simple-generated-data
-  (dfa/with-fixtures ent-db
+  (dc/with-fixtures ent-db
     (dc/insert-fixtures ent-db {:user [{:count 2}]})
     (is (= [[:user #:users{:id 1 :username "Luigi"}]
             [:user #:users{:id 2 :username "Luigi"}]]

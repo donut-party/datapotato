@@ -119,8 +119,8 @@
    :generate {:generator mg/generate}
    :fixtures (merge dfn/config
                     {:dbspec  @test-dbspec
-                     :setup   (fn [connection]
-                                (create-tables connection)
+                     :setup   (fn [{:keys [fixtures]}]
+                                (create-tables (:connection fixtures))
                                 (reset! dgt/id-seq 0))})})
 
 ;;---

@@ -7,7 +7,6 @@
   [{{:keys [atom]} dc/fixtures-visit-key}
    {:keys [ent-type visit-val]}]
   (swap! atom conj [ent-type visit-val]))
-
 (defmacro with-fixtures
   [ent-db & body]
   `(let [ent-db# ~ent-db

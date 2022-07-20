@@ -1064,15 +1064,25 @@
 
 (defmacro with-fixtures
   [ent-db & body]
-  `(let [ent-db# ~ent-db]
-     (with-open [conn# (or (get-in ent-db# [:fixtures :connection])
-                           (when-let [get-connection# (get-in ent-db# [:fixtures :get-connection])]
-                             (get-connection# ent-db#)))]
-       (binding [*connection* conn#]
+  `(let [ent-db#         ~ent-db
+         connection#     (get-in ent-db# [:fixtures :connection])
+         get-connection# (get-in ent-db# [:fixtures :get-connection])]
+     (if (or connection# get-connection#)
+       (with-open [conn# (or connection#
+                             (when get-connection# (get-connection# ent-db#)))]
+         (let [ent-db# (assoc-in ent-db# [:fixtures :connection] conn#)]
+           (binding [*connection* conn#
+                     *ent-db*     ent-db#]
+             (when-let [setup# (get-in ent-db# [:fixtures :setup])]
+               (setup# ent-db#))
+             (try
+               ~@body
+               (finally (when-let [teardown# (get-in ent-db# [:fixtures :teardown])]
+                          (teardown# ent-db#)))))))
+       (binding [*ent-db* ent-db#]
          (when-let [setup# (get-in ent-db# [:fixtures :setup])]
-           (setup# conn#))
+           (setup# ent-db#))
          (try
-           (binding [*ent-db* (assoc-in ent-db# [:fixtures :connection] conn#)]
-             ~@body)
+           ~@body
            (finally (when-let [teardown# (get-in ent-db# [:fixtures :teardown])]
-                      (teardown# conn#))))))))
+                      (teardown# ent-db#))))))))
