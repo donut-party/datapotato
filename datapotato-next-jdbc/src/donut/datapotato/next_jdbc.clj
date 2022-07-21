@@ -1,8 +1,12 @@
-(ns donut.datapotato.fixtures.next-jdbc
+(ns donut.datapotato.next-jdbc
   (:require
    [donut.datapotato.core :as dc]
    [next.jdbc :as jdbc]
    [next.jdbc.sql :as sql]))
+
+;;---
+;; fixtures
+;;---
 
 (comment
   ;; keys:

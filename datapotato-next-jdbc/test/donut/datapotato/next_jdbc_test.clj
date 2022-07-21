@@ -1,9 +1,9 @@
-(ns donut.datapotato.fixtures.next-jdbc-test
+(ns donut.datapotato.next-jdbc-test
   (:require
    [clojure.test :refer [deftest is use-fixtures]]
    [donut.datapotato.core :as dc]
    [donut.datapotato.generate-test :as dgt]
-   [donut.datapotato.fixtures.next-jdbc :as dfn]
+   [donut.datapotato.next-jdbc :as dnj]
    [malli.generator :as mg]
    [next.jdbc :as jdbc]
    [next.jdbc.sql :as sql])
@@ -117,7 +117,7 @@
   []
   {:schema   schema
    :generate {:generator mg/generate}
-   :fixtures (merge dfn/config
+   :fixtures (merge dnj/config
                     {:dbspec  @test-dbspec
                      :setup   (fn [{:keys [fixtures]}]
                                 (create-tables (:connection fixtures))
