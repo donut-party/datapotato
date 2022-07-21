@@ -6,4 +6,5 @@
 (defn perform-insert
   [{{:keys [atom]} dc/fixtures-visit-key}
    {:keys [ent-type visit-val]}]
-  (swap! atom conj [ent-type visit-val]))
+  (swap! atom conj [ent-type visit-val])
+  visit-val)

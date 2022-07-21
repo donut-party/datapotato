@@ -70,3 +70,23 @@
     (is (= [[:user #:users{:id 1 :username "Luigi"}]
             [:user #:users{:id 2 :username "Luigi"}]]
            @fixture-atom))))
+
+
+(deftest inserts-generated-data-hierarchy
+  (dc/with-fixtures ent-db
+    (dc/insert-fixtures ent-db {:todo [{:count 2}]})
+    (is (= [[:user #:users{:id 1 :username "Luigi"}]
+            [:todo-list #:todo_lists{:id            2
+                                     :created_by_id 1
+                                     :updated_by_id 1}]
+            [:todo #:todos{:id            5
+                           :todo_title    "write unit tests"
+                           :created_by_id 1
+                           :updated_by_id 1
+                           :todo_list_id  2}]
+            [:todo #:todos{:id            8
+                           :todo_title    "write unit tests"
+                           :created_by_id 1
+                           :updated_by_id 1
+                           :todo_list_id  2}]]
+           @fixture-atom))))
