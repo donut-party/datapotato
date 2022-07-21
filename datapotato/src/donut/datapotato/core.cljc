@@ -1062,27 +1062,39 @@
       insert-fixtures*
       (attr-map fixtures-visit-key)))
 
+(defn- mk-shared-body
+  [ent-db-sym connection-sym body]
+  `(binding [*connection* ~connection-sym
+             *ent-db* ~ent-db-sym]
+     (when-let [setup# (get-in ~ent-db-sym [:fixtures :setup])]
+       (setup# ~ent-db-sym))
+     (try
+       ~@body
+       (finally (when-let [teardown# (get-in ~ent-db-sym [:fixtures :teardown])]
+                  (teardown# ~ent-db-sym))))))
+
 (defmacro with-fixtures
   [ent-db & body]
-  `(let [ent-db#         ~ent-db
-         connection#     (get-in ent-db# [:fixtures :connection])
-         get-connection# (get-in ent-db# [:fixtures :get-connection])]
-     (if (or connection# get-connection#)
-       (with-open [conn# (or connection#
-                             (when get-connection# (get-connection# ent-db#)))]
-         (let [ent-db# (assoc-in ent-db# [:fixtures :connection] conn#)]
-           (binding [*connection* conn#
-                     *ent-db*     ent-db#]
-             (when-let [setup# (get-in ent-db# [:fixtures :setup])]
-               (setup# ent-db#))
-             (try
-               ~@body
-               (finally (when-let [teardown# (get-in ent-db# [:fixtures :teardown])]
-                          (teardown# ent-db#)))))))
-       (binding [*ent-db* ent-db#]
-         (when-let [setup# (get-in ent-db# [:fixtures :setup])]
-           (setup# ent-db#))
-         (try
-           ~@body
-           (finally (when-let [teardown# (get-in ent-db# [:fixtures :teardown])]
-                      (teardown# ent-db#))))))))
+  (let [ent-db-sym     (gensym 'ent-db)
+        connection-sym (gensym 'connection)
+        shared-body    (mk-shared-body ent-db-sym connection-sym body)]
+    `(let [~ent-db-sym      ~ent-db
+           fixtures#        (:fixtures ~ent-db-sym)
+           ~connection-sym  (:connection fixtures#)
+           get-connection#  (:get-connection fixtures#)
+           open-connection# (:open-connection fixtures#)]
+
+       (cond
+         (or ~connection-sym get-connection#)
+         (let [~ent-db-sym (assoc-in ~ent-db-sym
+                                     [:fixtures :connection]
+                                     (or ~connection-sym (get-connection# ~ent-db-sym)))]
+           ~shared-body)
+
+         open-connection#
+         (with-open [~connection-sym (open-connection# ~ent-db-sym)]
+           (let [~ent-db-sym (assoc-in ~ent-db-sym [:fixtures :connection] ~connection-sym)]
+             ~shared-body))
+
+         :else
+         ~shared-body))))

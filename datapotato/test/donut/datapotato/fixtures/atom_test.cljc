@@ -56,7 +56,9 @@
   {:schema   schema
    :generate {:generator mg/generate}
    :fixtures {:perform-insert dfa/perform-insert
-              :setup          (fn [_] (reset! dgt/id-seq 0))
+              :setup          (fn [_]
+                                (reset! fixture-atom [])
+                                (reset! dgt/id-seq 0))
               :atom           fixture-atom}})
 
 

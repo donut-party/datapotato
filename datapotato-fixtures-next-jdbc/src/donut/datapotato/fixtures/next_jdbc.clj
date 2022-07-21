@@ -54,5 +54,5 @@
                       :insert-result insert-result}))))
 
 (def config
-  {:perform-insert perform-insert
-   :get-connection #(jdbc/get-connection (get-in % [:fixtures :dbspec]))})
+  {:perform-insert  perform-insert
+   :open-connection #(jdbc/get-connection (get-in % [:fixtures :dbspec]))})
