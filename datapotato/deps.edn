@@ -2,7 +2,7 @@
 
  :deps {aysylu/loom             {:mvn/version "1.0.2"}
         medley/medley           {:mvn/version "0.8.3"}
-        better-cond/better-cond {:mvn/version "2.0.1-SNAPSHOT"}
+        better-cond/better-cond {:mvn/version "2.1.5"}
         org.clojure/spec.alpha  {:mvn/version "0.3.218"}}
 
  :aliases
