@@ -1,8 +1,8 @@
-(ns donut.datapotato.fixtures.atom-test
+(ns donut.datapotato.atom-test
   (:require
    [clojure.test :refer [deftest is]]
    [donut.datapotato.core :as dc]
-   [donut.datapotato.fixtures.atom :as dfa]
+   [donut.datapotato.atom :as da]
    [donut.datapotato.generate-test :as dgt]
    [malli.generator :as mg]))
 
@@ -55,7 +55,7 @@
 (def ent-db
   {:schema   schema
    :generate {:generator mg/generate}
-   :fixtures {:perform-insert dfa/perform-insert
+   :fixtures {:perform-insert da/perform-insert
               :setup          (fn [_]
                                 (reset! fixture-atom [])
                                 (reset! dgt/id-seq 0))

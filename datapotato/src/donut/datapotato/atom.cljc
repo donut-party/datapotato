@@ -1,4 +1,4 @@
-(ns donut.datapotato.fixtures.atom
+(ns donut.datapotato.atom
   "Generates fixtures for atom 'storage'"
   (:require
    [donut.datapotato.core :as dc]))
