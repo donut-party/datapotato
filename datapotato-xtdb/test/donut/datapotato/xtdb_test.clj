@@ -27,15 +27,15 @@
   [:map
    [:xt/id ID]
    [:todo/todo-title string?]
-   [:todo/created-by-id ID]
-   [:todo/updated-by-id ID]])
+   [:todo/created-by ID]
+   [:todo/updated-by ID]])
 
 
 (def TodoList
   [:map
    [:xt/id ID]
-   [:todo-list/created-by-id ID]
-   [:todo-list/updated-by-id ID]])
+   [:todo-list/created-by ID]
+   [:todo-list/updated-by ID]])
 
 
 (def schema
@@ -45,14 +45,14 @@
    :todo      {:generate  {:overwrites {:todo/todo-title "write unit tests"}
                            :schema     Todo}
                :fixtures  {:table-name "todos"}
-               :relations {:todo/created-by-id [:user :xt/id]
-                           :todo/updated-by-id [:user :xt/id]
-                           :todo/todo-list-id  [:todo-list :xt/id]}
+               :relations {:todo/created-by [:user :xt/id]
+                           :todo/updated-by [:user :xt/id]
+                           :todo/todo-list  [:todo-list :xt/id]}
                :prefix    :t}
    :todo-list {:generate  {:schema TodoList}
                :fixtures  {:table-name "todo-lists"}
-               :relations {:todo-list/created-by-id [:user :xt/id]
-                           :todo-list/updated-by-id [:user :xt/id]}
+               :relations {:todo-list/created-by [:user :xt/id]
+                           :todo-list/updated-by [:user :xt/id]}
                :prefix    :tl}})
 
 (def fixture-atom (atom []))
@@ -92,20 +92,20 @@
                 :where [[?u :user/username]]})))
 
     (is (= [{:xt/id            5,
-             :todo/todo-list-id  2
+             :todo/todo-list  2
              :todo/todo-title    "write unit tests"
-             :todo/created-by-id 1
-             :todo/updated-by-id 1}
+             :todo/created-by 1
+             :todo/updated-by 1}
             {:xt/id            8
-             :todo/todo-list-id  2
+             :todo/todo-list  2
              :todo/todo-title    "write unit tests"
-             :todo/created-by-id 1
-             :todo/updated-by-id 1}]
+             :todo/created-by 1
+             :todo/updated-by 1}]
            (q '{:find  [(pull ?u [*])]
                 :where [[?u :todo/todo-title]]})))
 
     (is (= [{:xt/id            2
-             :todo-list/created-by-id 1
-             :todo-list/updated-by-id 1}]
+             :todo-list/created-by 1
+             :todo-list/updated-by 1}]
            (q '{:find  [(pull ?u [*])]
-                :where [[?u :todo-list/created-by-id]]})))))
+                :where [[?u :todo-list/created-by]]})))))
