@@ -1086,9 +1086,10 @@
 
        (cond
          (or ~connection-sym get-connection#)
-         (let [~ent-db-sym (assoc-in ~ent-db-sym
-                                     [:fixtures :connection]
-                                     (or ~connection-sym (get-connection# ~ent-db-sym)))]
+         (let [~connection-sym (or ~connection-sym (get-connection# ~ent-db-sym))
+               ~ent-db-sym     (assoc-in ~ent-db-sym
+                                         [:fixtures :connection]
+                                         ~connection-sym)]
            ~shared-body)
 
          open-connection#

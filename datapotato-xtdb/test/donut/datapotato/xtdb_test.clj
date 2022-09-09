@@ -55,8 +55,6 @@
                            :todo-list/updated-by [:user :xt/id]}
                :prefix    :tl}})
 
-(def fixture-atom (atom []))
-
 (def ent-db
   {:schema   schema
    :generate {:generator mg/generate}
@@ -66,8 +64,7 @@
                                   (.close node))
                                 (reset! node-atom (xt/start-node {}))
                                 @node-atom)
-              :setup          (fn setup [_] (reset! dgt/id-seq 0))
-              :atom           fixture-atom}})
+              :setup          (fn setup [_] (reset! dgt/id-seq 0))}})
 
 (defn q
   [query]
@@ -91,20 +88,20 @@
            (q '{:find  [(pull ?u [*])]
                 :where [[?u :user/username]]})))
 
-    (is (= [{:xt/id            5,
+    (is (= [{:xt/id           5
              :todo/todo-list  2
-             :todo/todo-title    "write unit tests"
+             :todo/todo-title "write unit tests"
              :todo/created-by 1
              :todo/updated-by 1}
-            {:xt/id            8
+            {:xt/id           8
              :todo/todo-list  2
-             :todo/todo-title    "write unit tests"
+             :todo/todo-title "write unit tests"
              :todo/created-by 1
              :todo/updated-by 1}]
            (q '{:find  [(pull ?u [*])]
                 :where [[?u :todo/todo-title]]})))
 
-    (is (= [{:xt/id            2
+    (is (= [{:xt/id                2
              :todo-list/created-by 1
              :todo-list/updated-by 1}]
            (q '{:find  [(pull ?u [*])]
