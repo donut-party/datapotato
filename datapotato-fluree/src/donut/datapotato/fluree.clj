@@ -11,7 +11,6 @@
   (let [{:keys [conn ledger]} connection
         collection            (get-in (dc/ent-schema ent-db ent-name) [dc/fixtures-visit-key :collection])
         result                @(fdb/transact conn ledger [(assoc visit-val :_id collection)])]
-    (def result result)
     (assoc visit-val :_id (let [tempids (get-in result [:tempids collection])]
                             (if (vector? tempids)
                               (first tempids)

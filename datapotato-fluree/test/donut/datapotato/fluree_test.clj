@@ -51,51 +51,58 @@
 (def ent-db
   {:schema   schema
    :generate {:generator mg/generate}
-   :fixtures {:perform-insert  df/perform-insert
-              :get-connection (fn open-connection [_]
-                                (let [conn            (or (:conn @conn-atom) (fdb/connect fdb-host))
-                                      new-ledger-name (ledger-name)]
-                                  @(fdb/new-ledger conn new-ledger-name)
-                                  (loop [remaining 3]
-                                    (when-not (or (zero? remaining)
-                                                  (= "ready" (:status @(fdb/ledger-info conn new-ledger-name))))
-                                      (Thread/sleep 500)
-                                      (recur (dec remaining))))
-                                  (reset! conn-atom {:conn   conn
-                                                     :ledger new-ledger-name}))
-                                @conn-atom)
-              :setup           (fn setup [{:keys [fixtures]}]
-                                 (reset! dgt/id-seq 0)
-                                 (let [{:keys [connection]}  fixtures
-                                       {:keys [conn ledger]} connection]
-                                   @(fdb/transact conn ledger [{:_id              :_collection
-                                                                :_collection/name :user}
-                                                               {:_id              :_collection
-                                                                :_collection/name :todo-list}
-                                                               {:_id              :_collection
-                                                                :_collection/name :todo}
+   :fixtures {:perform-insert
+              df/perform-insert
 
-                                                               {:_id             :_predicate
-                                                                :_predicate/name :user/username
-                                                                :_predicate/type :string}
+              :get-connection
+              (fn open-connection [_]
+                (let [conn            (or (:conn @conn-atom) (fdb/connect fdb-host))
+                      new-ledger-name (ledger-name)]
+                  @(fdb/new-ledger conn new-ledger-name)
+                  (loop [remaining 3]
+                    (when-not (or (zero? remaining)
+                                  (= "ready" (:status @(fdb/ledger-info conn new-ledger-name))))
+                      (Thread/sleep 500)
+                      (recur (dec remaining))))
+                  (reset! conn-atom {:conn   conn
+                                     :ledger new-ledger-name}))
+                @conn-atom)
 
-                                                               {:_id             :_predicate
-                                                                :_predicate/name :todo-list/created-by
-                                                                :_predicate/type :ref}
+              :setup
+              (fn setup [{:keys [fixtures]}]
+                (reset! dgt/id-seq 0)
+                (let [{:keys [connection]}  fixtures
+                      {:keys [conn ledger]} connection]
+                  @(fdb/transact conn ledger [{:_id              :_collection
+                                               :_collection/name :user}
+                                              {:_id              :_collection
+                                               :_collection/name :todo-list}
+                                              {:_id              :_collection
+                                               :_collection/name :todo}
 
-                                                               {:_id             :_predicate
-                                                                :_predicate/name :todo/todo-title
-                                                                :_predicate/type :string}
-                                                               {:_id             :_predicate
-                                                                :_predicate/name :todo/todo-list
-                                                                :_predicate/type :ref}
-                                                               {:_id             :_predicate
-                                                                :_predicate/name :todo/created-by
-                                                                :_predicate/type :ref}])))
-              :teardown (fn teardown [_]
-                          (when @conn-atom
-                            (let [{:keys [conn ledger]} @conn-atom]
-                              @(fdb/delete-ledger conn ledger))))}})
+                                              {:_id             :_predicate
+                                               :_predicate/name :user/username
+                                               :_predicate/type :string}
+
+                                              {:_id             :_predicate
+                                               :_predicate/name :todo-list/created-by
+                                               :_predicate/type :ref}
+
+                                              {:_id             :_predicate
+                                               :_predicate/name :todo/todo-title
+                                               :_predicate/type :string}
+                                              {:_id             :_predicate
+                                               :_predicate/name :todo/todo-list
+                                               :_predicate/type :ref}
+                                              {:_id             :_predicate
+                                               :_predicate/name :todo/created-by
+                                               :_predicate/type :ref}])))
+
+              :teardown
+              (fn teardown [_]
+                (when @conn-atom
+                  (let [{:keys [conn ledger]} @conn-atom]
+                    @(fdb/delete-ledger conn ledger))))}})
 
 (defn q
   [connection query]
