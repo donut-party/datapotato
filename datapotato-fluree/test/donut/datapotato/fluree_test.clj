@@ -120,29 +120,29 @@
               {:select [:*]
                :from "user"})))))
 
-(deftest inserts-generated-data-hierarchy
-  (dc/with-fixtures ent-db
-    (dc/insert-fixtures dc/*ent-db* {:todo [{:count 2}]})
-    (is (= [{:_id            351843720888320
-             "user/username" "Luigi"}]
-           (q dc/*connection*
-              {:select [:*]
-               :from   "user"})))
+#_(deftest inserts-generated-data-hierarchy
+    (dc/with-fixtures ent-db
+      (dc/insert-fixtures dc/*ent-db* {:todo [{:count 2}]})
+      (is (= [{:_id            351843720888320
+               "user/username" "Luigi"}]
+             (q dc/*connection*
+                {:select [:*]
+                 :from   "user"})))
 
-    (is (= [{:_id              387028092977154
-             "todo/todo-title" "write unit tests"
-             "todo/created-by" {:_id 351843720888320}
-             "todo/todo-list"  {:_id 387028092977152}}
-            {:_id              387028092977153
-             "todo/todo-title" "write unit tests"
-             "todo/created-by" {:_id 351843720888320}
-             "todo/todo-list"  {:_id 387028092977152}}]
-           (q dc/*connection*
-              {:select [:*]
-               :from   "todo"})))
+      (is (= [{:_id              387028092977154
+               "todo/todo-title" "write unit tests"
+               "todo/created-by" {:_id 351843720888320}
+               "todo/todo-list"  {:_id 387028092977152}}
+              {:_id              387028092977153
+               "todo/todo-title" "write unit tests"
+               "todo/created-by" {:_id 351843720888320}
+               "todo/todo-list"  {:_id 387028092977152}}]
+             (q dc/*connection*
+                {:select [:*]
+                 :from   "todo"})))
 
-    (is (= [{:_id                   387028092977152
-             "todo-list/created-by" {:_id 351843720888320}}]
-           (q dc/*connection*
-              {:select [:*]
-               :from   "todo-list"})))))
+      (is (= [{:_id                   387028092977152
+               "todo-list/created-by" {:_id 351843720888320}}]
+             (q dc/*connection*
+                {:select [:*]
+                 :from   "todo-list"})))))
