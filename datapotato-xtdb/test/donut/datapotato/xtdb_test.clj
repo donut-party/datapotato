@@ -58,7 +58,7 @@
 (def ent-db
   {:schema   schema
    :generate {:generator mg/generate}
-   :fixtures {:perform-insert dxtdb/perform-insert
+   :fixtures {:insert         dxtdb/insert
               :get-connection (fn get-connection [_]
                                 (when-let [node @node-atom]
                                   (.close node))

@@ -56,11 +56,11 @@
 (def ent-db
   {:schema   schema
    :generate {:generator mg/generate}
-   :fixtures {:perform-insert da/perform-insert
-              :setup          (fn [_]
-                                (reset! fixture-atom [])
-                                (reset! dgt/id-seq 0))
-              :atom           fixture-atom}})
+   :fixtures {:insert da/insert
+              :setup  (fn [_]
+                        (reset! fixture-atom [])
+                        (reset! dgt/id-seq 0))
+              :atom   fixture-atom}})
 
 
 ;;---

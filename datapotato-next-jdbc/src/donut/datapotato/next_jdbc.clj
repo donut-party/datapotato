@@ -12,7 +12,7 @@
   ;; keys:
   ;; dbspec
   ;; dbtype
-  ;; perform-insert
+  ;; insert
   ;; get-inserted
   ;; setup
   ;; teardown
@@ -34,7 +34,7 @@
   [{:keys [insert-result]}]
   insert-result)
 
-(defn perform-insert
+(defn insert
   [{{:keys [connection dbspec dbtype]} dc/fixtures-visit-key
     :as                                ent-db}
    {:keys [ent-name ent-type visit-val]}]
@@ -58,5 +58,5 @@
                       :insert-result insert-result}))))
 
 (def config
-  {:perform-insert  perform-insert
+  {:insert          insert
    :open-connection #(jdbc/get-connection (get-in % [:fixtures :dbspec]))})

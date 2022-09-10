@@ -3,7 +3,7 @@
    [donut.datapotato.core :as dc]
    [fluree.db.api :as fdb]))
 
-(defn perform-insert
+(defn insert
   [{{:keys [connection]} dc/fixtures-visit-key
     :as                  ent-db}
    {:keys [ent-name visit-val]}]

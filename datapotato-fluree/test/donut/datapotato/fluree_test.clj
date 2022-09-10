@@ -51,8 +51,8 @@
 (def ent-db
   {:schema   schema
    :generate {:generator mg/generate}
-   :fixtures {:perform-insert
-              df/perform-insert
+   :fixtures {:insert
+              df/insert
 
               :get-connection
               (fn open-connection [_]
