@@ -4,7 +4,8 @@
    [donut.datapotato.core :as dc]
    [donut.datapotato.atom :as da]
    [donut.datapotato.generate-test :as dgt]
-   [malli.generator :as mg]))
+   [malli.generator :as mg])
+  #?(:cljs (:require-macros [donut.datapotato.core])))
 
 ;;---
 ;; schemas
