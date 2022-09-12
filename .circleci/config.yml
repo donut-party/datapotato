@@ -83,8 +83,17 @@ jobs:
           name: Deploy datapotato to clojars
           command: cd datapotato && clojure -T:build deploy
       - run:
-          name: Deploy datapotato-insert-next-jdbc to clojars
-          command: cd datapotato-insert-next-jdbc && clojure -T:build deploy
+          name: Deploy datapotato-next-jdbc to clojars
+          command: cd datapotato-next-jdbc && clojure -T:build deploy
+      - run:
+          name: Deploy datapotato-xtdb to clojars
+          command: cd datapotato-xtdb && clojure -T:build deploy
+      - run:
+          name: Deploy datapotato-datomic to clojars
+          command: cd datapotato-datomic && clojure -T:build deploy
+      - run:
+          name: Deploy datapotato-fluree to clojars
+          command: cd datapotato-fluree && clojure -T:build deploy
 
 workflows:
   version: 2
