@@ -4,9 +4,11 @@ jobs:
     environment:
       - _JAVA_OPTIONS: "-Xms512m -Xmx1024m"
     docker:
-      - image: circleci/clojure:openjdk-8-tools-deps-buster-node
+      - image: cimg/clojure:1.11.1-openjdk-8.0-node
     steps:
       - checkout
+
+      # core
       - run:
           name: test datapotato clj
           command: cd datapotato && clojure -X:test
@@ -23,12 +25,42 @@ jobs:
       - run:
           name: Build datapotato
           command: cd datapotato && clojure -T:build jar
+
+          # next-jdbc
       - run:
-          name: test datapotato-insert-next-jdbc clj
-          command: cd datapotato-insert-next-jdbc && clojure -X:test
+          name: test datapotato-next-jdbc clj
+          command: cd datapotato-next-jdbc && clojure -X:test
       - run:
-          name: Build datapotato-insert-next-jdbc
-          command: cd datapotato-insert-next-jdbc && clojure -T:build jar
+          name: Build datapotato-next-jdbc
+          command: cd datapotato-next-jdbc && clojure -T:build jar
+
+          # xtdb
+          # xtdb test hangs for some reason :(
+      # - run:
+      #     name: test datapotato-xtdb clj
+      #     command: cd datapotato-xtdb && clojure -X:test
+      - run:
+          name: Build datapotato-xtdb
+          command: cd datapotato-xtdb && clojure -T:build jar
+
+
+          # datomic
+      - run:
+          name: test datapotato-datomic clj
+          command: cd datapotato-datomic && clojure -X:test
+      - run:
+          name: Build datapotato-datomic
+          command: cd datapotato-datomic && clojure -T:build jar
+
+          # fluree
+      - run:
+          name: test datapotato-fluree clj
+          command: cd datapotato-fluree && clojure -X:test
+      - run:
+          name: Build datapotato-fluree
+          command: cd datapotato-fluree && clojure -T:build jar
+
+
       - save-cache:
           paths:
             - ~/bin
