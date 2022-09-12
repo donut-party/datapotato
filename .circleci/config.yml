@@ -76,7 +76,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: datapotato-{{ checksum "build.clj" }}
+          key: datapotato-{{ checksum "datapotato/build.clj" }}
       - attach_workspace:
           at: ./
       - run:
