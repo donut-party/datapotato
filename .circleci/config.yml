@@ -65,14 +65,14 @@ jobs:
           paths:
             - ~/bin
             - ~/.m2
-          key: datapotato-{{ checksum "build.clj" }}
+          key: datapotato-{{ checksum "datapotato/build.clj" }}
       - persist_to_workspace:
           root: ./
           paths:
             - ./
   deploy:
     docker:
-      - image: circleci/clojure:openjdk-8-tools-deps-buster-node
+      - image: cimg/clojure:1.11.1-openjdk-8.0-node
     steps:
       - checkout
       - restore_cache:
