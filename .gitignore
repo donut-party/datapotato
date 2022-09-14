@@ -2,6 +2,7 @@
 *cider-repl*
 .DS_Store
 .cache
+.clj-kondo/metosin
 .cpcache
 .lein*
 .nrepl*

@@ -196,9 +196,7 @@
   (s/cat :ent-id ::ent-id
          :query-opts (s/? ::query-opts)))
 
-(s/def ::query-term.new
-  (s/or :count ::count
-        :query-opts ::query-opts))
+(s/def ::query-term.new ::query-opts)
 
 (s/def ::query-term
   (s/or :query-term.orig ::query-term.orig
@@ -243,11 +241,7 @@
 
 (defn query-opts
   [{:keys [data]} ent-name]
-  (let [query-term      (lat/attr data ent-name :query-term)
-        query-term-type (first (s/conform ::query-term query-term))]
-    (case query-term-type
-      :query-term.orig (second query-term)
-      :query-term.new  query-term)))
+  (lat/attr data ent-name :query-term))
 
 (defn relation-graph
   "A graph of the type dependencies in a schema. If entities of type
@@ -376,8 +370,7 @@
   Conforming the query opts provides the `qr-type` and `qr-constraint`
   so that dependent functions can dispatch on these values."
   [query-term relation-attr]
-  (let [{:keys [refs bind]}        (and query-term
-                                        (s/conform ::query-opts (second query-term)))
+  (let [{:keys [refs bind]}        (s/conform ::query-opts query-term)
         [qr-constraint qr-details] (relation-attr refs)]
     (if (= qr-constraint :omit)
       {:qr-constraint :omit}
@@ -411,7 +404,7 @@
     (validate-related-ents-query ent-db ent-name relation-attr query-term)
 
     (b/cond (= qr-constraint :omit) []
-            (= qr-type :count)  (mapv (partial numeric-node-name schema related-ent-type) (range qr-term))
+            (= qr-type :count)      (mapv (partial numeric-node-name schema related-ent-type) (range qr-term))
             (= qr-type :ent-names)  qr-term
             (= qr-type :ent-name)   [qr-term]
             :let [bn (get bind related-ent-type)]
@@ -458,9 +451,9 @@
                                 related-ent-type [(:ent-type (query-relation ent-db ent-name relation-attr))]
                                 related-ent      (related-ents ent-db ent-name relation-attr related-ent-type query-term)]
                             [relation-attr related-ent-type related-ent])
-        ent-bindings      (if-let [query-bindings (get-in query-term [1 :bind])]
-                            [:_ {:bind query-bindings}]
-                            [:_])]
+        ent-bindings      (if-let [query-bindings (:bind query-term)]
+                            {:ent-name :_ :bind query-bindings}
+                            {:ent-name :_})]
     (reduce (fn [db [relation-attr related-ent-type related-ent]]
               (-> db
                   (update :ref-ents conj [related-ent related-ent-type ent-bindings])
@@ -503,38 +496,29 @@
       (recur (add-ent db (incrementing-node-name db ent-type) ent-type query-term)
              (dec n)))))
 
-(defn conform-query-term-orig
-  [conformed-query-term]
-  (let [[ent-id-type ent-id] (:ent-id conformed-query-term)]
+(defn normalize-query-term-orig
+  "normalizes query terms written with specmonstah syntax"
+  [{:keys [ent-id query-opts]}]
+  (let [[ent-id-type ent-id-val] ent-id
+        query-opts               (s/unform ::query-opts query-opts)]
     (case ent-id-type
-      :count      {:count      ent-id
-                   :ent-name :_}
-      :ent-name {:count      1
-                 :ent-name ent-id})))
+      :ent-name (merge {:ent-name ent-id-val
+                        :count    1}
+                       query-opts)
+      :count    (merge {:ent-name :_
+                        :count    ent-id-val}
+                       query-opts))))
 
-(defn conform-query-term-new
-  [[query-term-type query-term]]
-  (case query-term-type
-    :count      {:count    query-term
-                 :ent-name :_}
-    :query-opts (-> query-term
-                    (update :count #(or % 1))
-                    (update :ent-name #(or % :_)))))
-
-(defn conform-query-term
+(defn normalize-query-term
   [query-term]
-  (let [[query-term-version conformed-query-term]
-        (s/conform ::query-term query-term)
-
-        {:keys [count ent-name] :as query-opts}
-        (case query-term-version
-          :query-term.orig (conform-query-term-orig conformed-query-term)
-          :query-term.new  (conform-query-term-new conformed-query-term))]
-    (when (and (> count 1)
-               (not= :_ ent-name))
+  (let [[query-term-version conformed-query-term] (s/conform ::query-term query-term)
+        normalized (case query-term-version
+                     :query-term.orig (normalize-query-term-orig conformed-query-term)
+                     :query-term.new  (merge {:ent-name :_ :count 1} conformed-query-term))]
+    (when (and (> (:count normalized) 1)
+               (not= :_ (:ent-name normalized)))
       (throw (ex-info "You can't specify both :ent-name and a :count > 1 in a query term" {:query-term query-term})))
-
-    query-opts))
+    normalized))
 
 (defn add-ent-type-query
   "A query is composed of ent-type-queries, where each ent-type-query
@@ -546,7 +530,7 @@
             ;; specified explicitly in a query
 
             (let [query-term               (with-meta query-term {:top-level true})
-                  {:keys [count ent-name]} (conform-query-term query-term)]
+                  {:keys [count ent-name]} query-term]
               (if (> count 1)
                 (add-n-ents db ent-type count query-term)
                 (add-ent db ent-name ent-type query-term))))
@@ -645,13 +629,15 @@
   (throw-invalid-spec "query" ::query query)
   ;; end validations
 
-  (let [ent-db (init-db ent-db query)]
-    (->> (reduce (fn [db ent-type]
-                   (if-let [ent-type-query (ent-type query)]
+  (let [normalized-query (medley/map-vals (fn [query-terms] (mapv normalize-query-term query-terms))
+                                          query)
+        ent-db           (init-db ent-db normalized-query)]
+    (->> (:types ent-db)
+         (reduce (fn [db ent-type]
+                   (if-let [ent-type-query (ent-type normalized-query)]
                      (add-ent-type-query db ent-type-query ent-type)
                      db))
-                 ent-db
-                 (:types ent-db))
+                 ent-db)
          (add-ref-ents))))
 
 ;; -----------------
