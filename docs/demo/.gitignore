@@ -1,3 +1,4 @@
-frontend-target
-.shadow-cljs
+.clj-kondo/metosi
 .cpcache
+.shadow-cljs
+frontend-targetn

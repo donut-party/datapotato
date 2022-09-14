@@ -532,32 +532,29 @@
 
 (deftest test-add-ents-handles-A->B-cycles
   (testing "Handle cycles where two entities of the different types reference each other"
-    (is-graph= (:data (dc/add-ents {:schema td/cycle-schema} {:todo      [[:t0 {:refs {:todo-list-id :tl0}}]]
-                                                              :todo-list [[:tl0 {:refs {:first-todo-id :t0}}]]}))
-               (-> (lg/digraph [:todo :t0] [:todo-list :tl0] [:tl0 :t0] [:t0 :tl0])
+    (is-graph= (-> (lg/digraph [:todo :t0] [:todo-list :tl0] [:tl0 :t0] [:t0 :tl0])
                    (lat/add-attr :todo :type :ent-type)
                    (lat/add-attr :t0 :type :ent)
                    (lat/add-attr :t0 :index 0)
                    (lat/add-attr :t0 :query-term [:t0 {:refs {:todo-list-id :tl0}}])
                    (lat/add-attr :t0 :ent-type :todo)
                    (lat/add-attr :t0 :tl0 :relation-attrs #{:todo-list-id})
-                   
+
                    (lat/add-attr :todo-list :type :ent-type)
                    (lat/add-attr :tl0 :type :ent)
                    (lat/add-attr :tl0 :index 0)
                    (lat/add-attr :tl0 :query-term [:tl0 {:refs {:first-todo-id :t0}}])
                    (lat/add-attr :tl0 :ent-type :todo-list)
-                   (lat/add-attr :tl0 :t0 :relation-attrs #{:first-todo-id})))))
+                   (lat/add-attr :tl0 :t0 :relation-attrs #{:first-todo-id}))
+               (:data (dc/add-ents {:schema td/cycle-schema} {:todo      [[:t0 {:refs {:todo-list-id :tl0}}]]
+                                                              :todo-list [[:tl0 {:refs {:first-todo-id :t0}}]]})))))
 
 ;; -----------------
 ;; polymorphism tests
 ;; -----------------
 
 (deftest polymorphic-refs
-  (is-graph= (:data (dc/add-ents {:schema td/polymorphic-schema}
-                                 {:watch [[1 {:refs      {:watched-id :tc0}
-                                              :ref-types {:watched-id :topic-category}}]]}))
-             (-> (lg/digraph [:topic-category :tc0] [:watch :w0] [:w0 :tc0])
+  (is-graph= (-> (lg/digraph [:topic-category :tc0] [:watch :w0] [:w0 :tc0])
                  (lat/add-attr :topic-category :type :ent-type)
                  (lat/add-attr :tc0 :type :ent)
                  (lat/add-attr :tc0 :index 0)
@@ -570,13 +567,14 @@
                  (lat/add-attr :w0 :query-term [1 {:refs      {:watched-id :tc0}
                                                    :ref-types {:watched-id :topic-category}}])
                  (lat/add-attr :w0 :ent-type :watch)
-                 (lat/add-attr :w0 :tc0 :relation-attrs #{:watched-id}))))
+                 (lat/add-attr :w0 :tc0 :relation-attrs #{:watched-id}))
+             (:data (dc/add-ents {:schema td/polymorphic-schema}
+                                 {:watch [[1 {:refs      {:watched-id :tc0}
+                                              :ref-types {:watched-id :topic-category}}]]}))))
 
 (deftest polymorphic-refs-with-ref-name-unspecified
   ;; differs from above in that we leave out {:refs {:watched-id :tc0}}
-  (is-graph= (:data (dc/add-ents {:schema td/polymorphic-schema}
-                                 {:watch [[1 {:ref-types {:watched-id :topic-category}}]]}))
-             (-> (lg/digraph [:topic-category :tc0] [:watch :w0] [:w0 :tc0])
+  (is-graph= (-> (lg/digraph [:topic-category :tc0] [:watch :w0] [:w0 :tc0])
                  (lat/add-attr :topic-category :type :ent-type)
                  (lat/add-attr :tc0 :type :ent)
                  (lat/add-attr :tc0 :index 0)
@@ -588,7 +586,9 @@
                  (lat/add-attr :w0 :index 0)
                  (lat/add-attr :w0 :query-term [1 {:ref-types {:watched-id :topic-category}}])
                  (lat/add-attr :w0 :ent-type :watch)
-                 (lat/add-attr :w0 :tc0 :relation-attrs #{:watched-id}))))
+                 (lat/add-attr :w0 :tc0 :relation-attrs #{:watched-id}))
+             (:data (dc/add-ents {:schema td/polymorphic-schema}
+                                 {:watch [[1 {:ref-types {:watched-id :topic-category}}]]}))))
 
 (deftest polymorphic-refs-nested
   ;; refer to topic instead of topic-category
@@ -941,4 +941,39 @@
   (is (= #{:bill}
          (-> (dc/add-ents {:schema td/schema} {:user [{:count    1
                                                        :ent-name :bill}]})
+             (dc/ents)))))
+
+(comment
+  (deftest test-related-ents-by-attr
+    (let [db (dc/add-ents {:schema td/schema} {:todo [[1]]
+                                               :project [[1 {:refs {:todo-list-ids [:tl0 :tl1]}}]]})]
+      (is (= (dc/related-ents-by-attr db :t0 :todo-list-id)
+             :tl0))
+      (is (= (dc/related-ents-by-attr db :t0 :created-by-id)
+             :u0))
+      (is (= (dc/related-ents-by-attr db :p0 :todo-list-ids)
+             [:tl0 :tl1])))))
+
+(deftest new-synxtax-test-related-ents-by-attr
+  (let [db (dc/add-ents {:schema td/schema} {:todo    [{:count 1}]
+                                             :project [{:count 1
+                                                        :refs  {:todo-list-ids [:tl0 :tl1]}}]})]
+    (is (= (dc/related-ents-by-attr db :t0 :todo-list-id)
+           :tl0))
+    (is (= (dc/related-ents-by-attr db :t0 :created-by-id)
+           :u0))
+    (is (= (dc/related-ents-by-attr db :p0 :todo-list-ids)
+           [:tl0 :tl1]))))
+
+(deftest new-syntax-multiple-ent-types
+  (is (= #{:u0 :u1 :u2 :u3 :u4 :p0 :p1 :p2 :tl0}
+         (-> (dc/add-ents {:schema td/schema} {:user    [{:count 5}]
+                                               :project [{:count 3}]})
+             (dc/ents)))))
+
+#_
+(deftest new-syntax-2-ent-name
+  (is (= #{:bill}
+         (-> (dc/add-ents {:schema td/schema} [[:user {:count 1 :ent-name :bill}]
+                                               [:todo-list {:count 3}]])
              (dc/ents)))))

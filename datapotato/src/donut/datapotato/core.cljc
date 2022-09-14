@@ -453,21 +453,20 @@
 
 (defn add-related-ents
   [ent-db ent-name query-term]
-  (let [relation-schema (:relations (ent-schema ent-db ent-name))]
-    (reduce (fn [db relation-attr]
-              (let [related-ent-type (:ent-type (query-relation db ent-name relation-attr))]
-                (reduce (fn [db related-ent]
-                          (-> db
-                              (update :ref-ents conj [related-ent
-                                                      related-ent-type
-                                                      (if-let [query-bindings (get-in query-term [1 :bind])]
-                                                        [:_ {:bind query-bindings}]
-                                                        [:_])])
-                              (update :data add-edge-with-id ent-name related-ent relation-attr)))
-                        db
-                        (related-ents db ent-name relation-attr related-ent-type query-term))))
+  (let [relation-attrs    (keys (:relations (ent-schema ent-db ent-name)))
+        attr-related-ents (for [relation-attr    relation-attrs
+                                related-ent-type [(:ent-type (query-relation ent-db ent-name relation-attr))]
+                                related-ent      (related-ents ent-db ent-name relation-attr related-ent-type query-term)]
+                            [relation-attr related-ent-type related-ent])
+        ent-bindings      (if-let [query-bindings (get-in query-term [1 :bind])]
+                            [:_ {:bind query-bindings}]
+                            [:_])]
+    (reduce (fn [db [relation-attr related-ent-type related-ent]]
+              (-> db
+                  (update :ref-ents conj [related-ent related-ent-type ent-bindings])
+                  (update :data add-edge-with-id ent-name related-ent relation-attr)))
             ent-db
-            (keys relation-schema))))
+            attr-related-ents)))
 
 (defn add-ent
   "Add an ent, and its related ents, to the ent-db"
@@ -546,7 +545,7 @@
             ;; top-level meta is used to track which ents are
             ;; specified explicitly in a query
 
-            (let [query-term             (with-meta query-term {:top-level true})
+            (let [query-term               (with-meta query-term {:top-level true})
                   {:keys [count ent-name]} (conform-query-term query-term)]
               (if (> count 1)
                 (add-n-ents db ent-type count query-term)
