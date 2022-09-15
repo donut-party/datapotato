@@ -514,7 +514,7 @@
   (let [[query-term-version conformed-query-term] (s/conform ::query-term query-term)
         normalized (case query-term-version
                      :query-term.orig (normalize-query-term-orig conformed-query-term)
-                     :query-term.new  (merge {:ent-name :_ :count 1} conformed-query-term))]
+                     :query-term.new  (merge {:ent-name :_ :count 1} query-term))]
     (when (and (> (:count normalized) 1)
                (not= :_ (:ent-name normalized)))
       (throw (ex-info "You can't specify both :ent-name and a :count > 1 in a query term" {:query-term query-term})))

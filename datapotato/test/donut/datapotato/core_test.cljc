@@ -86,158 +86,187 @@
          (dc/bound-relation-attr-name (dc/add-ents {:schema td/schema} {}) :tl-bound-p-0 :todo 1))))
 
 (deftest test-add-ents-relationless-ent
-  (is-graph= (-> (lg/digraph [:user :u1])
-                 (lat/add-attr :user :type :ent-type)
-                 (lat/add-attr :u1 :type :ent)
-                 (lat/add-attr :u1 :index 0)
-                 (lat/add-attr :u1 :query-term {:ent-name :u1 :count 1})
-                 (lat/add-attr :u1 :ent-type :user))
-             (:data (dc/add-ents {:schema td/schema} {:user [[:u1]]}))))
+  (let [expected (-> (lg/digraph [:user :u1])
+                     (lat/add-attr :user :type :ent-type)
+                     (lat/add-attr :u1 :type :ent)
+                     (lat/add-attr :u1 :index 0)
+                     (lat/add-attr :u1 :query-term {:ent-name :u1 :count 1})
+                     (lat/add-attr :u1 :ent-type :user))]
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:user [[:u1]]})))
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:user [{:ent-name :u1}]})))))
 
 (deftest test-add-ents-mult-relationless-ents
-  (is-graph= (-> (lg/digraph [:user :u0] [:user :u1] [:user :u2])
-                 (lat/add-attr :user :type :ent-type)
-                 (lat/add-attr :u0 :type :ent)
-                 (lat/add-attr :u0 :index 0)
-                 (lat/add-attr :u0 :query-term {:ent-name :_ :count 3})
-                 (lat/add-attr :u0 :ent-type :user)
+  (let [expected (-> (lg/digraph [:user :u0] [:user :u1] [:user :u2])
+                     (lat/add-attr :user :type :ent-type)
+                     (lat/add-attr :u0 :type :ent)
+                     (lat/add-attr :u0 :index 0)
+                     (lat/add-attr :u0 :query-term {:ent-name :_ :count 3})
+                     (lat/add-attr :u0 :ent-type :user)
 
-                 (lat/add-attr :u1 :type :ent)
-                 (lat/add-attr :u1 :index 1)
-                 (lat/add-attr :u1 :query-term {:ent-name :_ :count 3})
-                 (lat/add-attr :u1 :ent-type :user)
+                     (lat/add-attr :u1 :type :ent)
+                     (lat/add-attr :u1 :index 1)
+                     (lat/add-attr :u1 :query-term {:ent-name :_ :count 3})
+                     (lat/add-attr :u1 :ent-type :user)
 
-                 (lat/add-attr :u2 :type :ent)
-                 (lat/add-attr :u2 :index 2)
-                 (lat/add-attr :u2 :query-term {:ent-name :_ :count 3})
-                 (lat/add-attr :u2 :ent-type :user))
-             (:data (strip-db (dc/add-ents {:schema td/schema} {:user [[3]]})))))
+                     (lat/add-attr :u2 :type :ent)
+                     (lat/add-attr :u2 :index 2)
+                     (lat/add-attr :u2 :query-term {:ent-name :_ :count 3})
+                     (lat/add-attr :u2 :ent-type :user))]
+    (is-graph= expected (:data (strip-db (dc/add-ents {:schema td/schema} {:user [[3]]}))))
+    (is-graph= expected (:data (strip-db (dc/add-ents {:schema td/schema} {:user [{:count 3}]}))))))
 
 (deftest test-add-ents-one-level-relation
-  (is-graph= (-> (lg/digraph [:user :u0] [:todo-list :tl0] [:tl0 :u0])
+  (let [expected (-> (lg/digraph [:user :u0] [:todo-list :tl0] [:tl0 :u0])
 
-                 (lat/add-attr :user :type :ent-type)
-                 (lat/add-attr :u0 :type :ent)
-                 (lat/add-attr :u0 :index 0)
-                 (lat/add-attr :u0 :query-term {:ent-name :_})
-                 (lat/add-attr :u0 :ent-type :user)
+                     (lat/add-attr :user :type :ent-type)
+                     (lat/add-attr :u0 :type :ent)
+                     (lat/add-attr :u0 :index 0)
+                     (lat/add-attr :u0 :query-term {:ent-name :_})
+                     (lat/add-attr :u0 :ent-type :user)
 
-                 (lat/add-attr :todo-list :type :ent-type)
-                 (lat/add-attr :tl0 :type :ent)
-                 (lat/add-attr :tl0 :index 0)
-                 (lat/add-attr :tl0 :ent-type :todo-list)
-                 (lat/add-attr :tl0 :query-term {:ent-name :_ :count 1})
+                     (lat/add-attr :todo-list :type :ent-type)
+                     (lat/add-attr :tl0 :type :ent)
+                     (lat/add-attr :tl0 :index 0)
+                     (lat/add-attr :tl0 :ent-type :todo-list)
+                     (lat/add-attr :tl0 :query-term {:ent-name :_ :count 1})
 
-                 (lat/add-attr :tl0 :u0 :relation-attrs #{:created-by-id :updated-by-id}))
-             (:data (dc/add-ents {:schema td/schema} {:todo-list [[1]]}))))
+                     (lat/add-attr :tl0 :u0 :relation-attrs #{:created-by-id :updated-by-id}))]
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo-list [[1]]})))
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo-list [{:count 1}]})))))
 
 (deftest test-add-ents-one-level-relation-with-omit
-  (is-graph= (-> (lg/digraph [:todo-list :tl0])
+  (let [expected (-> (lg/digraph [:todo-list :tl0])
 
-                 (lat/add-attr :todo-list :type :ent-type)
-                 (lat/add-attr :tl0 :type :ent)
-                 (lat/add-attr :tl0 :index 0)
-                 (lat/add-attr :tl0 :ent-type :todo-list)
-                 (lat/add-attr :tl0 :query-term {:ent-name :_
-                                                 :count    1
-                                                 :refs     {:created-by-id ::dc/omit
-                                                            :updated-by-id ::dc/omit}}))
-             (:data (dc/add-ents {:schema td/schema} {:todo-list [[1 {:refs {:created-by-id ::dc/omit
-                                                                             :updated-by-id ::dc/omit}}]]}))))
+                     (lat/add-attr :todo-list :type :ent-type)
+                     (lat/add-attr :tl0 :type :ent)
+                     (lat/add-attr :tl0 :index 0)
+                     (lat/add-attr :tl0 :ent-type :todo-list)
+                     (lat/add-attr :tl0 :query-term {:ent-name :_
+                                                     :count    1
+                                                     :refs     {:created-by-id ::dc/omit
+                                                                :updated-by-id ::dc/omit}}))]
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema}
+                                            {:todo-list [[1 {:refs {:created-by-id ::dc/omit
+                                                                    :updated-by-id ::dc/omit}}]]})))
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema}
+                                            {:todo-list [{:count 1
+                                                          :refs  {:created-by-id ::dc/omit
+                                                                  :updated-by-id ::dc/omit}}]})))))
 
 (deftest test-add-ents-mult-ents-w-extended-query
-  (is-graph= (-> (lg/digraph [:user :bloop]
-                             [:todo-list :tl0]
-                             [:todo-list :tl1]
-                             [:tl0 :bloop]
-                             [:tl1 :bloop])
+  (let [expected (-> (lg/digraph [:user :bloop]
+                                 [:todo-list :tl0]
+                                 [:todo-list :tl1]
+                                 [:tl0 :bloop]
+                                 [:tl1 :bloop])
 
-                 (lat/add-attr :user :type :ent-type)
-                 (lat/add-attr :bloop :type :ent)
-                 (lat/add-attr :bloop :index 0)
-                 (lat/add-attr :bloop :query-term {:ent-name :_})
-                 (lat/add-attr :bloop :ent-type :user)
+                     (lat/add-attr :user :type :ent-type)
+                     (lat/add-attr :bloop :type :ent)
+                     (lat/add-attr :bloop :index 0)
+                     (lat/add-attr :bloop :query-term {:ent-name :_})
+                     (lat/add-attr :bloop :ent-type :user)
 
-                 (lat/add-attr :todo-list :type :ent-type)
-                 (lat/add-attr :tl0 :type :ent)
-                 (lat/add-attr :tl0 :index 0)
-                 (lat/add-attr :tl0 :ent-type :todo-list)
-                 (lat/add-attr :tl0 :query-term {:ent-name :_
-                                                 :count    2
-                                                 :refs     {:created-by-id :bloop
-                                                            :updated-by-id :bloop}})
+                     (lat/add-attr :todo-list :type :ent-type)
+                     (lat/add-attr :tl0 :type :ent)
+                     (lat/add-attr :tl0 :index 0)
+                     (lat/add-attr :tl0 :ent-type :todo-list)
+                     (lat/add-attr :tl0 :query-term {:ent-name :_
+                                                     :count    2
+                                                     :refs     {:created-by-id :bloop
+                                                                :updated-by-id :bloop}})
 
-                 (lat/add-attr :todo-list :type :ent-type)
-                 (lat/add-attr :tl1 :type :ent)
-                 (lat/add-attr :tl1 :index 1)
-                 (lat/add-attr :tl1 :ent-type :todo-list)
-                 (lat/add-attr :tl1 :query-term {:ent-name :_
-                                                 :count    2
-                                                 :refs     {:created-by-id :bloop,
-                                                            :updated-by-id :bloop}})
+                     (lat/add-attr :todo-list :type :ent-type)
+                     (lat/add-attr :tl1 :type :ent)
+                     (lat/add-attr :tl1 :index 1)
+                     (lat/add-attr :tl1 :ent-type :todo-list)
+                     (lat/add-attr :tl1 :query-term {:ent-name :_
+                                                     :count    2
+                                                     :refs     {:created-by-id :bloop,
+                                                                :updated-by-id :bloop}})
 
-                 (lat/add-attr :tl0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
-                 (lat/add-attr :tl1 :bloop :relation-attrs #{:created-by-id :updated-by-id}))
-             (:data (dc/add-ents {:schema td/schema} {:todo-list [[2 {:refs {:created-by-id :bloop :updated-by-id :bloop}}]]}))))
+                     (lat/add-attr :tl0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
+                     (lat/add-attr :tl1 :bloop :relation-attrs #{:created-by-id :updated-by-id}))]
+    (is-graph= expected (-> {:schema td/schema}
+                            (dc/add-ents {:todo-list [[2 {:refs {:created-by-id :bloop :updated-by-id :bloop}}]]})
+                            :data))
+    (is-graph= expected (-> {:schema td/schema}
+                            (dc/add-ents {:todo-list [{:count 2
+                                                       :refs {:created-by-id :bloop :updated-by-id :bloop}}]})
+                            :data))))
 
 (deftest test-add-ents-one-level-relation-custom-related
-  (is-graph= (-> (lg/digraph [:user :owner0] [:todo-list :tl0] [:tl0 :owner0])
-                 (lat/add-attr :user :type :ent-type)
-                 (lat/add-attr :owner0 :type :ent)
-                 (lat/add-attr :owner0 :index 0)
-                 (lat/add-attr :owner0 :query-term {:ent-name :_})
-                 (lat/add-attr :owner0 :ent-type :user)
-                 (lat/add-attr :todo-list :type :ent-type)
-                 (lat/add-attr :tl0 :type :ent)
-                 (lat/add-attr :tl0 :index 0)
-                 (lat/add-attr :tl0 :ent-type :todo-list)
-                 (lat/add-attr :tl0 :query-term {:ent-name :_
-                                                 :count    1
-                                                 :refs     {:created-by-id :owner0
-                                                            :updated-by-id :owner0}})
-                 (lat/add-attr :tl0 :owner0 :relation-attrs #{:updated-by-id :created-by-id}))
-             (:data (strip-db (dc/add-ents {:schema td/schema} {:todo-list [[:_ {:refs {:created-by-id :owner0
-                                                                                        :updated-by-id :owner0}}]]})))))
+  (let [expected (-> (lg/digraph [:user :owner0] [:todo-list :tl0] [:tl0 :owner0])
+                     (lat/add-attr :user :type :ent-type)
+                     (lat/add-attr :owner0 :type :ent)
+                     (lat/add-attr :owner0 :index 0)
+                     (lat/add-attr :owner0 :query-term {:ent-name :_})
+                     (lat/add-attr :owner0 :ent-type :user)
+                     (lat/add-attr :todo-list :type :ent-type)
+                     (lat/add-attr :tl0 :type :ent)
+                     (lat/add-attr :tl0 :index 0)
+                     (lat/add-attr :tl0 :ent-type :todo-list)
+                     (lat/add-attr :tl0 :query-term {:ent-name :_
+                                                     :count    1
+                                                     :refs     {:created-by-id :owner0
+                                                                :updated-by-id :owner0}})
+                     (lat/add-attr :tl0 :owner0 :relation-attrs #{:updated-by-id :created-by-id}))]
+    (is-graph= expected (-> {:schema td/schema}
+                            (dc/add-ents {:todo-list [[:_ {:refs {:created-by-id :owner0
+                                                                  :updated-by-id :owner0}}]]})
+                            strip-db
+                            :data))
+    (is-graph= expected (-> {:schema td/schema}
+                            (dc/add-ents {:todo-list [{:refs {:created-by-id :owner0
+                                                              :updated-by-id :owner0}}]})
+                            strip-db
+                            :data))))
 
 (deftest testadd-ents-two-level-coll-relation
   (testing "can specify how many ents to gen in a coll relationship"
-    (is-graph= (-> (lg/digraph [:user :u0]
-                               [:todo-list :tl0] [:todo-list :tl1]  [:tl0 :u0] [:tl1 :u0]
-                               [:project :p0] [:p0 :u0] [:p0 :tl0] [:p0 :tl1] [:p0 :u0])
+    (let [expected (-> (lg/digraph [:user :u0]
+                                   [:todo-list :tl0] [:todo-list :tl1]  [:tl0 :u0] [:tl1 :u0]
+                                   [:project :p0] [:p0 :u0] [:p0 :tl0] [:p0 :tl1] [:p0 :u0])
 
-                   (lat/add-attr :user :type :ent-type)
-                   (lat/add-attr :u0 :type :ent)
-                   (lat/add-attr :u0 :index 0)
-                   (lat/add-attr :u0 :query-term {:ent-name :_})
-                   (lat/add-attr :u0 :ent-type :user)
+                       (lat/add-attr :user :type :ent-type)
+                       (lat/add-attr :u0 :type :ent)
+                       (lat/add-attr :u0 :index 0)
+                       (lat/add-attr :u0 :query-term {:ent-name :_})
+                       (lat/add-attr :u0 :ent-type :user)
 
-                   (lat/add-attr :project :type :ent-type)
-                   (lat/add-attr :p0 :type :ent)
-                   (lat/add-attr :p0 :index 0)
-                   (lat/add-attr :p0 :query-term {:ent-name :_
-                                                  :count    1
-                                                  :refs     {:todo-list-ids 2}})
-                   (lat/add-attr :p0 :ent-type :project)
-                   (lat/add-attr :p0 :u0 :relation-attrs #{:created-by-id :updated-by-id})
+                       (lat/add-attr :project :type :ent-type)
+                       (lat/add-attr :p0 :type :ent)
+                       (lat/add-attr :p0 :index 0)
+                       (lat/add-attr :p0 :query-term {:ent-name :_
+                                                      :count    1
+                                                      :refs     {:todo-list-ids 2}})
+                       (lat/add-attr :p0 :ent-type :project)
+                       (lat/add-attr :p0 :u0 :relation-attrs #{:created-by-id :updated-by-id})
 
-                   (lat/add-attr :todo-list :type :ent-type)
-                   (lat/add-attr :tl0 :type :ent)
-                   (lat/add-attr :tl0 :index 0)
-                   (lat/add-attr :tl0 :ent-type :todo-list)
-                   (lat/add-attr :tl0 :query-term {:ent-name :_})
+                       (lat/add-attr :todo-list :type :ent-type)
+                       (lat/add-attr :tl0 :type :ent)
+                       (lat/add-attr :tl0 :index 0)
+                       (lat/add-attr :tl0 :ent-type :todo-list)
+                       (lat/add-attr :tl0 :query-term {:ent-name :_})
 
-                   (lat/add-attr :todo-list :type :ent-type)
-                   (lat/add-attr :tl1 :type :ent)
-                   (lat/add-attr :tl1 :index 1)
-                   (lat/add-attr :tl1 :ent-type :todo-list)
-                   (lat/add-attr :tl1 :query-term {:ent-name :_})
+                       (lat/add-attr :todo-list :type :ent-type)
+                       (lat/add-attr :tl1 :type :ent)
+                       (lat/add-attr :tl1 :index 1)
+                       (lat/add-attr :tl1 :ent-type :todo-list)
+                       (lat/add-attr :tl1 :query-term {:ent-name :_})
 
-                   (lat/add-attr :p0 :tl0 :relation-attrs #{:todo-list-ids})
-                   (lat/add-attr :p0 :tl1 :relation-attrs #{:todo-list-ids})
-                   (lat/add-attr :p0 :u0 :relation-attrs #{:created-by-id :updated-by-id})
-                   (lat/add-attr :tl0 :u0 :relation-attrs #{:created-by-id :updated-by-id})
-                   (lat/add-attr :tl1 :u0 :relation-attrs #{:created-by-id :updated-by-id}))
-               (:data (strip-db (dc/add-ents {:schema td/schema} {:project [[:_ {:refs {:todo-list-ids 2}}]]}))))))
+                       (lat/add-attr :p0 :tl0 :relation-attrs #{:todo-list-ids})
+                       (lat/add-attr :p0 :tl1 :relation-attrs #{:todo-list-ids})
+                       (lat/add-attr :p0 :u0 :relation-attrs #{:created-by-id :updated-by-id})
+                       (lat/add-attr :tl0 :u0 :relation-attrs #{:created-by-id :updated-by-id})
+                       (lat/add-attr :tl1 :u0 :relation-attrs #{:created-by-id :updated-by-id}))]
+      (is-graph= expected (-> {:schema td/schema}
+                              (dc/add-ents {:project [[:_ {:refs {:todo-list-ids 2}}]]})
+                              strip-db
+                              :data))
+      (is-graph= expected (-> {:schema td/schema}
+                              (dc/add-ents {:project [{:refs {:todo-list-ids 2}}]})
+                              strip-db
+                              :data)))))
 
 (deftest test-add-ents-two-level-coll-relation-names
   (testing "can specify names in a coll relationship"
@@ -280,257 +309,261 @@
                (:data (strip-db (dc/add-ents {:schema td/schema} {:project [[:_ {:refs {:todo-list-ids [:mario :luigi]}}]]}))))))
 
 (deftest test-add-ents-one-level-relation-binding
-  (is-graph= (-> (lg/digraph [:user :bloop] [:todo-list :tl0] [:tl0 :bloop])
-                 (lat/add-attr :user :type :ent-type)
-                 (lat/add-attr :bloop :type :ent)
-                 (lat/add-attr :bloop :index 0)
-                 (lat/add-attr :bloop :query-term {:ent-name :_ :bind {:user :bloop}})
-                 (lat/add-attr :bloop :ent-type :user)
-                 (lat/add-attr :todo-list :type :ent-type)
-                 (lat/add-attr :tl0 :type :ent)
-                 (lat/add-attr :tl0 :index 0)
-                 (lat/add-attr :tl0 :ent-type :todo-list)
-                 (lat/add-attr :tl0 :query-term {:count 1 :ent-name :_ :bind {:user :bloop}})
-                 (lat/add-attr :tl0 :bloop :relation-attrs #{:created-by-id :updated-by-id}))
-             (:data (dc/add-ents {:schema td/schema} {:todo-list [[:_ {:bind {:user :bloop}}]]}))))
+  (let [expected  (-> (lg/digraph [:user :bloop] [:todo-list :tl0] [:tl0 :bloop])
+                      (lat/add-attr :user :type :ent-type)
+                      (lat/add-attr :bloop :type :ent)
+                      (lat/add-attr :bloop :index 0)
+                      (lat/add-attr :bloop :query-term {:ent-name :_ :bind {:user :bloop}})
+                      (lat/add-attr :bloop :ent-type :user)
+                      (lat/add-attr :todo-list :type :ent-type)
+                      (lat/add-attr :tl0 :type :ent)
+                      (lat/add-attr :tl0 :index 0)
+                      (lat/add-attr :tl0 :ent-type :todo-list)
+                      (lat/add-attr :tl0 :query-term {:count 1 :ent-name :_ :bind {:user :bloop}})
+                      (lat/add-attr :tl0 :bloop :relation-attrs #{:created-by-id :updated-by-id}))]
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo-list [[:_ {:bind {:user :bloop}}]]})))
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo-list [{:bind {:user :bloop}}]})))))
 
 (deftest test-add-ents-two-level-relation-binding
-  (is-graph= (-> (lg/digraph [:user :bloop]
-                             [:todo :t0]
-                             [:todo-list :tl-bound-t-0]
-                             [:t0 :bloop]
-                             [:t0 :tl-bound-t-0]
-                             [:tl-bound-t-0 :bloop])
+  (let [expected (-> (lg/digraph [:user :bloop]
+                                 [:todo :t0]
+                                 [:todo-list :tl-bound-t-0]
+                                 [:t0 :bloop]
+                                 [:t0 :tl-bound-t-0]
+                                 [:tl-bound-t-0 :bloop])
 
-                 (lat/add-attr :user :type :ent-type)
-                 (lat/add-attr :bloop :type :ent)
-                 (lat/add-attr :bloop :index 0)
-                 (lat/add-attr :bloop :ent-type :user)
-                 (lat/add-attr :bloop :query-term {:ent-name :_ :bind {:user :bloop}})
+                     (lat/add-attr :user :type :ent-type)
+                     (lat/add-attr :bloop :type :ent)
+                     (lat/add-attr :bloop :index 0)
+                     (lat/add-attr :bloop :ent-type :user)
+                     (lat/add-attr :bloop :query-term {:ent-name :_ :bind {:user :bloop}})
 
-                 (lat/add-attr :todo :type :ent-type)
-                 (lat/add-attr :t0 :type :ent)
-                 (lat/add-attr :t0 :index 0)
-                 (lat/add-attr :t0 :ent-type :todo)
-                 (lat/add-attr :t0 :query-term {:count 1 :ent-name :_ :bind {:user :bloop}})
+                     (lat/add-attr :todo :type :ent-type)
+                     (lat/add-attr :t0 :type :ent)
+                     (lat/add-attr :t0 :index 0)
+                     (lat/add-attr :t0 :ent-type :todo)
+                     (lat/add-attr :t0 :query-term {:count 1 :ent-name :_ :bind {:user :bloop}})
 
-                 (lat/add-attr :todo-list :type :ent-type)
-                 (lat/add-attr :tl-bound-t-0 :type :ent)
-                 (lat/add-attr :tl-bound-t-0 :index 0)
-                 (lat/add-attr :tl-bound-t-0 :ent-type :todo-list)
-                 (lat/add-attr :tl-bound-t-0 :query-term {:ent-name :_ :bind {:user :bloop}})
+                     (lat/add-attr :todo-list :type :ent-type)
+                     (lat/add-attr :tl-bound-t-0 :type :ent)
+                     (lat/add-attr :tl-bound-t-0 :index 0)
+                     (lat/add-attr :tl-bound-t-0 :ent-type :todo-list)
+                     (lat/add-attr :tl-bound-t-0 :query-term {:ent-name :_ :bind {:user :bloop}})
 
-                 (lat/add-attr :t0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
-                 (lat/add-attr :t0 :tl-bound-t-0 :relation-attrs #{:todo-list-id})
-
-                 (lat/add-attr :tl-bound-t-0 :bloop :relation-attrs #{:created-by-id :updated-by-id}))
-             (:data (dc/add-ents {:schema td/schema} {:todo [[:_ {:bind {:user :bloop}}]]}))))
+                     (lat/add-attr :t0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
+                     (lat/add-attr :t0 :tl-bound-t-0 :relation-attrs #{:todo-list-id})
+                     (lat/add-attr :tl-bound-t-0 :bloop :relation-attrs #{:created-by-id :updated-by-id}))]
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo [[:_ {:bind {:user :bloop}}]]})))
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo [{:bind {:user :bloop}}]})))))
 
 (deftest test-add-ents-multiple-two-level-relation-binding
   (testing "only one bound todo list is created for the three todos"
-    (is-graph= (:data (dc/add-ents {:schema td/schema} {:todo [[3 {:bind {:user :bloop}}]]}))
-               (-> (lg/digraph [:user :bloop]
-                               [:todo-list :tl-bound-t-0]
-                               [:todo :t0]
-                               [:t0 :bloop]
-                               [:t0 :tl-bound-t-0]
-                               [:todo :t1]
-                               [:t1 :bloop]
-                               [:t1 :tl-bound-t-0]
-                               [:todo :t2]
-                               [:t2 :bloop]
-                               [:t2 :tl-bound-t-0]
-                               [:tl-bound-t-0 :bloop])
-                   
-                   (lat/add-attr :user :type :ent-type)
-                   (lat/add-attr :bloop :type :ent)
-                   (lat/add-attr :bloop :index 0)
-                   (lat/add-attr :bloop :ent-type :user)
-                   (lat/add-attr :bloop :query-term {:ent-name :_ :bind {:user :bloop}})
+    (let [expected (-> (lg/digraph [:user :bloop]
+                                   [:todo-list :tl-bound-t-0]
+                                   [:todo :t0]
+                                   [:t0 :bloop]
+                                   [:t0 :tl-bound-t-0]
+                                   [:todo :t1]
+                                   [:t1 :bloop]
+                                   [:t1 :tl-bound-t-0]
+                                   [:todo :t2]
+                                   [:t2 :bloop]
+                                   [:t2 :tl-bound-t-0]
+                                   [:tl-bound-t-0 :bloop])
 
-                   (lat/add-attr :todo :type :ent-type)
-                   (lat/add-attr :t0 :type :ent)
-                   (lat/add-attr :t0 :index 0)
-                   (lat/add-attr :t0 :ent-type :todo)
-                   (lat/add-attr :t0 :query-term {:count 3 :ent-name :_ :bind {:user :bloop}})
+                       (lat/add-attr :user :type :ent-type)
+                       (lat/add-attr :bloop :type :ent)
+                       (lat/add-attr :bloop :index 0)
+                       (lat/add-attr :bloop :ent-type :user)
+                       (lat/add-attr :bloop :query-term {:ent-name :_ :bind {:user :bloop}})
 
-                   (lat/add-attr :todo :type :ent-type)
-                   (lat/add-attr :t1 :type :ent)
-                   (lat/add-attr :t1 :index 1)
-                   (lat/add-attr :t1 :ent-type :todo)
-                   (lat/add-attr :t1 :query-term {:count 3 :ent-name :_ :bind {:user :bloop}})
+                       (lat/add-attr :todo :type :ent-type)
+                       (lat/add-attr :t0 :type :ent)
+                       (lat/add-attr :t0 :index 0)
+                       (lat/add-attr :t0 :ent-type :todo)
+                       (lat/add-attr :t0 :query-term {:count 3 :ent-name :_ :bind {:user :bloop}})
 
-                   (lat/add-attr :todo :type :ent-type)
-                   (lat/add-attr :t2 :type :ent)
-                   (lat/add-attr :t2 :index 2)
-                   (lat/add-attr :t2 :ent-type :todo)
-                   (lat/add-attr :t2 :query-term {:count 3 :ent-name :_ :bind {:user :bloop}})
+                       (lat/add-attr :todo :type :ent-type)
+                       (lat/add-attr :t1 :type :ent)
+                       (lat/add-attr :t1 :index 1)
+                       (lat/add-attr :t1 :ent-type :todo)
+                       (lat/add-attr :t1 :query-term {:count 3 :ent-name :_ :bind {:user :bloop}})
 
-                   (lat/add-attr :todo-list :type :ent-type)
-                   (lat/add-attr :tl-bound-t-0 :type :ent)
-                   (lat/add-attr :tl-bound-t-0 :index 0)
-                   (lat/add-attr :tl-bound-t-0 :ent-type :todo-list)
-                   (lat/add-attr :tl-bound-t-0 :query-term {:ent-name :_ :bind {:user :bloop}})
+                       (lat/add-attr :todo :type :ent-type)
+                       (lat/add-attr :t2 :type :ent)
+                       (lat/add-attr :t2 :index 2)
+                       (lat/add-attr :t2 :ent-type :todo)
+                       (lat/add-attr :t2 :query-term {:count 3 :ent-name :_ :bind {:user :bloop}})
 
-                   (lat/add-attr :t0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
-                   (lat/add-attr :t0 :tl-bound-t-0 :relation-attrs #{:todo-list-id})
+                       (lat/add-attr :todo-list :type :ent-type)
+                       (lat/add-attr :tl-bound-t-0 :type :ent)
+                       (lat/add-attr :tl-bound-t-0 :index 0)
+                       (lat/add-attr :tl-bound-t-0 :ent-type :todo-list)
+                       (lat/add-attr :tl-bound-t-0 :query-term {:ent-name :_ :bind {:user :bloop}})
 
-                   (lat/add-attr :t1 :bloop :relation-attrs #{:created-by-id :updated-by-id})
-                   (lat/add-attr :t1 :tl-bound-t-0 :relation-attrs #{:todo-list-id})
+                       (lat/add-attr :t0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
+                       (lat/add-attr :t0 :tl-bound-t-0 :relation-attrs #{:todo-list-id})
 
-                   (lat/add-attr :t2 :bloop :relation-attrs #{:created-by-id :updated-by-id})
-                   (lat/add-attr :t2 :tl-bound-t-0 :relation-attrs #{:todo-list-id})
+                       (lat/add-attr :t1 :bloop :relation-attrs #{:created-by-id :updated-by-id})
+                       (lat/add-attr :t1 :tl-bound-t-0 :relation-attrs #{:todo-list-id})
 
-                   (lat/add-attr :tl-bound-t-0 :bloop :relation-attrs #{:created-by-id :updated-by-id})))))
+                       (lat/add-attr :t2 :bloop :relation-attrs #{:created-by-id :updated-by-id})
+                       (lat/add-attr :t2 :tl-bound-t-0 :relation-attrs #{:todo-list-id})
+                       (lat/add-attr :tl-bound-t-0 :bloop :relation-attrs #{:created-by-id :updated-by-id}))]
+      (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo [[3 {:bind {:user :bloop}}]]})))
+      (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo [{:count 3 :bind {:user :bloop}}]}))))))
 
 (deftest test-add-ents-bound-and-uniq
   (testing "create uniq bound todo lists per todo-list-watch uniq constraint"
-    (is-graph= (:data (dc/add-ents {:schema td/schema} {:todo-list-watch [[2 {:bind {:user :bloop}}]]}))
-               (-> (lg/digraph [:user :bloop]
-                               [:todo-list :tl-bound-tlw-0]
-                               [:tl-bound-tlw-0 :bloop]
-                               [:todo-list :tl-bound-tlw-1]
-                               [:tl-bound-tlw-1 :bloop]
-                               [:todo-list-watch :tlw0]
-                               [:tlw0 :bloop]
-                               [:tlw0 :tl-bound-tlw-0]
-                               [:todo-list-watch :tlw1]
-                               [:tlw1 :bloop]
-                               [:tlw1 :tl-bound-tlw-1])
-                   
-                   (lat/add-attr :user :type :ent-type)
-                   (lat/add-attr :bloop :type :ent)
-                   (lat/add-attr :bloop :index 0)
-                   (lat/add-attr :bloop :ent-type :user)
-                   (lat/add-attr :bloop :query-term {:ent-name :_ :bind {:user :bloop}})
+    (let [expected (-> (lg/digraph [:user :bloop]
+                                   [:todo-list :tl-bound-tlw-0]
+                                   [:tl-bound-tlw-0 :bloop]
+                                   [:todo-list :tl-bound-tlw-1]
+                                   [:tl-bound-tlw-1 :bloop]
+                                   [:todo-list-watch :tlw0]
+                                   [:tlw0 :bloop]
+                                   [:tlw0 :tl-bound-tlw-0]
+                                   [:todo-list-watch :tlw1]
+                                   [:tlw1 :bloop]
+                                   [:tlw1 :tl-bound-tlw-1])
 
-                   (lat/add-attr :todo-list-watch :type :ent-type)
-                   (lat/add-attr :tlw0 :type :ent)
-                   (lat/add-attr :tlw0 :index 0)
-                   (lat/add-attr :tlw0 :ent-type :todo-list-watch)
-                   (lat/add-attr :tlw0 :query-term {:count 2 :ent-name :_ :bind {:user :bloop}})
+                       (lat/add-attr :user :type :ent-type)
+                       (lat/add-attr :bloop :type :ent)
+                       (lat/add-attr :bloop :index 0)
+                       (lat/add-attr :bloop :ent-type :user)
+                       (lat/add-attr :bloop :query-term {:ent-name :_ :bind {:user :bloop}})
 
-                   (lat/add-attr :todo-list-watch :type :ent-type)
-                   (lat/add-attr :tlw1 :type :ent)
-                   (lat/add-attr :tlw1 :index 1)
-                   (lat/add-attr :tlw1 :ent-type :todo-list-watch)
-                   (lat/add-attr :tlw1 :query-term {:count 2 :ent-name :_ :bind {:user :bloop}})
+                       (lat/add-attr :todo-list-watch :type :ent-type)
+                       (lat/add-attr :tlw0 :type :ent)
+                       (lat/add-attr :tlw0 :index 0)
+                       (lat/add-attr :tlw0 :ent-type :todo-list-watch)
+                       (lat/add-attr :tlw0 :query-term {:count 2 :ent-name :_ :bind {:user :bloop}})
 
-                   (lat/add-attr :todo-list :type :ent-type)
-                   (lat/add-attr :tl-bound-tlw-0 :type :ent)
-                   (lat/add-attr :tl-bound-tlw-0 :index 0)
-                   (lat/add-attr :tl-bound-tlw-0 :ent-type :todo-list)
-                   (lat/add-attr :tl-bound-tlw-0 :query-term {:ent-name :_ :bind {:user :bloop}})
+                       (lat/add-attr :todo-list-watch :type :ent-type)
+                       (lat/add-attr :tlw1 :type :ent)
+                       (lat/add-attr :tlw1 :index 1)
+                       (lat/add-attr :tlw1 :ent-type :todo-list-watch)
+                       (lat/add-attr :tlw1 :query-term {:count 2 :ent-name :_ :bind {:user :bloop}})
 
-                   (lat/add-attr :todo-list :type :ent-type)
-                   (lat/add-attr :tl-bound-tlw-1 :type :ent)
-                   (lat/add-attr :tl-bound-tlw-1 :index 1)
-                   (lat/add-attr :tl-bound-tlw-1 :ent-type :todo-list)
-                   (lat/add-attr :tl-bound-tlw-1 :query-term {:ent-name :_ :bind {:user :bloop}})
+                       (lat/add-attr :todo-list :type :ent-type)
+                       (lat/add-attr :tl-bound-tlw-0 :type :ent)
+                       (lat/add-attr :tl-bound-tlw-0 :index 0)
+                       (lat/add-attr :tl-bound-tlw-0 :ent-type :todo-list)
+                       (lat/add-attr :tl-bound-tlw-0 :query-term {:ent-name :_ :bind {:user :bloop}})
 
-                   (lat/add-attr :tlw0 :bloop :relation-attrs #{:watcher-id})
-                   (lat/add-attr :tlw0 :tl-bound-tlw-0 :relation-attrs #{:todo-list-id})
+                       (lat/add-attr :todo-list :type :ent-type)
+                       (lat/add-attr :tl-bound-tlw-1 :type :ent)
+                       (lat/add-attr :tl-bound-tlw-1 :index 1)
+                       (lat/add-attr :tl-bound-tlw-1 :ent-type :todo-list)
+                       (lat/add-attr :tl-bound-tlw-1 :query-term {:ent-name :_ :bind {:user :bloop}})
 
-                   (lat/add-attr :tlw1 :bloop :relation-attrs #{:watcher-id})
-                   (lat/add-attr :tlw1 :tl-bound-tlw-1 :relation-attrs #{:todo-list-id})
+                       (lat/add-attr :tlw0 :bloop :relation-attrs #{:watcher-id})
+                       (lat/add-attr :tlw0 :tl-bound-tlw-0 :relation-attrs #{:todo-list-id})
 
-                   (lat/add-attr :tl-bound-tlw-0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
-                   (lat/add-attr :tl-bound-tlw-1 :bloop :relation-attrs #{:created-by-id :updated-by-id})))))
+                       (lat/add-attr :tlw1 :bloop :relation-attrs #{:watcher-id})
+                       (lat/add-attr :tlw1 :tl-bound-tlw-1 :relation-attrs #{:todo-list-id})
+
+                       (lat/add-attr :tl-bound-tlw-0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
+                       (lat/add-attr :tl-bound-tlw-1 :bloop :relation-attrs #{:created-by-id :updated-by-id}))]
+      (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo-list-watch [[2 {:bind {:user :bloop}}]]})))
+      (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo-list-watch [{:count 2 :bind {:user :bloop}}]}))))))
 
 (deftest test-add-ents-three-level-relation-binding
-  (is-graph= (:data (dc/add-ents {:schema td/schema} {:attachment [[:_ {:bind {:user :bloop}}]]}))
-             (-> (lg/digraph [:user :bloop]
-                             [:attachment :a0]
-                             [:todo :t-bound-a-0]
-                             [:todo-list :tl-bound-a-0]
-                             [:a0 :bloop]
-                             [:a0 :t-bound-a-0]
-                             [:t-bound-a-0 :bloop]
-                             [:t-bound-a-0 :tl-bound-a-0]
-                             [:tl-bound-a-0 :bloop])
-                 
-                 (lat/add-attr :user :type :ent-type)
-                 (lat/add-attr :bloop :type :ent)
-                 (lat/add-attr :bloop :index 0)
-                 (lat/add-attr :bloop :ent-type :user)
-                 (lat/add-attr :bloop :query-term {:ent-name :_ :bind {:user :bloop}})
+  (let [expected  (-> (lg/digraph [:user :bloop]
+                                  [:attachment :a0]
+                                  [:todo :t-bound-a-0]
+                                  [:todo-list :tl-bound-a-0]
+                                  [:a0 :bloop]
+                                  [:a0 :t-bound-a-0]
+                                  [:t-bound-a-0 :bloop]
+                                  [:t-bound-a-0 :tl-bound-a-0]
+                                  [:tl-bound-a-0 :bloop])
 
-                 (lat/add-attr :todo :type :ent-type)
-                 (lat/add-attr :t-bound-a-0 :type :ent)
-                 (lat/add-attr :t-bound-a-0 :index 0)
-                 (lat/add-attr :t-bound-a-0 :ent-type :todo)
-                 (lat/add-attr :t-bound-a-0 :query-term {:ent-name :_ :bind {:user :bloop}})
+                      (lat/add-attr :user :type :ent-type)
+                      (lat/add-attr :bloop :type :ent)
+                      (lat/add-attr :bloop :index 0)
+                      (lat/add-attr :bloop :ent-type :user)
+                      (lat/add-attr :bloop :query-term {:ent-name :_ :bind {:user :bloop}})
 
-                 (lat/add-attr :todo-list :type :ent-type)
-                 (lat/add-attr :tl-bound-a-0 :type :ent)
-                 (lat/add-attr :tl-bound-a-0 :index 0)
-                 (lat/add-attr :tl-bound-a-0 :ent-type :todo-list)
-                 (lat/add-attr :tl-bound-a-0 :query-term {:ent-name :_ :bind {:user :bloop}})
+                      (lat/add-attr :todo :type :ent-type)
+                      (lat/add-attr :t-bound-a-0 :type :ent)
+                      (lat/add-attr :t-bound-a-0 :index 0)
+                      (lat/add-attr :t-bound-a-0 :ent-type :todo)
+                      (lat/add-attr :t-bound-a-0 :query-term {:ent-name :_ :bind {:user :bloop}})
 
-                 (lat/add-attr :attachment :type :ent-type)
-                 (lat/add-attr :a0 :type :ent)
-                 (lat/add-attr :a0 :index 0)
-                 (lat/add-attr :a0 :ent-type :attachment)
-                 (lat/add-attr :a0 :query-term {:count 1 :ent-name :_ :bind {:user :bloop}})
+                      (lat/add-attr :todo-list :type :ent-type)
+                      (lat/add-attr :tl-bound-a-0 :type :ent)
+                      (lat/add-attr :tl-bound-a-0 :index 0)
+                      (lat/add-attr :tl-bound-a-0 :ent-type :todo-list)
+                      (lat/add-attr :tl-bound-a-0 :query-term {:ent-name :_ :bind {:user :bloop}})
 
-                 (lat/add-attr :a0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
-                 (lat/add-attr :a0 :t-bound-a-0 :relation-attrs #{:todo-id})
+                      (lat/add-attr :attachment :type :ent-type)
+                      (lat/add-attr :a0 :type :ent)
+                      (lat/add-attr :a0 :index 0)
+                      (lat/add-attr :a0 :ent-type :attachment)
+                      (lat/add-attr :a0 :query-term {:count 1 :ent-name :_ :bind {:user :bloop}})
 
-                 (lat/add-attr :t-bound-a-0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
-                 (lat/add-attr :t-bound-a-0 :tl-bound-a-0 :relation-attrs #{:todo-list-id})
+                      (lat/add-attr :a0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
+                      (lat/add-attr :a0 :t-bound-a-0 :relation-attrs #{:todo-id})
 
-                 (lat/add-attr :tl-bound-a-0 :bloop :relation-attrs #{:created-by-id :updated-by-id}))))
+                      (lat/add-attr :t-bound-a-0 :bloop :relation-attrs #{:created-by-id :updated-by-id})
+                      (lat/add-attr :t-bound-a-0 :tl-bound-a-0 :relation-attrs #{:todo-list-id})
+                      (lat/add-attr :tl-bound-a-0 :bloop :relation-attrs #{:created-by-id :updated-by-id}))]
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:attachment [[:_ {:bind {:user :bloop}}]]})))
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:attachment [{:bind {:user :bloop}}]})))))
 
 (deftest test-add-ents-uniq-constraint
-  (is-graph= (:data (dc/add-ents {:schema td/schema} {:todo-list-watch [[2]]}))
-             (-> (lg/digraph [:user :u0]
-                             [:todo-list :tl0]
-                             [:tl0 :u0]
-                             [:todo-list :tl1]
-                             [:tl1 :u0]
-                             [:todo-list-watch :tlw0]
-                             [:tlw0 :tl0]
-                             [:tlw0 :u0]
-                             [:todo-list-watch :tlw1]
-                             [:tlw1 :tl1]
-                             [:tlw1 :u0])
-                 (lat/add-attr :user :type :ent-type)
-                 (lat/add-attr :u0 :type :ent)
-                 (lat/add-attr :u0 :index 0)
-                 (lat/add-attr :u0 :ent-type :user)
-                 (lat/add-attr :u0 :query-term {:ent-name :_})
-                 
-                 (lat/add-attr :todo-list :type :ent-type)
-                 (lat/add-attr :tl0 :type :ent)
-                 (lat/add-attr :tl0 :index 0)
-                 (lat/add-attr :tl0 :ent-type :todo-list)
-                 (lat/add-attr :tl0 :query-term {:ent-name :_})
+  (let [expected (-> (lg/digraph [:user :u0]
+                                 [:todo-list :tl0]
+                                 [:tl0 :u0]
+                                 [:todo-list :tl1]
+                                 [:tl1 :u0]
+                                 [:todo-list-watch :tlw0]
+                                 [:tlw0 :tl0]
+                                 [:tlw0 :u0]
+                                 [:todo-list-watch :tlw1]
+                                 [:tlw1 :tl1]
+                                 [:tlw1 :u0])
 
-                 (lat/add-attr :todo-list :type :ent-type)
-                 (lat/add-attr :tl1 :type :ent)
-                 (lat/add-attr :tl1 :index 1)
-                 (lat/add-attr :tl1 :ent-type :todo-list)
-                 (lat/add-attr :tl1 :query-term {:ent-name :_})
-                 
-                 (lat/add-attr :todo-list-watch :type :ent-type)
-                 (lat/add-attr :tlw0 :type :ent)
-                 (lat/add-attr :tlw0 :index 0)
-                 (lat/add-attr :tlw0 :ent-type :todo-list-watch)
-                 (lat/add-attr :tlw0 :query-term {:ent-name :_ :count 2})
+                     (lat/add-attr :user :type :ent-type)
+                     (lat/add-attr :u0 :type :ent)
+                     (lat/add-attr :u0 :index 0)
+                     (lat/add-attr :u0 :ent-type :user)
+                     (lat/add-attr :u0 :query-term {:ent-name :_})
 
-                 (lat/add-attr :todo-list-watch :type :ent-type)
-                 (lat/add-attr :tlw1 :type :ent)
-                 (lat/add-attr :tlw1 :index 1)
-                 (lat/add-attr :tlw1 :ent-type :todo-list-watch)
-                 (lat/add-attr :tlw1 :query-term {:ent-name :_ :count 2})
-                 
-                 (lat/add-attr :tl0 :u0 :relation-attrs #{:updated-by-id :created-by-id})
-                 (lat/add-attr :tl1 :u0 :relation-attrs #{:updated-by-id :created-by-id})
+                     (lat/add-attr :todo-list :type :ent-type)
+                     (lat/add-attr :tl0 :type :ent)
+                     (lat/add-attr :tl0 :index 0)
+                     (lat/add-attr :tl0 :ent-type :todo-list)
+                     (lat/add-attr :tl0 :query-term {:ent-name :_})
 
-                 (lat/add-attr :tlw0 :tl0 :relation-attrs #{:todo-list-id})
-                 (lat/add-attr :tlw0 :u0 :relation-attrs #{:watcher-id})
-                 (lat/add-attr :tlw1 :tl1 :relation-attrs #{:todo-list-id})
-                 (lat/add-attr :tlw1 :u0 :relation-attrs #{:watcher-id}))))
+                     (lat/add-attr :todo-list :type :ent-type)
+                     (lat/add-attr :tl1 :type :ent)
+                     (lat/add-attr :tl1 :index 1)
+                     (lat/add-attr :tl1 :ent-type :todo-list)
+                     (lat/add-attr :tl1 :query-term {:ent-name :_})
+
+                     (lat/add-attr :todo-list-watch :type :ent-type)
+                     (lat/add-attr :tlw0 :type :ent)
+                     (lat/add-attr :tlw0 :index 0)
+                     (lat/add-attr :tlw0 :ent-type :todo-list-watch)
+                     (lat/add-attr :tlw0 :query-term {:ent-name :_ :count 2})
+
+                     (lat/add-attr :todo-list-watch :type :ent-type)
+                     (lat/add-attr :tlw1 :type :ent)
+                     (lat/add-attr :tlw1 :index 1)
+                     (lat/add-attr :tlw1 :ent-type :todo-list-watch)
+                     (lat/add-attr :tlw1 :query-term {:ent-name :_ :count 2})
+
+                     (lat/add-attr :tl0 :u0 :relation-attrs #{:updated-by-id :created-by-id})
+                     (lat/add-attr :tl1 :u0 :relation-attrs #{:updated-by-id :created-by-id})
+
+                     (lat/add-attr :tlw0 :tl0 :relation-attrs #{:todo-list-id})
+                     (lat/add-attr :tlw0 :u0 :relation-attrs #{:watcher-id})
+                     (lat/add-attr :tlw1 :tl1 :relation-attrs #{:todo-list-id})
+                     (lat/add-attr :tlw1 :u0 :relation-attrs #{:watcher-id}))]
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo-list-watch [[2]]})))
+    (is-graph= expected (:data (dc/add-ents {:schema td/schema} {:todo-list-watch [{:count 2}]})))))
 
 (deftest test-bound-descendants?
   (is (dc/bound-descendants? (dc/init-db {:schema td/schema} {}) {:user :bibbity} :attachment))
@@ -562,153 +595,179 @@
 
 (deftest test-add-ents-handles-A->A-cycles
   (testing "Handle cycles where two entities of the same type reference each other"
-    (is-graph= (-> (lg/digraph [:user :u0] [:user :u1] [:u0 :u1] [:u1 :u0])
-                   (lat/add-attr :user :type :ent-type)
-                   (lat/add-attr :u0 :type :ent)
-                   (lat/add-attr :u0 :index 0)
-                   (lat/add-attr :u0 :query-term {:ent-name :u0 :count 1 :refs {:updated-by-id :u1}})
-                   (lat/add-attr :u0 :ent-type :user)
-                   (lat/add-attr :u0 :u1 :relation-attrs #{:updated-by-id})
+    (let [expected (-> (lg/digraph [:user :u0] [:user :u1] [:u0 :u1] [:u1 :u0])
+                       (lat/add-attr :user :type :ent-type)
+                       (lat/add-attr :u0 :type :ent)
+                       (lat/add-attr :u0 :index 0)
+                       (lat/add-attr :u0 :query-term {:ent-name :u0 :count 1 :refs {:updated-by-id :u1}})
+                       (lat/add-attr :u0 :ent-type :user)
+                       (lat/add-attr :u0 :u1 :relation-attrs #{:updated-by-id})
 
-                   (lat/add-attr :u1 :type :ent)
-                   (lat/add-attr :u1 :index 1)
-                   (lat/add-attr :u1 :query-term {:ent-name :u1 :count 1 :refs {:updated-by-id :u0}})
-                   (lat/add-attr :u1 :ent-type :user)
-                   (lat/add-attr :u1 :u0 :relation-attrs #{:updated-by-id}))
-               (:data (dc/add-ents {:schema td/cycle-schema} {:user [[:u0 {:refs {:updated-by-id :u1}}]
-                                                                     [:u1 {:refs {:updated-by-id :u0}}]]})))))
+                       (lat/add-attr :u1 :type :ent)
+                       (lat/add-attr :u1 :index 1)
+                       (lat/add-attr :u1 :query-term {:ent-name :u1 :count 1 :refs {:updated-by-id :u0}})
+                       (lat/add-attr :u1 :ent-type :user)
+                       (lat/add-attr :u1 :u0 :relation-attrs #{:updated-by-id}))]
+      (is-graph= expected (:data (dc/add-ents {:schema td/cycle-schema}
+                                              {:user [[:u0 {:refs {:updated-by-id :u1}}]
+                                                      [:u1 {:refs {:updated-by-id :u0}}]]})))
+      (is-graph= expected (:data (dc/add-ents {:schema td/cycle-schema}
+                                              {:user [{:ent-name :u0
+                                                       :refs {:updated-by-id :u1}}
+                                                      {:ent-name :u1
+                                                       :refs {:updated-by-id :u0}}]}))))))
 
 (deftest test-add-ents-handles-A->B-cycles
   (testing "Handle cycles where two entities of the different types reference each other"
-    (is-graph= (-> (lg/digraph [:todo :t0] [:todo-list :tl0] [:tl0 :t0] [:t0 :tl0])
-                   (lat/add-attr :todo :type :ent-type)
-                   (lat/add-attr :t0 :type :ent)
-                   (lat/add-attr :t0 :index 0)
-                   (lat/add-attr :t0 :query-term {:ent-name :t0 :count 1 :refs {:todo-list-id :tl0}})
-                   (lat/add-attr :t0 :ent-type :todo)
-                   (lat/add-attr :t0 :tl0 :relation-attrs #{:todo-list-id})
+    (let [expected (-> (lg/digraph [:todo :t0] [:todo-list :tl0] [:tl0 :t0] [:t0 :tl0])
+                       (lat/add-attr :todo :type :ent-type)
+                       (lat/add-attr :t0 :type :ent)
+                       (lat/add-attr :t0 :index 0)
+                       (lat/add-attr :t0 :query-term {:ent-name :t0 :count 1 :refs {:todo-list-id :tl0}})
+                       (lat/add-attr :t0 :ent-type :todo)
+                       (lat/add-attr :t0 :tl0 :relation-attrs #{:todo-list-id})
 
-                   (lat/add-attr :todo-list :type :ent-type)
-                   (lat/add-attr :tl0 :type :ent)
-                   (lat/add-attr :tl0 :index 0)
-                   (lat/add-attr :tl0 :query-term {:ent-name :tl0 :count 1 :refs {:first-todo-id :t0}})
-                   (lat/add-attr :tl0 :ent-type :todo-list)
-                   (lat/add-attr :tl0 :t0 :relation-attrs #{:first-todo-id}))
-               (:data (dc/add-ents {:schema td/cycle-schema} {:todo      [[:t0 {:refs {:todo-list-id :tl0}}]]
-                                                              :todo-list [[:tl0 {:refs {:first-todo-id :t0}}]]})))))
+                       (lat/add-attr :todo-list :type :ent-type)
+                       (lat/add-attr :tl0 :type :ent)
+                       (lat/add-attr :tl0 :index 0)
+                       (lat/add-attr :tl0 :query-term {:ent-name :tl0 :count 1 :refs {:first-todo-id :t0}})
+                       (lat/add-attr :tl0 :ent-type :todo-list)
+                       (lat/add-attr :tl0 :t0 :relation-attrs #{:first-todo-id}))]
+      (is-graph= expected (-> {:schema td/cycle-schema}
+                              (dc/add-ents {:todo      [[:t0 {:refs {:todo-list-id :tl0}}]]
+                                            :todo-list [[:tl0 {:refs {:first-todo-id :t0}}]]})
+                              :data))
+      (is-graph= expected (-> {:schema td/cycle-schema}
+                              (dc/add-ents {:todo      [{:ent-name :t0
+                                                         :refs     {:todo-list-id :tl0}}]
+                                            :todo-list [{:ent-name :tl0
+                                                         :refs     {:first-todo-id :t0}}]})
+                              :data)))))
 
 ;; -----------------
 ;; polymorphism tests
 ;; -----------------
 
 (deftest polymorphic-refs
-  (is-graph= (-> (lg/digraph [:topic-category :tc0] [:watch :w0] [:w0 :tc0])
-                 (lat/add-attr :topic-category :type :ent-type)
-                 (lat/add-attr :tc0 :type :ent)
-                 (lat/add-attr :tc0 :index 0)
-                 (lat/add-attr :tc0 :query-term {:ent-name :_})
-                 (lat/add-attr :tc0 :ent-type :topic-category)
+  (let [expected (-> (lg/digraph [:topic-category :tc0] [:watch :w0] [:w0 :tc0])
+                     (lat/add-attr :topic-category :type :ent-type)
+                     (lat/add-attr :tc0 :type :ent)
+                     (lat/add-attr :tc0 :index 0)
+                     (lat/add-attr :tc0 :query-term {:ent-name :_})
+                     (lat/add-attr :tc0 :ent-type :topic-category)
 
-                 (lat/add-attr :watch :type :ent-type)
-                 (lat/add-attr :w0 :type :ent)
-                 (lat/add-attr :w0 :index 0)
-                 (lat/add-attr :w0 :query-term {:ent-name  :_
-                                                :count     1
-                                                :refs      {:watched-id :tc0}
-                                                :ref-types {:watched-id :topic-category}})
-                 (lat/add-attr :w0 :ent-type :watch)
-                 (lat/add-attr :w0 :tc0 :relation-attrs #{:watched-id}))
-             (:data (dc/add-ents {:schema td/polymorphic-schema}
-                                 {:watch [[1 {:refs      {:watched-id :tc0}
-                                              :ref-types {:watched-id :topic-category}}]]}))))
+                     (lat/add-attr :watch :type :ent-type)
+                     (lat/add-attr :w0 :type :ent)
+                     (lat/add-attr :w0 :index 0)
+                     (lat/add-attr :w0 :query-term {:ent-name  :_
+                                                    :count     1
+                                                    :refs      {:watched-id :tc0}
+                                                    :ref-types {:watched-id :topic-category}})
+                     (lat/add-attr :w0 :ent-type :watch)
+                     (lat/add-attr :w0 :tc0 :relation-attrs #{:watched-id}))]
+    (is-graph= expected (:data (dc/add-ents {:schema td/polymorphic-schema}
+                                            {:watch [[1 {:refs      {:watched-id :tc0}
+                                                         :ref-types {:watched-id :topic-category}}]]})))
+    (is-graph= expected (:data (dc/add-ents {:schema td/polymorphic-schema}
+                                            {:watch [{:refs      {:watched-id :tc0}
+                                                      :ref-types {:watched-id :topic-category}}]})))))
 
 (deftest polymorphic-refs-with-ref-name-unspecified
   ;; differs from above in that we leave out {:refs {:watched-id :tc0}}
-  (is-graph= (-> (lg/digraph [:topic-category :tc0] [:watch :w0] [:w0 :tc0])
-                 (lat/add-attr :topic-category :type :ent-type)
-                 (lat/add-attr :tc0 :type :ent)
-                 (lat/add-attr :tc0 :index 0)
-                 (lat/add-attr :tc0 :query-term {:ent-name :_})
-                 (lat/add-attr :tc0 :ent-type :topic-category)
+  (let [expected (-> (lg/digraph [:topic-category :tc0] [:watch :w0] [:w0 :tc0])
+                     (lat/add-attr :topic-category :type :ent-type)
+                     (lat/add-attr :tc0 :type :ent)
+                     (lat/add-attr :tc0 :index 0)
+                     (lat/add-attr :tc0 :query-term {:ent-name :_})
+                     (lat/add-attr :tc0 :ent-type :topic-category)
 
-                 (lat/add-attr :watch :type :ent-type)
-                 (lat/add-attr :w0 :type :ent)
-                 (lat/add-attr :w0 :index 0)
-                 (lat/add-attr :w0 :query-term {:ent-name :_ :count 1 :ref-types {:watched-id :topic-category}})
-                 (lat/add-attr :w0 :ent-type :watch)
-                 (lat/add-attr :w0 :tc0 :relation-attrs #{:watched-id}))
-             (:data (dc/add-ents {:schema td/polymorphic-schema}
-                                 {:watch [[1 {:ref-types {:watched-id :topic-category}}]]}))))
+                     (lat/add-attr :watch :type :ent-type)
+                     (lat/add-attr :w0 :type :ent)
+                     (lat/add-attr :w0 :index 0)
+                     (lat/add-attr :w0 :query-term {:ent-name :_ :count 1 :ref-types {:watched-id :topic-category}})
+                     (lat/add-attr :w0 :ent-type :watch)
+                     (lat/add-attr :w0 :tc0 :relation-attrs #{:watched-id}))]
+    (is-graph= expected (:data (dc/add-ents {:schema td/polymorphic-schema}
+                                            {:watch [[1 {:ref-types {:watched-id :topic-category}}]]})))
+    (is-graph= expected (:data (dc/add-ents {:schema td/polymorphic-schema}
+                                            {:watch [{:ref-types {:watched-id :topic-category}}]})))))
 
 (deftest polymorphic-refs-nested
   ;; refer to topic instead of topic-category
   ;; topic depends on topic-category and will create one
-  (is-graph= (-> (lg/digraph [:topic-category :tc0]
-                             [:topic :t0]
-                             [:watch :w0]
-                             [:w0 :t0]
-                             [:t0 :tc0])
-                 (lat/add-attr :topic-category :type :ent-type)
-                 (lat/add-attr :tc0 :type :ent)
-                 (lat/add-attr :tc0 :index 0)
-                 (lat/add-attr :tc0 :query-term {:ent-name :_})
-                 (lat/add-attr :tc0 :ent-type :topic-category)
+  (let [expected (-> (lg/digraph [:topic-category :tc0]
+                                 [:topic :t0]
+                                 [:watch :w0]
+                                 [:w0 :t0]
+                                 [:t0 :tc0])
+                     (lat/add-attr :topic-category :type :ent-type)
+                     (lat/add-attr :tc0 :type :ent)
+                     (lat/add-attr :tc0 :index 0)
+                     (lat/add-attr :tc0 :query-term {:ent-name :_})
+                     (lat/add-attr :tc0 :ent-type :topic-category)
 
-                 (lat/add-attr :topic :type :ent-type)
-                 (lat/add-attr :t0 :type :ent)
-                 (lat/add-attr :t0 :index 0)
-                 (lat/add-attr :t0 :query-term {:ent-name :_})
-                 (lat/add-attr :t0 :ent-type :topic)
-                 (lat/add-attr :t0 :tc0 :relation-attrs #{:topic-category-id})
+                     (lat/add-attr :topic :type :ent-type)
+                     (lat/add-attr :t0 :type :ent)
+                     (lat/add-attr :t0 :index 0)
+                     (lat/add-attr :t0 :query-term {:ent-name :_})
+                     (lat/add-attr :t0 :ent-type :topic)
+                     (lat/add-attr :t0 :tc0 :relation-attrs #{:topic-category-id})
 
-                 (lat/add-attr :watch :type :ent-type)
-                 (lat/add-attr :w0 :type :ent)
-                 (lat/add-attr :w0 :index 0)
-                 (lat/add-attr :w0 :query-term {:ent-name  :_
-                                                :count     1
-                                                :refs      {:watched-id :t0}
-                                                :ref-types {:watched-id :topic}})
-                 (lat/add-attr :w0 :ent-type :watch)
-                 (lat/add-attr :w0 :t0 :relation-attrs #{:watched-id}))
-             (:data (dc/add-ents {:schema td/polymorphic-schema}
-                                 {:watch [[1 {:refs      {:watched-id :t0}
-                                              :ref-types {:watched-id :topic}}]]}))))
+                     (lat/add-attr :watch :type :ent-type)
+                     (lat/add-attr :w0 :type :ent)
+                     (lat/add-attr :w0 :index 0)
+                     (lat/add-attr :w0 :query-term {:ent-name  :_
+                                                    :count     1
+                                                    :refs      {:watched-id :t0}
+                                                    :ref-types {:watched-id :topic}})
+                     (lat/add-attr :w0 :ent-type :watch)
+                     (lat/add-attr :w0 :t0 :relation-attrs #{:watched-id}))]
+    (is-graph= expected (:data (dc/add-ents {:schema td/polymorphic-schema}
+                                            {:watch [[1 {:refs      {:watched-id :t0}
+                                                         :ref-types {:watched-id :topic}}]]})))
+    (is-graph= expected (:data (dc/add-ents {:schema td/polymorphic-schema}
+                                            {:watch [{:refs      {:watched-id :t0}
+                                                      :ref-types {:watched-id :topic}}]})))))
 
 (deftest polymorphic-refs-with-binding
   ;; refer to topic instead of topic-category
   ;; topic depends on topic-category and will create one
-  (is-graph= (-> (lg/digraph [:topic-category :tc100]
-                             [:topic :t0]
-                             [:watch :w0]
-                             [:w0 :t0]
-                             [:t0 :tc100])
-                 (lat/add-attr :topic-category :type :ent-type)
-                 (lat/add-attr :tc100 :type :ent)
-                 (lat/add-attr :tc100 :index 0)
-                 (lat/add-attr :tc100 :query-term {:ent-name :_ :count 1 :bind {:topic-category :tc100}})
-                 (lat/add-attr :tc100 :ent-type :topic-category)
+  (let [expected (-> (lg/digraph [:topic-category :tc100]
+                                 [:topic :t0]
+                                 [:watch :w0]
+                                 [:w0 :t0]
+                                 [:t0 :tc100])
+                     (lat/add-attr :topic-category :type :ent-type)
+                     (lat/add-attr :tc100 :type :ent)
+                     (lat/add-attr :tc100 :index 0)
+                     (lat/add-attr :tc100 :query-term {:ent-name :_ :bind {:topic-category :tc100}})
+                     (lat/add-attr :tc100 :ent-type :topic-category)
 
-                 (lat/add-attr :topic :type :ent-type)
-                 (lat/add-attr :t0 :type :ent)
-                 (lat/add-attr :t0 :index 0)
-                 (lat/add-attr :t0 :query-term {:ent-name :_ :count 1 :bind {:topic-category :tc100}})
-                 (lat/add-attr :t0 :ent-type :topic)
-                 (lat/add-attr :t0 :tc100 :relation-attrs #{:topic-category-id})
+                     (lat/add-attr :topic :type :ent-type)
+                     (lat/add-attr :t0 :type :ent)
+                     (lat/add-attr :t0 :index 0)
+                     (lat/add-attr :t0 :query-term {:ent-name :_ :bind {:topic-category :tc100}})
+                     (lat/add-attr :t0 :ent-type :topic)
+                     (lat/add-attr :t0 :tc100 :relation-attrs #{:topic-category-id})
 
-                 (lat/add-attr :watch :type :ent-type)
-                 (lat/add-attr :w0 :type :ent)
-                 (lat/add-attr :w0 :index 0)
-                 (lat/add-attr :w0 :query-term {:ent-name  :_
-                                                :count     1
-                                                :refs      {:watched-id :t0}
-                                                :bind      {:topic-category :tc100}
-                                                :ref-types {:watched-id :topic}})
-                 (lat/add-attr :w0 :ent-type :watch)
-                 (lat/add-attr :w0 :t0 :relation-attrs #{:watched-id}))
-             (:data (dc/add-ents {:schema td/polymorphic-schema}
-                                 {:watch [[1 {:refs      {:watched-id :t0}
-                                              :bind      {:topic-category :tc100}
-                                              :ref-types {:watched-id :topic}}]]}))))
+                     (lat/add-attr :watch :type :ent-type)
+                     (lat/add-attr :w0 :type :ent)
+                     (lat/add-attr :w0 :index 0)
+                     (lat/add-attr :w0 :query-term {:ent-name  :_
+                                                    :count     1
+                                                    :refs      {:watched-id :t0}
+                                                    :bind      {:topic-category :tc100}
+                                                    :ref-types {:watched-id :topic}})
+                     (lat/add-attr :w0 :ent-type :watch)
+                     (lat/add-attr :w0 :t0 :relation-attrs #{:watched-id}))]
+    (is-graph= expected (:data (dc/add-ents {:schema td/polymorphic-schema}
+                                            {:watch [[1 {:refs      {:watched-id :t0}
+                                                         :bind      {:topic-category :tc100}
+                                                         :ref-types {:watched-id :topic}}]]})))
+    (is-graph= expected (:data (dc/add-ents {:schema td/polymorphic-schema}
+                                            {:watch [{:refs      {:watched-id :t0}
+                                                      :bind      {:topic-category :tc100}
+                                                      :ref-types {:watched-id :topic}}]})))))
 
 ;; -----------------
 ;; visiting tests
@@ -717,12 +776,12 @@
 (deftest test-related-ents-by-attr
   (let [db (dc/add-ents {:schema td/schema} {:todo [[1]]
                                              :project [[1 {:refs {:todo-list-ids [:tl0 :tl1]}}]]})]
-    (is (= (dc/related-ents-by-attr db :t0 :todo-list-id)
-           :tl0))
-    (is (= (dc/related-ents-by-attr db :t0 :created-by-id)
-           :u0))
-    (is (= (dc/related-ents-by-attr db :p0 :todo-list-ids)
-           [:tl0 :tl1]))))
+    (is (= :tl0
+           (dc/related-ents-by-attr db :t0 :todo-list-id)))
+    (is (= :u0
+           (dc/related-ents-by-attr db :t0 :created-by-id)))
+    (is (= [:tl0 :tl1]
+           (dc/related-ents-by-attr db :p0 :todo-list-ids)))))
 
 (deftest test-attr-map
   (let [db (dc/add-ents {:schema td/schema} {:todo [[1]]})]
@@ -737,16 +796,16 @@
 (deftest visit-ents-once-updates-node-attrs
   (let [db (-> (dc/add-ents {:schema td/schema} {:user [[:_]]})
                (dc/visit-ents-once :custom-attr-key (constantly "yaaaaay a key")))]
-    (is (= (lat/attr (:data db) :u0 :custom-attr-key)
-           "yaaaaay a key"))))
+    (is (= "yaaaaay a key"
+           (lat/attr (:data db) :u0 :custom-attr-key)))))
 
 (deftest visit-ents-once-does-not-override-node-attr
   (testing "If node already has attr, subsequent invocations of visit-ents-once will not overwrite it"
     (let [db (-> (dc/add-ents {:schema td/schema} {:user [[:_]]})
                  (dc/visit-ents-once :custom-attr-key (constantly "yaaaaay a key"))
                  (dc/visit-ents-once :custom-attr-key (constantly "overwrite!")))]
-      (is (= (lat/attr (:data db) :u0 :custom-attr-key)
-             "yaaaaay a key")))))
+      (is (= "yaaaaay a key"
+             (lat/attr (:data db) :u0 :custom-attr-key))))))
 
 (deftest test-relation-attrs
   (is (= #{:todo-list-id}
@@ -986,48 +1045,3 @@
                            :cljs js/Object)
                         #"Query-relations for unary attrs must be a keyword"
                         (dc/add-ents {:schema td/schema} {:attachment [[:_ {:refs {:todo-id [:t0 :t1]}}]]}))))
-
-;; -----------------
-;; new syntax
-;; -----------------
-
-(deftest new-syntax-ent-name
-  (is (= #{:bill}
-         (-> (dc/add-ents {:schema td/schema} {:user [{:count    1
-                                                       :ent-name :bill}]})
-             (dc/ents)))))
-
-(comment
-  (deftest test-related-ents-by-attr
-    (let [db (dc/add-ents {:schema td/schema} {:todo [[1]]
-                                               :project [[1 {:refs {:todo-list-ids [:tl0 :tl1]}}]]})]
-      (is (= (dc/related-ents-by-attr db :t0 :todo-list-id)
-             :tl0))
-      (is (= (dc/related-ents-by-attr db :t0 :created-by-id)
-             :u0))
-      (is (= (dc/related-ents-by-attr db :p0 :todo-list-ids)
-             [:tl0 :tl1])))))
-
-(deftest new-synxtax-test-related-ents-by-attr
-  (let [db (dc/add-ents {:schema td/schema} {:todo    [{:count 1}]
-                                             :project [{:count 1
-                                                        :refs  {:todo-list-ids [:tl0 :tl1]}}]})]
-    (is (= (dc/related-ents-by-attr db :t0 :todo-list-id)
-           :tl0))
-    (is (= (dc/related-ents-by-attr db :t0 :created-by-id)
-           :u0))
-    (is (= (dc/related-ents-by-attr db :p0 :todo-list-ids)
-           [:tl0 :tl1]))))
-
-(deftest new-syntax-multiple-ent-types
-  (is (= #{:u0 :u1 :u2 :u3 :u4 :p0 :p1 :p2 :tl0}
-         (-> (dc/add-ents {:schema td/schema} {:user    [{:count 5}]
-                                               :project [{:count 3}]})
-             (dc/ents)))))
-
-#_
-(deftest new-syntax-2-ent-name
-  (is (= #{:bill}
-         (-> (dc/add-ents {:schema td/schema} [[:user {:count 1 :ent-name :bill}]
-                                               [:todo-list {:count 3}]])
-             (dc/ents)))))
