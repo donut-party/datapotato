@@ -58,5 +58,7 @@
                       :insert-result insert-result}))))
 
 (def config
-  {:insert          insert
-   :open-connection #(jdbc/get-connection (get-in % [:fixtures :dbspec]))})
+  {:insert           insert
+   :get-connection   (fn next-jdbc-get-connection [ent-db]
+                       (jdbc/get-connection (get-in ent-db [:fixtures :dbspec])))
+   :close-connection (fn next-jdbc-close-connection [connection] (.close connection))})
