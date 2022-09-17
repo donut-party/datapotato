@@ -1,19 +1,24 @@
 ;; for local development
 {:paths ["datapotato/test"
          "datapotato-next-jdbc/test"]
- :deps  {club.donutpower/datapotato                                      {:local/root "datapotato"}
-         io.github.cognitect-labs/test-runner                            {:git/tag "v0.5.0" :git/sha "48c3c67"}
-         metosin/malli                                                   {:mvn/version "0.8.9"}
+ :deps  {club.donutpower/datapotato           {:local/root "datapotato"}
+         io.github.cognitect-labs/test-runner {:git/tag "v0.5.0" :git/sha "48c3c67"}
+         metosin/malli                        {:mvn/version "0.8.9"}
 
          ;; next-jdbc
-         club.donutpower/datapotato-next-jdbc                            {:local/root "datapotato-next-jdbc"}
-         com.github.seancorfield/next.jdbc                               {:mvn/version "1.2.737"}
-         io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64  {:mvn/version "13.4.0"}
-         io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64   {:mvn/version "13.4.0"}
-         io.zonky.test/embedded-postgres                                 {:mvn/version "1.3.1"}
-         org.postgresql/postgresql                                       {:mvn/version "42.3.1"}
-         org.xerial/sqlite-jdbc                                          {:mvn/version "3.36.0.3"}
+         club.donutpower/datapotato-datomic                             {:local/root "datapotato-datomic"}
+         club.donutpower/datapotato-fluree                              {:local/root "datapotato-fluree"}
+         club.donutpower/datapotato-next-jdbc                           {:local/root "datapotato-next-jdbc"}
+         club.donutpower/datapotato-xtdb                                {:local/root "datapotato-xtdb"}
+         com.github.seancorfield/next.jdbc                              {:mvn/version "1.2.737"}
+         io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "13.4.0"}
+         io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64  {:mvn/version "13.4.0"}
+         io.zonky.test/embedded-postgres                                {:mvn/version "1.3.1"}
+         org.postgresql/postgresql                                      {:mvn/version "42.3.1"}
+         org.xerial/sqlite-jdbc                                         {:mvn/version "3.36.0.3"}
 
-         ;; xtdb
-         com.xtdb/xtdb-core                   {:mvn/version "1.21.0"}
+         ;; other dbs
+         com.fluree/db            {:mvn/version "1.0.4"}
+         com.datomic/datomic-free {:mvn/version "0.9.5697" :exclusions [com.google.guava/guava]}
+         com.xtdb/xtdb-core       {:mvn/version "1.21.0"}
          }}
