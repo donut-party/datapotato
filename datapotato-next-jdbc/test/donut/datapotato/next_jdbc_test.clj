@@ -129,14 +129,14 @@
 
 (deftest inserts-simple-generated-data
   (dc/with-fixtures (ent-db)
-    (dc/insert-fixtures dc/*ent-db* {:user [{:count 2}]})
+    (dc/insert-fixtures {:user [{:count 2}]})
     (is (= [#:users{:id 1 :username "Luigi"}
             #:users{:id 2 :username "Luigi"}]
            (sql/query dc/*connection* ["SELECT * FROM users"])))))
 
 (deftest inserts-generated-data-hierarchy
   (dc/with-fixtures (ent-db)
-    (dc/insert-fixtures dc/*ent-db* {:todo [{:count 2}]})
+    (dc/insert-fixtures {:todo [{:count 2}]})
     (is (= [#:users{:id 1 :username "Luigi"}]
            (sql/query dc/*connection* ["SELECT * FROM users"])))
 

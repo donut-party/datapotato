@@ -1012,7 +1012,7 @@
 
 (def ^:const fixtures-visit-key :fixtures)
 (def ^:dynamic *connection*)
-(def ^:dynamic *ent-db*)
+(def ^:dynamic *potato*)
 
 (defn wrap-incremental-insert-visiting-fn
   "Takes generated data stored as an attributed under `source-key` and inserts it
@@ -1031,7 +1031,7 @@
 
 (defn insert-fixtures*
   [{{:keys [insert]} fixtures-visit-key
-    :as                      ent-db}]
+    :as              ent-db}]
   (let [connection (or (get-in ent-db [fixtures-visit-key :connection])
                        (when-let [get-connection (get-in ent-db [fixtures-visit-key :get-connection])]
                          (get-connection ent-db)))]
@@ -1040,17 +1040,19 @@
                      (wrap-incremental-insert-visiting-fn generate-visit-key insert))))
 
 (defn insert-fixtures
-  [ent-db query]
-  (-> ent-db
-      (add-ents query)
-      generate*
-      insert-fixtures*
-      (attr-map fixtures-visit-key)))
+  ([query]
+   (insert-fixtures *potato* query))
+  ([ent-db query]
+   (-> ent-db
+       (add-ents query)
+       generate*
+       insert-fixtures*
+       (attr-map fixtures-visit-key))))
 
 (defn- mk-shared-body
   [ent-db-sym connection-sym body]
   `(binding [*connection* ~connection-sym
-             *ent-db* ~ent-db-sym]
+             *potato*     ~ent-db-sym]
      (when-let [setup# (get-in ~ent-db-sym [:fixtures :setup])]
        (setup# ~ent-db-sym))
      (try

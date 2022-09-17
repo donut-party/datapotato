@@ -74,7 +74,7 @@
 
 (deftest inserts-simple-generated-data
   (dc/with-fixtures ent-db
-    (dc/insert-fixtures dc/*ent-db* {:user [{:count 2}]})
+    (dc/insert-fixtures {:user [{:count 2}]})
     (is (= [{:xt/id 1 :user/username "Luigi"}
             {:xt/id 2 :user/username "Luigi"}]
            (q '{:find  [(pull ?u [*])]
@@ -83,7 +83,7 @@
 
 (deftest inserts-generated-data-hierarchy
   (dc/with-fixtures ent-db
-    (dc/insert-fixtures dc/*ent-db* {:todo [{:count 2}]})
+    (dc/insert-fixtures {:todo [{:count 2}]})
     (is (= [{:xt/id 1 :user/username "Luigi"}]
            (q '{:find  [(pull ?u [*])]
                 :where [[?u :user/username]]})))
