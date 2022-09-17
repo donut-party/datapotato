@@ -118,10 +118,10 @@
   {:schema   schema
    :generate {:generator mg/generate}
    :fixtures (merge dnj/config
-                    {:dbspec  @test-dbspec
-                     :setup   (fn [_]
-                                (create-tables dc/*connection*)
-                                (reset! dgt/id-seq 0))})})
+                    {:dbspec @test-dbspec
+                     :setup  (fn [_]
+                               (create-tables dc/*connection*)
+                               (reset! dgt/id-seq 0))})})
 
 ;;---
 ;; tests
