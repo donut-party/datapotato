@@ -93,3 +93,23 @@
                            :updated_by_id 1
                            :todo_list_id  2}]]
            @fixture-atom))))
+
+(deftest can-overwrite-data-to-insert
+  (dc/with-fixtures ent-db
+    (dc/insert-fixtures ent-db {:todo [{:count    2
+                                        :generate {:todos/todo_title "overwritten"}}]})
+    (is (= [[:user #:users{:id 1 :username "Luigi"}]
+            [:todo-list #:todo_lists{:id            2
+                                     :created_by_id 1
+                                     :updated_by_id 1}]
+            [:todo #:todos{:id            5
+                           :todo_title    "overwritten"
+                           :created_by_id 1
+                           :updated_by_id 1
+                           :todo_list_id  2}]
+            [:todo #:todos{:id            8
+                           :todo_title    "overwritten"
+                           :created_by_id 1
+                           :updated_by_id 1
+                           :todo_list_id  2}]]
+           @fixture-atom))))

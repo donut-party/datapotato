@@ -859,6 +859,10 @@
                                             dc/assoc-referenced-vals])
                  (dc/attr-map :test)))))))
 
+;;---
+;; generating and inserting
+;;---
+
 (deftest test-wrap-generate-visiting-fn
   (let [gen-id (dc/wrap-generate-visiting-fn
                 (fn [_db {:keys [ent-name] :as v}]
