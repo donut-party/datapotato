@@ -1,4 +1,6 @@
 (ns donut.datapotato.generate-test
+  "these tests focus on the collection of functions used to generate maps for ents
+  within the ent db"
   #?(:cljs (:require-macros [clojure.template :as ct]))
   (:require
    [clojure.data :as data]
@@ -9,9 +11,7 @@
    #?(:clj [clojure.test :refer [deftest is use-fixtures testing]]
       :cljs [cljs.test :include-macros true :refer [deftest is use-fixtures testing]])
    [donut.datapotato.core :as dc]
-   #?@(:bb []
-       :default [[malli.generator :as mg]])
-   ))
+   [malli.generator :as mg]))
 
 
 ;;---
@@ -143,7 +143,6 @@
       (assoc-in [:todo-list-watch :generate :schema] ::todo-list-watch)
       (assoc-in [:project :generate :schema] ::project)))
 
-
 (def spec-cycle-schema
   (-> cycle-schema
       (assoc-in [:user :generate :schema] ::user)
@@ -165,8 +164,7 @@
       (assoc-in [:watch :generate :schema] ::watch)))
 
 (def spec-generator (comp sg/generate s/gen))
-(def malli-generator #?(:bb nil
-                        :default mg/generate))
+(def malli-generator mg/generate)
 
 ;;---
 ;; malli
@@ -263,11 +261,9 @@
    {:schema    spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema    malli-schema
-         :generate {:generator malli-generator}}])))
+   "malli"
+   {:schema    malli-schema
+    :generate {:generator malli-generator}}))
 
 (deftest test-spec-gen-nested
   (ct/do-template
@@ -296,11 +292,9 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema    malli-schema
-         :generate {:generator malli-generator}}])))
+   "malli"
+   {:schema    malli-schema
+    :generate {:generator malli-generator}}))
 
 (deftest test-spec-gen-manual-attr
   (ct/do-template
@@ -341,11 +335,9 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema    malli-schema
-         :generate {:generator malli-generator}}])))
+   "malli"
+   {:schema    malli-schema
+    :generate {:generator malli-generator}}))
 
 (deftest test-spec-gen-omit
   (ct/do-template
@@ -391,12 +383,9 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema    malli-schema
-         :generate {:generator malli-generator}}])))
+   "malli"
+   {:schema    malli-schema
+    :generate {:generator malli-generator}}))
 
 (deftest test-overwriting
   (ct/do-template
@@ -434,11 +423,9 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema    malli-schema
-         :generate {:generator malli-generator}}])))
+   "malli"
+   {:schema    malli-schema
+    :generate {:generator malli-generator}}))
 
 (deftest test-idempotency
   (ct/do-template
@@ -454,12 +441,9 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema   malli-schema
-         :generate {:generator malli-generator}}])
-   ))
+   "malli"
+   {:schema   malli-schema
+    :generate {:generator malli-generator}}))
 
 
 (deftest test-coll-relval-order
@@ -481,11 +465,9 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema    malli-schema
-         :generate {:generator malli-generator}}])))
+   "malli"
+   {:schema    malli-schema
+    :generate {:generator malli-generator}}))
 
 (deftest test-sets-custom-relation-val
   (ct/do-template
@@ -509,11 +491,9 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema    malli-schema
-         :generate {:generator malli-generator}}])))
+   "malli"
+   {:schema    malli-schema
+    :generate {:generator malli-generator}}))
 
 ;; testing inserting
 (defn insert
@@ -558,11 +538,9 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema    malli-schema
-         :generate {:generator malli-generator}}])))
+   "malli"
+   {:schema    malli-schema
+    :generate {:generator malli-generator}}))
 
 (deftest test-inserts-novel-data
   (ct/do-template
@@ -602,11 +580,9 @@
    {:schema   spec-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema    malli-schema
-         :generate {:generator malli-generator}}])))
+   "malli"
+   {:schema    malli-schema
+    :generate {:generator malli-generator}}))
 
 ;;---
 ;; cycles
@@ -634,11 +610,9 @@
    {:schema   spec-cycle-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema    malli-cycle-schema
-         :generate {:generator malli-generator}}])))
+   "malli"
+   {:schema    malli-cycle-schema
+    :generate {:generator malli-generator}}))
 
 (deftest test-handles-cycle-ids
   (ct/do-template
@@ -657,11 +631,9 @@
    {:schema   spec-cycle-schema
     :generate {:generator spec-generator}}
 
-   #?@(:bb []
-       :default
-       ["malli"
-        {:schema    malli-cycle-schema
-         :generate {:generator malli-generator}}])))
+   "malli"
+   {:schema    malli-cycle-schema
+    :generate {:generator malli-generator}}))
 
 (deftest test-throws-exception-on-2nd-map-ent-attr-try
   (testing "insert-cycle fails because the schema contains a :required cycle"

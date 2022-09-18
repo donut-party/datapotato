@@ -510,6 +510,8 @@
                        query-opts))))
 
 (defn normalize-query-term
+  "Query terms can take a few different forms. This converts the query term to the
+  standard form used internally and fills in default values."
   [query-term]
   (let [[query-term-version conformed-query-term] (s/conform ::query-term query-term)
         normalized (case query-term-version
@@ -890,6 +892,12 @@
 ;; visiting w/ referenced vals
 ;; -----------------
 
+;; These helpers are here mainly for handling generated data. When generating
+;; data you need to do a little extra work to make sure that some generated
+;; values are replaced by a referent. That is, if a Book entity's :author_id
+;; refers to an Author entity's :id, then you want to replace the generated
+;; :author_id with the author's :id.
+
 (defn omit-relation?
   [ent-db ent-name reference-key]
   (-> ent-db
@@ -974,8 +982,26 @@
 
 (def ^:const generate-visit-key :generate)
 
+;; The functions below introduce some conventions to make it easier to get
+;; started with generating data. The conventions also make data generation
+;; pluggable, so that you can use either clojure.spec or malli and potentially
+;; other generators.
+
 (defn generate*
-  "Use a generator to generate data for each ent"
+  "Use a generator to generate data for each ent. The generator can be specified
+  in three places (in order of descending preference):
+
+  - the visit query
+  - an entity's schema
+  - the ent-db
+
+  for example:
+
+  (datapotato.core/generate
+    {:schema {:todo {:generate {:generator second-highest-precedence}}} ;; <= generator specified in entity schema
+     :generate {:generator lowest-precedence}}                          ;; <= generator specified in ent-db
+    {:todo [{:generate {:generator highest-precedence-generator}}]})    ;; <= generator specified in visit query
+  "
   [ent-db]
   (let [base-generator (get-in ent-db [:generate :generator])
         visiting-fn    (wrap-generate-visiting-fn
@@ -988,7 +1014,7 @@
                                                               (:generator ent-schema-generate)
                                                               base-generator)]
                             (when-not generator
-                              (throw (ex-info "No generator specified. Try adding [:generate :generator] to db" {})))
+                              (throw (ex-info "No generator specified. Try adding [:generate :generator] to ent-db" {})))
                             (when-not schema
                               (throw (ex-info "No generate schema provided" {})))
                             (generator schema))))]
@@ -1001,6 +1027,8 @@
       (generate*)))
 
 (defn generate-attr-map
+  "Generates data and returns a map of {ent-id generated-data} rather than the
+  entire ent-db"
   [ent-db query]
   (-> ent-db
       (generate query)
@@ -1050,6 +1078,7 @@
        (attr-map fixtures-visit-key))))
 
 (defmacro with-fixtures
+  "Preferred way to work with fixtures in tests. Handles setup and teardown."
   [ent-db & body]
   `(let [ent-db#         ~ent-db
          get-connection# (get-in ent-db# [:fixtures :get-connection])
