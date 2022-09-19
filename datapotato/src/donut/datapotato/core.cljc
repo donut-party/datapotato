@@ -1062,8 +1062,7 @@
              inserting-visiting-fn])))
 
 (defn insert-fixtures*
-  [{{:keys [insert]} fixtures-visit-key
-    :as              ent-db}]
+  [ent-db]
   (let [connection (or (get-in ent-db [fixtures-visit-key :connection])
                        (when-let [get-connection (get-in ent-db [fixtures-visit-key :get-connection])]
                          (get-connection ent-db)))]
@@ -1072,10 +1071,9 @@
                      (wrap-incremental-insert-visiting-fn
                       generate-visit-key
                       (fn insert-visiting-fn [ent-db {:keys [ent-name visit-query-opts] :as visit-data}]
-                        (let [ent-schema-fixtures       (fixtures-visit-key (ent-schema ent-db ent-name))
-                              insert                    (or (get-in visit-query-opts [fixtures-visit-key insert-key])
-                                                            (get-in (ent-schema ent-db ent-name) [fixtures-visit-key insert-key])
-                                                            (get-in ent-db [fixtures-visit-key insert-key]))]
+                        (let [insert (or (get-in visit-query-opts [fixtures-visit-key insert-key])
+                                         (get-in (ent-schema ent-db ent-name) [fixtures-visit-key insert-key])
+                                         (get-in ent-db [fixtures-visit-key insert-key]))]
                           (when-not insert
                             (throw (ex-info "No insert function specified. Try adding [:fixtures :insert] to ent-db" {})))
                           (insert ent-db visit-data)))))))
