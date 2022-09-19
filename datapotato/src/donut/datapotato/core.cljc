@@ -1005,22 +1005,22 @@
     {:todo [{:generate {:generator highest-precedence-generator}}]})    ;; <= generator specified in visit query
   "
   [ent-db]
-  (let [base-generator (get-in ent-db [:generate :generator])
-        visiting-fn    (wrap-generate-visiting-fn
-                        (fn [db {:keys [ent-name visit-query-opts]}]
-                          (let [ent-schema-generate       (generate-visit-key (ent-schema db ent-name))
-                                visit-query-opts-generate (generate-visit-key visit-query-opts)
-                                schema                    (or (:schema visit-query-opts-generate)
-                                                              (:schema ent-schema-generate))
-                                generator                 (or (:generator visit-query-opts-generate)
-                                                              (:generator ent-schema-generate)
-                                                              base-generator)]
-                            (when-not generator
-                              (throw (ex-info "No generator specified. Try adding [:generate :generator] to ent-db" {})))
-                            (when-not schema
-                              (throw (ex-info "No generate schema provided" {})))
-                            (generator schema))))]
-    (visit-ents-once ent-db generate-visit-key visiting-fn)))
+  (visit-ents-once ent-db
+                   generate-visit-key
+                   (wrap-generate-visiting-fn
+                    (fn generate-visiting-fn [db {:keys [ent-name visit-query-opts]}]
+                      (let [ent-schema-generate       (generate-visit-key (ent-schema db ent-name))
+                            visit-query-opts-generate (generate-visit-key visit-query-opts)
+                            schema                    (or (:schema visit-query-opts-generate)
+                                                          (:schema ent-schema-generate))
+                            generator                 (or (:generator visit-query-opts-generate)
+                                                          (:generator ent-schema-generate)
+                                                          (get-in ent-db [generate-visit-key :generator]))]
+                        (when-not generator
+                          (throw (ex-info "No generator specified. Try adding [:generate :generator] to ent-db" {})))
+                        (when-not schema
+                          (throw (ex-info "No generate schema provided" {})))
+                        (generator schema))))))
 
 (defn generate
   [ent-db query]
@@ -1041,6 +1041,7 @@
 ;;---
 
 (def ^:const fixtures-visit-key :fixtures)
+(def ^:const insert-key :insert)
 (def ^:dynamic *connection*)
 (def ^:dynamic *potato*)
 
@@ -1068,7 +1069,16 @@
                          (get-connection ent-db)))]
     (visit-ents-once (assoc-in ent-db [fixtures-visit-key :connection] connection)
                      fixtures-visit-key
-                     (wrap-incremental-insert-visiting-fn generate-visit-key insert))))
+                     (wrap-incremental-insert-visiting-fn
+                      generate-visit-key
+                      (fn insert-visiting-fn [ent-db {:keys [ent-name visit-query-opts] :as visit-data}]
+                        (let [ent-schema-fixtures       (fixtures-visit-key (ent-schema ent-db ent-name))
+                              insert                    (or (get-in visit-query-opts [fixtures-visit-key insert-key])
+                                                            (get-in (ent-schema ent-db ent-name) [fixtures-visit-key insert-key])
+                                                            (get-in ent-db [fixtures-visit-key insert-key]))]
+                          (when-not insert
+                            (throw (ex-info "No insert function specified. Try adding [:fixtures :insert] to ent-db" {})))
+                          (insert ent-db visit-data)))))))
 
 (defn insert-fixtures
   ([query]
