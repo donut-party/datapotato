@@ -609,38 +609,39 @@
 (defn add-ents
   "Produce a new db with an ent graph that contains all ents specified
   by query"
-  [{:keys [schema] :as ent-db} query]
-  ;; validations
-  (let [isr (invalid-schema-relations schema)]
-    (assert (empty? isr)
-            (str "Your schema relations reference nonexistent types: " isr)))
+  [ent-db query]
+  (let [{:keys [schema] :as ent-db} (or (:ent-db (meta ent-db)) ent-db)]
+    ;; validations
+    (let [isr (invalid-schema-relations schema)]
+      (assert (empty? isr)
+              (str "Your schema relations reference nonexistent types: " isr)))
 
-  (let [prefix-dupes (identical-prefixes schema)]
-    (assert (empty? prefix-dupes)
-            (str "You have used the same prefix for multiple entity types: " prefix-dupes)))
+    (let [prefix-dupes (identical-prefixes schema)]
+      (assert (empty? prefix-dupes)
+              (str "You have used the same prefix for multiple entity types: " prefix-dupes)))
 
-  (let [ic (invalid-constraints schema)]
-    (assert (empty? ic)
-            (str "Schema constraints reference nonexistent relation attrs: " ic)))
+    (let [ic (invalid-constraints schema)]
+      (assert (empty? ic)
+              (str "Schema constraints reference nonexistent relation attrs: " ic)))
 
-  (let [diff (set/difference (set (keys query)) (set (keys schema)))]
-    (assert (empty? diff)
-            (str "The following ent types are in your query but aren't defined in your schema: " diff)))
+    (let [diff (set/difference (set (keys query)) (set (keys schema)))]
+      (assert (empty? diff)
+              (str "The following ent types are in your query but aren't defined in your schema: " diff)))
 
-  (throw-invalid-spec "db" ::ent-db ent-db)
-  (throw-invalid-spec "query" ::query query)
-  ;; end validations
+    (throw-invalid-spec "db" ::ent-db ent-db)
+    (throw-invalid-spec "query" ::query query)
+    ;; end validations
 
-  (let [normalized-query (medley/map-vals (fn [query-terms] (mapv normalize-query-term query-terms))
-                                          query)
-        ent-db           (init-db ent-db normalized-query)]
-    (->> (:types ent-db)
-         (reduce (fn [db ent-type]
-                   (if-let [ent-type-query (ent-type normalized-query)]
-                     (add-ent-type-query db ent-type-query ent-type)
-                     db))
-                 ent-db)
-         (add-ref-ents))))
+    (let [normalized-query (medley/map-vals (fn [query-terms] (mapv normalize-query-term query-terms))
+                                            query)
+          ent-db           (init-db ent-db normalized-query)]
+      (->> (:types ent-db)
+           (reduce (fn [db ent-type]
+                     (if-let [ent-type-query (ent-type normalized-query)]
+                       (add-ent-type-query db ent-type-query ent-type)
+                       db))
+                   ent-db)
+           (add-ref-ents)))))
 
 ;; -----------------
 ;; visiting
@@ -808,11 +809,12 @@
   "Produce a map where each key is a node and its value is a graph
   attr on that node"
   ([ent-db attr] (attr-map ent-db attr (ents ent-db)))
-  ([{:keys [data]} attr ents]
-   (->> ents
-        (reduce (fn [m ent] (assoc m ent (lat/attr data ent attr)))
-                {})
-        (into (sorted-map)))))
+  ([{:keys [data] :as ent-db} attr ents]
+   (with-meta (->> ents
+                   (reduce (fn [m ent] (assoc m ent (lat/attr data ent attr)))
+                           {})
+                   (into (sorted-map)))
+     {:ent-db ent-db})))
 
 (defn query-ents
   "Get seq of nodes that are explicitly defined in the query"
@@ -1072,8 +1074,7 @@
    (insert-fixtures *potato* query))
   ([ent-db query]
    (-> ent-db
-       (add-ents query)
-       generate*
+       (generate query)
        insert-fixtures*
        (attr-map fixtures-visit-key))))
 
