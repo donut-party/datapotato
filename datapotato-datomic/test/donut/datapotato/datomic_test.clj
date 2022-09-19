@@ -27,6 +27,12 @@
    [:todo/created-by pos-int?]
    [:todo/todo-list pos-int?]])
 
+(def Project
+  [:map
+   [:project/todo-lists
+    [:vector pos-int?]]
+   [:project/created-by pos-int?]])
+
 (def schema
   {:user      {:prefix   :u
                :generate {:schema User}
@@ -40,7 +46,12 @@
                :fixtures  {:collection :todo}
                :relations {:todo/created-by [:user :db/id]
                            :todo/todo-list  [:todo-list :db/id]}
-               :prefix    :t}})
+               :prefix    :t}
+   :project   {:generate    {:schema Project}
+               :relations   {:project/created-by [:user :db/id]
+                             :project/todo-lists [:todo-list :db/id]}
+               :constraints {:project/todo-lists #{:coll}}
+               :prefix      :p}})
 
 (def uri "datomic:mem://datapotato-test")
 
@@ -86,6 +97,18 @@
                       :db.install/_attribute :db.part/db}
 
                      {:db/ident              :todo/todo-list
+                      :db/id                 #db/id [:db.part/db]
+                      :db/valueType          :db.type/ref
+                      :db/cardinality        :db.cardinality/one
+                      :db.install/_attribute :db.part/db}
+
+                     {:db/ident              :project/todo-lists
+                      :db/id                 #db/id [:db.part/db]
+                      :db/valueType          :db.type/ref
+                      :db/cardinality        :db.cardinality/many
+                      :db.install/_attribute :db.part/db}
+
+                     {:db/ident              :project/created-by
                       :db/id                 #db/id [:db.part/db]
                       :db/valueType          :db.type/ref
                       :db/cardinality        :db.cardinality/one
@@ -137,3 +160,28 @@
            (q dc/*connection*
               '{:find  [(pull ?u [*])]
                 :where [[?u :todo-list/created-by]]})))))
+
+(deftest inserts-colls
+  (dc/with-fixtures ent-db
+    (dc/insert-fixtures {:project [{:refs {:project/todo-lists 2}}]})
+
+    (is (= [{:db/id         17592186045418
+             :user/username "Luigi"}]
+           (q dc/*connection*
+              '{:find  [(pull ?u [*])]
+                :where [[?u :user/username]]})))
+
+    (is (= [{:db/id                17592186045420,
+             :todo-list/created-by #:db{:id 17592186045418}}
+            {:db/id                17592186045422,
+             :todo-list/created-by #:db{:id 17592186045418}}]
+           (q dc/*connection*
+              '{:find  [(pull ?u [*])]
+                :where [[?u :todo-list/created-by]]})))
+
+    (is (= [{:db/id              17592186045424,
+             :project/todo-lists [{:db/id 17592186045420} {:db/id 17592186045422}]
+             :project/created-by {:db/id 17592186045418}}]
+           (q dc/*connection*
+              '{:find  [(pull ?u [*])]
+                :where [[?u :project/created-by]]})))))

@@ -1055,7 +1055,8 @@
     (reduce (fn [visit-val visiting-fn]
               (visiting-fn ent-db (assoc opts :visit-val visit-val)))
             (source-key opts)
-            [merge-overwrites
+            [reset-relations
+             merge-overwrites
              assoc-referenced-vals
              inserting-visiting-fn])))
 
