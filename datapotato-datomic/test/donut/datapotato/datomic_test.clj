@@ -1,6 +1,6 @@
 (ns donut.datapotato.datomic-test
   (:require
-   [clojure.test :refer [deftest is]]
+   [clojure.test :refer [deftest is testing]]
    [datomic.api :as d]
    [donut.datapotato.core :as dc]
    [donut.datapotato.datomic :as dd]
@@ -185,3 +185,125 @@
            (q dc/*connection*
               '{:find  [(pull ?u [*])]
                 :where [[?u :project/created-by]]})))))
+
+;;---
+;; polymorphic test
+;;---
+
+(def TopicCategory
+  [:map
+   [:topic-category/name string?]])
+
+(def Topic
+  [:map
+   [:topic/topic-category pos-int?]])
+
+(def Watch
+  [:map
+   [:watch/watched pos-int?]])
+
+(def polymorphic-schema
+  {:topic-category {:generate {:schema     TopicCategory
+                               :overwrites {:topic-category/name "topic category"}}
+                    :prefix   :tc}
+   :topic          {:generate  {:schema Topic}
+                    :relations {:topic/topic-category [:topic-category :db/id]}
+                    :prefix    :t}
+   :watch          {:generate  {:schema Watch}
+                    :relations {:watch/watched #{[:topic-category :db/id]
+                                                 [:topic :db/id]}}
+                    :prefix    :w}})
+
+(def polymorphic-ent-db
+  {:schema   polymorphic-schema
+   :generate {:generator mg/generate}
+   :fixtures {:insert
+              dd/insert
+
+              :get-connection
+              (fn get-connection [_]
+                (d/delete-database uri)
+                (d/create-database uri)
+                (d/connect uri))
+
+              :setup
+              (fn setup [{:keys [fixtures]}]
+                (let [{:keys [connection]} fixtures]
+                  @(d/transact
+                    connection
+                    [{:db/ident              :topic-category/name
+                      :db/id                 #db/id [:db.part/db]
+                      :db/valueType          :db.type/string
+                      :db/cardinality        :db.cardinality/one
+                      :db.install/_attribute :db.part/db}
+
+                     {:db/ident              :topic/topic-category
+                      :db/id                 #db/id [:db.part/db]
+                      :db/valueType          :db.type/ref
+                      :db/cardinality        :db.cardinality/one
+                      :db.install/_attribute :db.part/db}
+
+                     {:db/ident              :watch/watched
+                      :db/id                 #db/id [:db.part/db]
+                      :db/valueType          :db.type/ref
+                      :db/cardinality        :db.cardinality/one
+                      :db.install/_attribute :db.part/db}])))}})
+
+
+(deftest polymorphic-refs
+  (testing "incremental insert two different polymorphic refs"
+    (dc/with-fixtures polymorphic-ent-db
+      (let [updated-db (dc/insert-fixtures {:watch [{:count     1
+                                                     :ref-types {:watch/watched :topic-category}}]})]
+
+        (is (= [{:db/id               17592186045418
+                 :topic-category/name "topic category"}]
+               (q dc/*connection*
+                  '{:find  [(pull ?e [*])]
+                    :where [[?e :topic-category/name]]})))
+
+        (is (= [{:db/id         17592186045420
+                 :watch/watched {:db/id 17592186045418}}]
+               (q dc/*connection*
+                  '{:find  [(pull ?e [*])]
+                    :where [[?e :watch/watched]]})))
+
+        (dc/insert-fixtures updated-db {:watch [{:count     1
+                                                 :ref-types {:watch/watched :topic}}]})
+
+        (is (= [{:db/id                17592186045422
+                 :topic/topic-category {:db/id 17592186045418}}]
+               (q dc/*connection*
+                  '{:find  [(pull ?e [*])]
+                    :where [[?e :topic/topic-category]]})))
+
+        (is (= [{:db/id         17592186045420
+                 :watch/watched {:db/id 17592186045418}}
+                {:db/id         17592186045424
+                 :watch/watched {:db/id 17592186045422}}]
+               (q dc/*connection*
+                  '{:find  [(pull ?e [*])]
+                    :where [[?e :watch/watched]]}))))))
+
+  (testing "single polymorphic ref"
+    (dc/with-fixtures polymorphic-ent-db
+      (dc/insert-fixtures {:watch [{:count     1
+                                    :ref-types {:watch/watched :topic}}]})
+
+      (is (= [{:db/id               17592186045418
+               :topic-category/name "topic category"}]
+             (q dc/*connection*
+                '{:find  [(pull ?e [*])]
+                  :where [[?e :topic-category/name]]})))
+
+      (is (= [{:db/id                17592186045420
+               :topic/topic-category {:db/id 17592186045418}}]
+             (q dc/*connection*
+                '{:find  [(pull ?e [*])]
+                  :where [[?e :topic/topic-category]]})))
+
+      (is (= [{:db/id         17592186045422
+               :watch/watched {:db/id 17592186045420}}]
+             (q dc/*connection*
+                '{:find  [(pull ?e [*])]
+                  :where [[?e :watch/watched]]}))))))

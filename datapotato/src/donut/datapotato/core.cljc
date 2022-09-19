@@ -434,7 +434,7 @@
                                                                (map second)
                                                                (some #(and (= (:ent-type %) polymorphic-type-choice) %)))]
                               (when-not polymorphic-relation
-                                (throw (ex-info "Could not determine polymorphic relation. Specify relation type under :ref-type key of query-opts, or specify default value in schema."
+                                (throw (ex-info "Could not determine polymorphic relation. Specify relation type under the :ref-types key of query-opts, or specify default value in schema."
                                                 {:relation-attr  relation-attr
                                                  :ent-name       ent-name
                                                  :ent-query-opts ent-query-opts})))
