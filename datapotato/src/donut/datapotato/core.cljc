@@ -46,13 +46,13 @@
 (s/def :datapotato.fixtures/get-connection fn?)
 (s/def :datapotato.fixtures/setup fn?)
 (s/def :datapotato/fixtures
-  (s/map-of :req-un [:datapotato.fixtures/insert]
-            :opt-un [:datapotato.fixtures/get-connection
-                     :datapotato.fixtures/setup]))
+  (s/keys :req-un [:datapotato.fixtures/insert]
+          :opt-un [:datapotato.fixtures/get-connection
+                   :datapotato.fixtures/setup]))
 
 (s/def :datapotato.generate/generator any?)
 (s/def :datapotato/generate
-  (s/map-of :req-un [:datapotato.generate/generator]))
+  (s/keys :req-un [:datapotato.generate/generator]))
 
 
 ;; -----------------
@@ -872,7 +872,7 @@
            set/union
            {}
            (for [[ref-ent {:keys [relation-attrs]}] relations
-                 relation-attr relation-attrs]
+                 relation-attr                      relation-attrs]
              {relation-attr (if (coll-relation-attr? potatodb ent relation-attr)
                               #{ref-ent} ref-ent)}))))
 
@@ -982,14 +982,14 @@
   visit-query-opts."
   [_potatodb {:keys [visit-val visit-query-opts schema-opts]}]
   (let [schema-overwrites (:overwrites schema-opts)
-        merged (cond-> visit-val
-                 ;; the schema can include vals to merge into each ent
-                 (fn? schema-overwrites)  schema-overwrites
-                 (map? schema-overwrites) (merge schema-overwrites)
+        merged            (cond-> visit-val
+                            ;; the schema can include vals to merge into each ent
+                            (fn? schema-overwrites)  schema-overwrites
+                            (map? schema-overwrites) (merge schema-overwrites)
 
-                 ;; visit query opts can also specify merge vals
-                 (fn? visit-query-opts)  visit-query-opts
-                 (map? visit-query-opts) (merge visit-query-opts))
+                            ;; visit query opts can also specify merge vals
+                            (fn? visit-query-opts)  visit-query-opts
+                            (map? visit-query-opts) (merge visit-query-opts))
         changed-keys (->> (data/diff visit-val merged)
                           (take 2)
                           (map keys)
