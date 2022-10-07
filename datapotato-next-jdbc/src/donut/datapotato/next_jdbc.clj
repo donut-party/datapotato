@@ -1,4 +1,6 @@
 (ns donut.datapotato.next-jdbc
+  "Convenience configuration that should cover most use cases for inserting data
+  with next-jdbc"
   (:require
    [donut.datapotato.core :as dc]
    [next.jdbc :as jdbc]
@@ -19,7 +21,8 @@
   )
 
 (defmulti get-inserted
-  "default for retrieving data from the db after it's been inserted"
+  "retrieve data from the db after it's been inserted to account for e.g.
+  auto-incrementing ids"
   (fn get-inserted-dispatch [{:keys [dbtype dbspec]}]
     (or dbtype (:dbtype dbspec))))
 
@@ -35,6 +38,7 @@
   insert-result)
 
 (defn insert
+  "inserts a single record in the next.jdbc db for an ent"
   [{{:keys [connection dbspec dbtype]} dc/fixtures-visit-key
     :as                                ent-db}
    {:keys [ent-name ent-type visit-val]}]
@@ -47,8 +51,9 @@
       (throw (ex-info "connection required" {})))
 
     (when-not table-name
-      (throw (ex-info "no table name provided" {:ent-name ent-name
-                                                :ent-type ent-type})))
+      (throw (ex-info (format "no table name provided. add under [:schema %s :fixtures :table-name]" ent-type)
+                      {:ent-name ent-name
+                       :ent-type ent-type})))
 
     (let [insert-result (sql/insert! connection table-name visit-val)]
       (get-inserted_ {:dbspec        dbspec
@@ -58,6 +63,13 @@
                       :insert-result insert-result}))))
 
 (def config
+  "Good defaults for configuring database insertion with next-jdbc
+
+  Use this value under the `:fixtures` key in your potatodb, e.g.
+  (def ent-db
+   {:schema schema
+    :generate {:generator mg/generate}
+    :fixtures donut.datapotato.next-jdbc/config})"
   {:insert           insert
    :get-connection   (fn next-jdbc-get-connection [ent-db]
                        (jdbc/get-connection (get-in ent-db [:fixtures :dbspec])))

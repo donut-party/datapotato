@@ -32,6 +32,29 @@
 (s/def ::spec (s/or :keyword (s/and keyword? namespace)
                     :spec    s/spec?))
 
+
+;; -----------------
+;; -----------------
+;; fixture and generate specs
+;; -----------------
+
+;; fixture and generation behavior can be configured at the ent-db level and at
+;; the ent-type-schema level.
+
+;; db specs
+(s/def :datapotato.fixtures/insert fn?)
+(s/def :datapotato.fixtures/get-connection fn?)
+(s/def :datapotato.fixtures/setup fn?)
+(s/def :datapotato/fixtures
+  (s/map-of :req-un [:datapotato.fixtures/insert]
+            :opt-un [:datapotato.fixtures/get-connection
+                     :datapotato.fixtures/setup]))
+
+(s/def :datapotato.generate/generator any?)
+(s/def :datapotato/generate
+  (s/map-of :req-un [:datapotato.generate/generator]))
+
+
 ;; -----------------
 ;; -----------------
 ;; schema specs
@@ -130,7 +153,11 @@
 
 (s/def ::ent-type-schema
   (s/keys :req-un [::prefix]
-          :opt-un [::relations ::constraints ::spec]))
+          :opt-un [::relations
+                   ::constraints
+                   ::spec
+                   :datapotato/fixtures
+                   :datapotato/generate]))
 
 (s/def ::schema
   (s/map-of ::ent-type ::ent-type-schema))
@@ -205,10 +232,15 @@
 (s/def ::query
   (s/map-of ::ent-type (s/coll-of ::query-term)))
 
-;; db specs
-(s/def ::ent-db
-  (s/keys :req-un [::schema]))
+;; -----------------
+;; -----------------
+;; ent-db specs
+;; -----------------
 
+(s/def ::ent-db
+  (s/keys :req-un [::schema]
+          :opt-un [:datapotato/fixtures
+                   :datapotato/generate]))
 
 ;; -----------------
 ;; -----------------
