@@ -38,7 +38,7 @@
 ;; fixture and generate specs
 ;; -----------------
 
-;; fixture and generation behavior can be configured at the ent-db level and at
+;; fixture and generation behavior can be configured at the potatodb level and at
 ;; the ent-type-schema level.
 
 ;; db specs
@@ -153,11 +153,7 @@
 
 (s/def ::ent-type-schema
   (s/keys :req-un [::prefix]
-          :opt-un [::relations
-                   ::constraints
-                   ::spec
-                   :datapotato/fixtures
-                   :datapotato/generate]))
+          :opt-un [::relations ::constraints ::spec :datapotato/fixtures :datapotato/generate]))
 
 (s/def ::schema
   (s/map-of ::ent-type ::ent-type-schema))
@@ -234,10 +230,10 @@
 
 ;; -----------------
 ;; -----------------
-;; ent-db specs
+;; potatodb specs
 ;; -----------------
 
-(s/def ::ent-db
+(s/def ::potatodb
   (s/keys :req-un [::schema]
           :opt-un [:datapotato/fixtures
                    :datapotato/generate]))
@@ -256,8 +252,8 @@
 
 (defn relation-attrs-with-constraint
   "Given an ent name, return all relation attributes which include the constraint."
-  [ent-db ent-name _constraint]
-  (->> (ent-schema ent-db ent-name)
+  [potatodb ent-name _constraint]
+  (->> (ent-schema potatodb ent-name)
        :constraints
        (medley/filter-vals (fn [attr-constraints] (contains? attr-constraints :coll)))
        keys
@@ -338,29 +334,29 @@
 ;; related ents
 ;; -----------------
 (defn ent-relation-constraints
-  [ent-db ent relation-attr]
-  (-> ent-db
+  [potatodb ent relation-attr]
+  (-> potatodb
       (ent-schema ent)
       (get-in [:constraints relation-attr])))
 
 (defn coll-relation-attr?
   "Given a db, ent, and relation-attr, determines whether the relation is
   a coll attr."
-  [ent-db ent relation-attr]
-  (contains? (ent-relation-constraints ent-db ent relation-attr) :coll))
+  [potatodb ent relation-attr]
+  (contains? (ent-relation-constraints potatodb ent relation-attr) :coll))
 
 (s/fdef coll-relation-attr?
-  :args (s/cat :ent-db ::ent-db :ent-name ::ent-name :ent-attr ::ent-attr)
+  :args (s/cat :potatodb ::potatodb :ent-name ::ent-name :ent-attr ::ent-attr)
   :ret boolean?)
 
 (defn uniq-relation-attr?
   "Given a db, ent, and relation-attr, determines whether the relation is
   a uniq attr."
-  [ent-db ent relation-attr]
-  (contains? (ent-relation-constraints ent-db ent relation-attr) :uniq))
+  [potatodb ent relation-attr]
+  (contains? (ent-relation-constraints potatodb ent relation-attr) :uniq))
 
 (s/fdef uniq-relation-attr?
-  :args (s/cat :ent-db ::ent-db :ent-name ::ent-name :ent-attr ::ent-attr)
+  :args (s/cat :potatodb ::potatodb :ent-name ::ent-name :ent-attr ::ent-attr)
   :ret boolean?)
 
 (defn add-edge-with-id
@@ -415,8 +411,8 @@
   "Check that the refs value supplied in a query is a collection if the
   relation type is collection, or a keyword if the relation type is
   unary. If the reference is omit, no further validation is required."
-  [ent-db ent-name relation-attr query-term]
-  (let [coll-attr?                      (coll-relation-attr? ent-db ent-name relation-attr)
+  [potatodb ent-name relation-attr query-term]
+  (let [coll-attr?                      (coll-relation-attr? potatodb ent-name relation-attr)
         {:keys [qr-constraint qr-term]} (conformed-query-opts query-term relation-attr)]
     (cond (or (nil? qr-constraint) (= :omit qr-constraint)) nil ;; noop
 
@@ -430,10 +426,10 @@
 
 (defn related-ents
   "Returns all related ents for an ent's relation-attr"
-  [{:keys [schema data] :as ent-db} ent-name relation-attr related-ent-type query-term]
+  [{:keys [schema data] :as potatodb} ent-name relation-attr related-ent-type query-term]
   (let [{:keys [qr-constraint qr-type qr-term bind]} (conformed-query-opts query-term relation-attr)]
 
-    (validate-related-ents-query ent-db ent-name relation-attr query-term)
+    (validate-related-ents-query potatodb ent-name relation-attr query-term)
 
     (b/cond (= qr-constraint :omit) []
             (= qr-type :count)      (mapv (partial numeric-node-name schema related-ent-type) (range qr-term))
@@ -442,22 +438,22 @@
             :let [bn (get bind related-ent-type)]
             bn   [bn]
 
-            :let [has-bound-descendants? (bound-descendants? ent-db bind related-ent-type)
-                  uniq?                  (uniq-relation-attr? ent-db ent-name relation-attr)
+            :let [has-bound-descendants? (bound-descendants? potatodb bind related-ent-type)
+                  uniq?                  (uniq-relation-attr? potatodb ent-name relation-attr)
                   ent-index              (lat/attr data ent-name :index)]
-            (and has-bound-descendants? uniq?) [(bound-relation-attr-name ent-db ent-name related-ent-type ent-index)]
-            has-bound-descendants?             [(bound-relation-attr-name ent-db ent-name related-ent-type 0)]
+            (and has-bound-descendants? uniq?) [(bound-relation-attr-name potatodb ent-name related-ent-type ent-index)]
+            has-bound-descendants?             [(bound-relation-attr-name potatodb ent-name related-ent-type 0)]
             uniq?                              [(numeric-node-name schema related-ent-type ent-index)]
-            related-ent-type                   [(default-node-name ent-db related-ent-type)]
+            related-ent-type                   [(default-node-name potatodb related-ent-type)]
             :else                              [])))
 
 (defn query-relation
   "Returns the conformed relation for an ent's relation-attr. Handles
   polymorphic relations."
-  [ent-db ent-name relation-attr]
-  (let [{:keys [relations ref-types]} (ent-schema ent-db ent-name)
+  [potatodb ent-name relation-attr]
+  (let [{:keys [relations ref-types]} (ent-schema potatodb ent-name)
         [relation-type relation]      (s/conform ::relation (relation-attr relations))
-        ent-query-opts                (query-opts ent-db ent-name)]
+        ent-query-opts                (query-opts potatodb ent-name)]
     (case relation-type
       :monotype-relation    relation
       :polymorphic-relation (let [polymorphic-type-choice (or (get-in ent-query-opts [:ref-types relation-attr])
@@ -473,15 +469,15 @@
                               polymorphic-relation))))
 
 (s/fdef query-relation
-  :args (s/cat :ent-db ::ent-db :ent-name ::ent-name :relation-attr ::ent-attr)
+  :args (s/cat :potatodb ::potatodb :ent-name ::ent-name :relation-attr ::ent-attr)
   :ret ::conformed-relation)
 
 (defn add-related-ents
-  [ent-db ent-name query-term]
-  (let [relation-attrs    (keys (:relations (ent-schema ent-db ent-name)))
+  [potatodb ent-name query-term]
+  (let [relation-attrs    (keys (:relations (ent-schema potatodb ent-name)))
         attr-related-ents (for [relation-attr    relation-attrs
-                                related-ent-type [(:ent-type (query-relation ent-db ent-name relation-attr))]
-                                related-ent      (related-ents ent-db ent-name relation-attr related-ent-type query-term)]
+                                related-ent-type [(:ent-type (query-relation potatodb ent-name relation-attr))]
+                                related-ent      (related-ents potatodb ent-name relation-attr related-ent-type query-term)]
                             [relation-attr related-ent-type related-ent])
         ent-bindings      (if-let [query-bindings (:bind query-term)]
                             {:ent-name :_ :bind query-bindings}
@@ -490,14 +486,14 @@
               (-> db
                   (update :ref-ents conj [related-ent related-ent-type ent-bindings])
                   (update :data add-edge-with-id ent-name related-ent relation-attr)))
-            ent-db
+            potatodb
             attr-related-ents)))
 
 (defn add-ent
-  "Add an ent, and its related ents, to the ent-db"
-  [{:keys [data] :as ent-db} ent-name ent-type query-term]
+  "Add an ent, and its related ents, to the potatodb"
+  [{:keys [data] :as potatodb} ent-name ent-type query-term]
   ;; don't try to add an ent if it's already been added
-  (let [ent-name  (if (= ent-name :_) (incrementing-node-name ent-db ent-type) ent-name)]
+  (let [ent-name  (if (= ent-name :_) (incrementing-node-name potatodb ent-type) ent-name)]
     ;; check both that the node exists and that it has the type
     ;; attribute: it's possible for the node to be added as an edge in
     ;; `add-related-ents`, without all the additional attributes below
@@ -506,8 +502,8 @@
     ;; this prevents the attributes added below from being overwritten
     (if (and ((lg/nodes data) ent-name)
              (lat/attr data ent-name :type))
-      ent-db
-      (-> ent-db
+      potatodb
+      (-> potatodb
           (update :data (fn [data]
                           (-> data
                               (lg/add-edges [ent-type ent-name])
@@ -520,8 +516,8 @@
 
 (defn add-n-ents
   "Used when a query is something like [3]"
-  [ent-db ent-type num-ents query-term]
-  (loop [db ent-db
+  [potatodb ent-type num-ents query-term]
+  (loop [db potatodb
          n  num-ents]
     (if (zero? n)
       db
@@ -558,7 +554,7 @@
   "A query is composed of ent-type-queries, where each ent-type-query
   specifies the ents that should be created for that type. This
   function adds the ents for an ent-type-query."
-  [ent-db ent-type-query ent-type]
+  [potatodb ent-type-query ent-type]
   (reduce (fn [db query-term]
             ;; top-level meta is used to track which ents are
             ;; specified explicitly in a query
@@ -568,7 +564,7 @@
               (if (> count 1)
                 (add-n-ents db ent-type count query-term)
                 (add-ent db ent-name ent-type query-term))))
-          ent-db
+          potatodb
           ent-type-query))
 
 (defn add-ref-ents
@@ -577,19 +573,19 @@
   ents which are automatically generated in order to satisfy
   relations. This function adds those ref ents if an ent of the same
   name doesn't exist already."
-  [ent-db]
-  (loop [{:keys [ref-ents] :as ent-db} ent-db]
+  [potatodb]
+  (loop [{:keys [ref-ents] :as potatodb} potatodb]
     (if (empty? ref-ents)
-      ent-db
+      potatodb
       (recur (reduce (fn [db [ent-name ent-type query-term]]
                        (add-ent db ent-name ent-type query-term))
-                     (assoc ent-db :ref-ents [])
+                     (assoc potatodb :ref-ents [])
                      ref-ents)))))
 
 (defn init-db
-  [{:keys [schema] :as ent-db} query]
+  [{:keys [schema] :as potatodb} query]
   (let [rg (relation-graph schema)]
-    (-> ent-db
+    (-> potatodb
         (update :data #(or % (lg/digraph)))
         (update :queries conj query)
         (assoc :relation-graph rg
@@ -641,8 +637,8 @@
 (defn add-ents
   "Produce a new db with an ent graph that contains all ents specified
   by query"
-  [ent-db query]
-  (let [{:keys [schema] :as ent-db} (or (:ent-db (meta ent-db)) ent-db)]
+  [potatodb query]
+  (let [{:keys [schema] :as potatodb} (or (:potatodb (meta potatodb)) potatodb)]
     ;; validations
     (let [isr (invalid-schema-relations schema)]
       (assert (empty? isr)
@@ -660,19 +656,19 @@
       (assert (empty? diff)
               (str "The following ent types are in your query but aren't defined in your schema: " diff)))
 
-    (throw-invalid-spec "db" ::ent-db ent-db)
+    (throw-invalid-spec "db" ::potatodb potatodb)
     (throw-invalid-spec "query" ::query query)
     ;; end validations
 
     (let [normalized-query (medley/map-vals (fn [query-terms] (mapv normalize-query-term query-terms))
                                             query)
-          ent-db           (init-db ent-db normalized-query)]
-      (->> (:types ent-db)
+          potatodb           (init-db potatodb normalized-query)]
+      (->> (:types potatodb)
            (reduce (fn [db ent-type]
                      (if-let [ent-type-query (ent-type normalized-query)]
                        (add-ent-type-query db ent-type-query ent-type)
                        db))
-                   ent-db)
+                   potatodb)
            (add-ref-ents)))))
 
 ;; -----------------
@@ -692,26 +688,26 @@
 
 (defn ent-related-by-attr?
   "Is ent A related to ent B by the given relation-attr?"
-  [ent-db ent-name related-ent relation-attr]
-  (and (contains? (relation-attrs ent-db ent-name related-ent) relation-attr)
+  [potatodb ent-name related-ent relation-attr]
+  (and (contains? (relation-attrs potatodb ent-name related-ent) relation-attr)
        related-ent))
 
 (defn related-ents-by-attr
   "All ents related to ent via relation-attr"
-  [{:keys [data] :as ent-db} ent-name relation-attr]
+  [{:keys [data] :as potatodb} ent-name relation-attr]
   (let [related-ents (lg/successors data ent-name)]
-    (if (coll-relation-attr? ent-db ent-name relation-attr)
+    (if (coll-relation-attr? potatodb ent-name relation-attr)
       (->> related-ents
-           (map #(ent-related-by-attr? ent-db ent-name % relation-attr))
+           (map #(ent-related-by-attr? potatodb ent-name % relation-attr))
            (filter identity))
-      (some #(ent-related-by-attr? ent-db ent-name % relation-attr)
+      (some #(ent-related-by-attr? potatodb ent-name % relation-attr)
             related-ents))))
 
 (defn referenced-ent-attrs
   "seq of [referenced-ent relation-attr]"
-  [{:keys [data] :as ent-db} ent-name]
+  [{:keys [data] :as potatodb} ent-name]
   (for [referenced-ent (sort-by #(lat/attr data % :index) (lg/successors data ent-name))
-        relation-attr  (relation-attrs ent-db ent-name referenced-ent)]
+        relation-attr  (relation-attrs potatodb ent-name referenced-ent)]
     [referenced-ent relation-attr]))
 
 #?(:bb
@@ -751,8 +747,8 @@
 (defn prune-required
   "Updates ent graph, removing edges going from a 'required' ent to the
   'requiring' ent, thus eliminating cycles."
-  [{:keys [data] :as ent-db} required-attrs]
-  (assoc ent-db :data
+  [{:keys [data] :as potatodb} required-attrs]
+  (assoc potatodb :data
          (reduce-kv (fn [g ent-type attrs]
                       (reduce (fn [g requiring-ent]
                                 (reduce (fn [g required-ent]
@@ -767,59 +763,59 @@
                     required-attrs)))
 
 (defn sort-by-required
-  [ent-db]
-  (topsort-ents (prune-required ent-db (required-attrs ent-db))))
+  [potatodb]
+  (topsort-ents (prune-required potatodb (required-attrs potatodb))))
 
 (defn sort-ents
   "Attempts to topsort ents. If that's not possible (cycles present),
   uses `sort-by-required` to resolve ordering of ents in cycle"
-  [ent-db]
-  (let [sorted (or (seq (topsort-ents ent-db))
-                   (sort-by-required ent-db))]
-    (when (and (empty? sorted) (not-empty (ents ent-db)))
+  [potatodb]
+  (let [sorted (or (seq (topsort-ents potatodb))
+                   (sort-by-required potatodb))]
+    (when (and (empty? sorted) (not-empty (ents potatodb)))
       (throw (ex-info "Can't sort ents: check for cycles in ent type relations. If a cycle is present, use the :required constraint to indicate ordering."
                       {})))
     sorted))
 
 (defn visit-fn-data
   "When a visit fn is called, it's passed this map as its second argument"
-  [ent-db ent visit-key]
-  (let [attrs  (ent-attrs ent-db ent)
-        q-opts (query-opts ent-db ent)
+  [potatodb ent visit-key]
+  (let [attrs  (ent-attrs potatodb ent)
+        q-opts (query-opts potatodb ent)
         base   {:ent-name         ent
                 :attrs            attrs
                 :visit-val        (visit-key attrs)
                 :visit-key        visit-key
                 :query-opts       q-opts
                 :visit-query-opts (visit-key q-opts)
-                :schema-opts      (visit-key (ent-schema ent-db ent))}]
+                :schema-opts      (visit-key (ent-schema potatodb ent))}]
     (merge attrs base)))
 
 (defn visit-ents
   "Perform `visit-fns` on ents, storing return value as a graph
   attribute under `visit-key`"
-  ([ent-db visit-key visit-fns]
-   (visit-ents ent-db visit-key visit-fns (sort-ents ent-db)))
-  ([ent-db visit-key visit-fns ents]
+  ([potatodb visit-key visit-fns]
+   (visit-ents potatodb visit-key visit-fns (sort-ents potatodb)))
+  ([potatodb visit-key visit-fns ents]
    (let [visit-fns (if (sequential? visit-fns) visit-fns [visit-fns])]
-     (reduce (fn [ent-db [visit-fn ent]]
-               (update ent-db :data lat/add-attr ent visit-key (visit-fn ent-db (visit-fn-data ent-db ent visit-key))))
-             ent-db
+     (reduce (fn [potatodb [visit-fn ent]]
+               (update potatodb :data lat/add-attr ent visit-key (visit-fn potatodb (visit-fn-data potatodb ent visit-key))))
+             potatodb
              (for [visit-fn visit-fns ent ents] [visit-fn ent])))))
 
 (defn visit-ents-once
   "Like `visit-ents` but doesn't call `visit-fn` if the ent already
   has a `visit-key` attribute"
-  ([ent-db visit-key visit-fns]
-   (visit-ents-once ent-db visit-key visit-fns (sort-ents ent-db)))
-  ([ent-db visit-key visit-fns ents]
+  ([potatodb visit-key visit-fns]
+   (visit-ents-once potatodb visit-key visit-fns (sort-ents potatodb)))
+  ([potatodb visit-key visit-fns ents]
    (let [skip-ents (->> ents
                         (filter (fn [ent]
-                                  (let [ent-attrs (get-in ent-db [:data :attrs ent])]
+                                  (let [ent-attrs (get-in potatodb [:data :attrs ent])]
                                     (contains? ent-attrs visit-key))))
                         (set))
          visit-fns (if (sequential? visit-fns) visit-fns [visit-fns])]
-     (visit-ents ent-db
+     (visit-ents potatodb
                  visit-key
                  (mapv (fn [visit-fn]
                          (fn [db {:keys [ent-name visit-val] :as visit-data}]
@@ -840,13 +836,13 @@
 (defn attr-map
   "Produce a map where each key is a node and its value is a graph
   attr on that node"
-  ([ent-db attr] (attr-map ent-db attr (ents ent-db)))
-  ([{:keys [data] :as ent-db} attr ents]
+  ([potatodb attr] (attr-map potatodb attr (ents potatodb)))
+  ([{:keys [data] :as potatodb} attr ents]
    (with-meta (->> ents
                    (reduce (fn [m ent] (assoc m ent (lat/attr data ent attr)))
                            {})
                    (into (sorted-map)))
-     {:ent-db ent-db})))
+     {:potatodb potatodb})))
 
 (defn query-ents
   "Get seq of nodes that are explicitly defined in the query"
@@ -858,30 +854,30 @@
 (defn ents-by-type
   "Given a db, returns a map of ent-type to a set of entities of that
   type. Optionally pass in a seq of the ents that should be included."
-  ([ent-db] (ents-by-type ent-db (ents ent-db)))
-  ([ent-db ents]
+  ([potatodb] (ents-by-type potatodb (ents potatodb)))
+  ([potatodb ents]
    (reduce-kv (fn [m k v] (update m v (fnil conj #{}) k))
               {}
-              (select-keys (attr-map ent-db :ent-type) ents))))
+              (select-keys (attr-map potatodb :ent-type) ents))))
 
 (s/fdef ents-by-type
-  :args (s/cat :ent-db ::ent-db :ent-names (s/? (s/coll-of ::ent-name)))
+  :args (s/cat :potatodb ::potatodb :ent-names (s/? (s/coll-of ::ent-name)))
   :ret (s/map-of ::ent-type (s/coll-of ::ent-name)))
 
 (defn ent-relations
   "Given a db and an ent, returns a map of relation attr to ent-name."
-  [ent-db ent]
-  (let [relations (get-in ent-db [:data :attrs ent :loom.attr/edge-attrs])]
+  [potatodb ent]
+  (let [relations (get-in potatodb [:data :attrs ent :loom.attr/edge-attrs])]
     (apply merge-with
            set/union
            {}
            (for [[ref-ent {:keys [relation-attrs]}] relations
                  relation-attr relation-attrs]
-             {relation-attr (if (coll-relation-attr? ent-db ent relation-attr)
+             {relation-attr (if (coll-relation-attr? potatodb ent relation-attr)
                               #{ref-ent} ref-ent)}))))
 
 (s/fdef ent-relations
-  :args (s/cat :ent-db ::ent-db :ent-name ::ent-name)
+  :args (s/cat :potatodb ::potatodb :ent-name ::ent-name)
   :ret  (s/map-of ::ent-attr (s/or :unary ::ent-name
                                    :coll (s/coll-of ::ent-name))))
 
@@ -894,20 +890,20 @@
              :p1 {:created-by :u0
                   :updated-by :u2}}
    :user {:u0 {:friends-with :u0}}}"
-  ([ent-db]
-   (all-ent-relations ent-db (ents ent-db)))
-  ([ent-db ents]
+  ([potatodb]
+   (all-ent-relations potatodb (ents potatodb)))
+  ([potatodb ents]
    (reduce-kv (fn [ents-by-type ent-type ents]
                 (assoc ents-by-type ent-type
                        (into {}
                              (map (fn [ent]
-                                    [ent (ent-relations ent-db ent)]))
+                                    [ent (ent-relations potatodb ent)]))
                              ents)))
               {}
-              (ents-by-type ent-db ents))))
+              (ents-by-type potatodb ents))))
 
 (s/fdef all-ent-relations
-  :args (s/cat :ent-db ::ent-db :ent-names (s/? (s/coll-of ::ent-name)))
+  :args (s/cat :potatodb ::potatodb :ent-names (s/? (s/coll-of ::ent-name)))
   :ret  (s/map-of ::ent-type
                   (s/map-of ::ent-name
                             (s/map-of ::ent-attr ::ent-name))))
@@ -933,8 +929,8 @@
 ;; :author_id with the author's :id.
 
 (defn omit-relation?
-  [ent-db ent-name reference-key]
-  (-> ent-db
+  [potatodb ent-name reference-key]
+  (-> potatodb
       (query-opts ent-name)
       (get-in [:refs reference-key])
       omit?))
@@ -945,11 +941,11 @@
   constraints. First, it will remove any dummy ID's for a `:coll` relation.
   Next, it will remove any dummy ID's generated for an `:omit` relation. The
   updated ent-data map will be returned."
-  [ent-db {:keys [ent-name visit-val]}]
-  (let [coll-attrs (relation-attrs-with-constraint ent-db ent-name :coll)]
+  [potatodb {:keys [ent-name visit-val]}]
+  (let [coll-attrs (relation-attrs-with-constraint potatodb ent-name :coll)]
     (into {}
           (comp (map (fn [[k v]] (if (coll-attrs k) [k []] [k v])))
-                (map (fn [[k v]] (when-not (omit-relation? ent-db ent-name k) [k v]))))
+                (map (fn [[k v]] (when-not (omit-relation? potatodb ent-name k) [k v]))))
           visit-val)))
 
 (defn assoc-referenced-val
@@ -968,23 +964,23 @@
    :post {:relations {:created-by [:user :id]}}}
 
   a :post's `:created-by` key gets set to the `:id` of the :user it references."
-  [ent-db {:keys [ent-name visit-key visit-val]}]
-  (let [{:keys [constraints]} (ent-schema ent-db ent-name)
+  [potatodb {:keys [ent-name visit-key visit-val]}]
+  (let [{:keys [constraints]} (ent-schema potatodb ent-name)
         skip-keys             (::overwritten (meta visit-val) #{})]
-    (->> (referenced-ent-attrs ent-db ent-name)
+    (->> (referenced-ent-attrs potatodb ent-name)
          (filter (comp (complement skip-keys) second))
          (reduce (fn [ent-data [referenced-ent relation-attr]]
                    (assoc-referenced-val ent-data
                                          relation-attr
-                                         (get-in (ent-attr ent-db referenced-ent visit-key)
-                                                 (:path (query-relation ent-db ent-name relation-attr)))
+                                         (get-in (ent-attr potatodb referenced-ent visit-key)
+                                                 (:path (query-relation potatodb ent-name relation-attr)))
                                          constraints))
                  visit-val))))
 
 (defn merge-overwrites
   "Overwrites generated data with what's found in schema-opts or
   visit-query-opts."
-  [_ent-db {:keys [visit-val visit-query-opts schema-opts]}]
+  [_potatodb {:keys [visit-val visit-query-opts schema-opts]}]
   (let [schema-overwrites (:overwrites schema-opts)
         merged (cond-> visit-val
                  ;; the schema can include vals to merge into each ent
@@ -1027,17 +1023,17 @@
 
   - the visit query
   - an entity's schema
-  - the ent-db
+  - the potatodb
 
   for example:
 
   (datapotato.core/generate
     {:schema {:todo {:generate {:generator second-highest-precedence}}} ;; <= generator specified in entity schema
-     :generate {:generator lowest-precedence}}                          ;; <= generator specified in ent-db
+     :generate {:generator lowest-precedence}}                          ;; <= generator specified in potatodb
     {:todo [{:generate {:generator highest-precedence-generator}}]})    ;; <= generator specified in visit query
   "
-  [ent-db]
-  (visit-ents-once ent-db
+  [potatodb]
+  (visit-ents-once potatodb
                    generate-visit-key
                    (wrap-generate-visiting-fn
                     (fn generate-visiting-fn [db {:keys [ent-name visit-query-opts]}]
@@ -1047,24 +1043,24 @@
                                                           (:schema ent-schema-generate))
                             generator                 (or (:generator visit-query-opts-generate)
                                                           (:generator ent-schema-generate)
-                                                          (get-in ent-db [generate-visit-key :generator]))]
+                                                          (get-in potatodb [generate-visit-key :generator]))]
                         (when-not generator
-                          (throw (ex-info "No generator specified. Try adding [:generate :generator] to ent-db" {})))
+                          (throw (ex-info "No generator specified. Try adding [:generate :generator] to potatodb" {})))
                         (when-not schema
                           (throw (ex-info "No generate schema provided" {})))
                         (generator schema))))))
 
 (defn generate
-  [ent-db query]
-  (-> ent-db
+  [potatodb query]
+  (-> potatodb
       (add-ents query)
       (generate*)))
 
 (defn generate-attr-map
   "Generates data and returns a map of {ent-id generated-data} rather than the
-  entire ent-db"
-  [ent-db query]
-  (-> ent-db
+  entire potatodb"
+  [potatodb query]
+  (-> potatodb
       (generate query)
       (attr-map generate-visit-key)))
 
@@ -1075,7 +1071,7 @@
 (def ^:const fixtures-visit-key :fixtures)
 (def ^:const insert-key :insert)
 (def ^:dynamic *connection*)
-(def ^:dynamic *potato*)
+(def ^:dynamic *potatodb*)
 
 (defn wrap-incremental-insert-visiting-fn
   "Takes generated data stored as an attributed under `source-key` and inserts it
@@ -1084,9 +1080,9 @@
   Respects overwrites and ensures that referenced vals are assoc'd in before
   inserting. Useful when dealing with db-generated ids."
   [source-key inserting-visiting-fn]
-  (fn incremental-insert-visiting-fn [ent-db opts]
+  (fn incremental-insert-visiting-fn [potatodb opts]
     (reduce (fn [visit-val visiting-fn]
-              (visiting-fn ent-db (assoc opts :visit-val visit-val)))
+              (visiting-fn potatodb (assoc opts :visit-val visit-val)))
             (source-key opts)
             [reset-relations
              merge-overwrites
@@ -1094,46 +1090,46 @@
              inserting-visiting-fn])))
 
 (defn insert-fixtures*
-  [ent-db]
-  (let [connection (or (get-in ent-db [fixtures-visit-key :connection])
-                       (when-let [get-connection (get-in ent-db [fixtures-visit-key :get-connection])]
-                         (get-connection ent-db)))]
-    (visit-ents-once (assoc-in ent-db [fixtures-visit-key :connection] connection)
+  [potatodb]
+  (let [connection (or (get-in potatodb [fixtures-visit-key :connection])
+                       (when-let [get-connection (get-in potatodb [fixtures-visit-key :get-connection])]
+                         (get-connection potatodb)))]
+    (visit-ents-once (assoc-in potatodb [fixtures-visit-key :connection] connection)
                      fixtures-visit-key
                      (wrap-incremental-insert-visiting-fn
                       generate-visit-key
-                      (fn insert-visiting-fn [ent-db {:keys [ent-name visit-query-opts] :as visit-data}]
+                      (fn insert-visiting-fn [potatodb {:keys [ent-name visit-query-opts] :as visit-data}]
                         (let [insert (or (get-in visit-query-opts [fixtures-visit-key insert-key])
-                                         (get-in (ent-schema ent-db ent-name) [fixtures-visit-key insert-key])
-                                         (get-in ent-db [fixtures-visit-key insert-key]))]
+                                         (get-in (ent-schema potatodb ent-name) [fixtures-visit-key insert-key])
+                                         (get-in potatodb [fixtures-visit-key insert-key]))]
                           (when-not insert
-                            (throw (ex-info "No insert function specified. Try adding [:fixtures :insert] to ent-db" {})))
-                          (insert ent-db visit-data)))))))
+                            (throw (ex-info "No insert function specified. Try adding [:fixtures :insert] to potatodb" {})))
+                          (insert potatodb visit-data)))))))
 
 (defn insert-fixtures
   ([query]
-   (insert-fixtures *potato* query))
-  ([ent-db query]
-   (-> ent-db
+   (insert-fixtures *potatodb* query))
+  ([potatodb query]
+   (-> potatodb
        (generate query)
        insert-fixtures*
        (attr-map fixtures-visit-key))))
 
 (defmacro with-fixtures
   "Preferred way to work with fixtures in tests. Handles setup and teardown."
-  [ent-db & body]
-  `(let [ent-db#         ~ent-db
-         get-connection# (get-in ent-db# [:fixtures :get-connection])
-         connection#     (and get-connection# (get-connection# ent-db#))
-         ent-db#         (assoc-in ent-db# [:fixtures :connection] connection#)]
+  [potatodb & body]
+  `(let [potatodb#       ~potatodb
+         get-connection# (get-in potatodb# [:fixtures :get-connection])
+         connection#     (and get-connection# (get-connection# potatodb#))
+         potatodb#       (assoc-in potatodb# [:fixtures :connection] connection#)]
      (binding [*connection* connection#
-               *potato*     ent-db#]
-       (when-let [setup# (get-in ent-db# [:fixtures :setup])]
-         (setup# ent-db#))
+               *potatodb*   potatodb#]
+       (when-let [setup# (get-in potatodb# [:fixtures :setup])]
+         (setup# potatodb#))
        (try
          ~@body
          (finally
-           (when-let [teardown# (get-in ent-db# [:fixtures :teardown])]
-             (teardown# ent-db#))
-           (when-let [close-connection# (get-in ent-db# [:fixtures :close-connection])]
+           (when-let [teardown# (get-in potatodb# [:fixtures :teardown])]
+             (teardown# potatodb#))
+           (when-let [close-connection# (get-in potatodb# [:fixtures :close-connection])]
              (close-connection# *connection*)))))))
