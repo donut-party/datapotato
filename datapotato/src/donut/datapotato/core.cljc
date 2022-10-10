@@ -37,7 +37,6 @@
 ;; -----------------
 ;; fixture and generate specs
 ;; -----------------
-
 ;; fixture and generation behavior can be configured at the potatodb level and at
 ;; the ent-type-schema level.
 
@@ -52,7 +51,7 @@
 
 (s/def :datapotato.generate/generator any?)
 (s/def :datapotato/generate
-  (s/keys :req-un [:datapotato.generate/generator]))
+  (s/keys :opt-un [:datapotato.generate/generator]))
 
 
 ;; -----------------
@@ -1036,7 +1035,7 @@
   (visit-ents-once potatodb
                    generate-visit-key
                    (wrap-generate-visiting-fn
-                    (fn generate-visiting-fn [db {:keys [ent-name visit-query-opts]}]
+                    (fn generate-visiting-fn [db {:keys [ent-name visit-query-opts ent-type]}]
                       (let [ent-schema-generate       (generate-visit-key (ent-schema db ent-name))
                             visit-query-opts-generate (generate-visit-key visit-query-opts)
                             schema                    (or (:schema visit-query-opts-generate)
@@ -1047,7 +1046,11 @@
                         (when-not generator
                           (throw (ex-info "No generator specified. Try adding [:generate :generator] to potatodb" {})))
                         (when-not schema
-                          (throw (ex-info "No generate schema provided" {})))
+                          (throw (ex-info (str "No generate schema provided. Add under [:schema "
+                                               ent-type
+                                               " :generate :schema]")
+                                          {:ent-name ent-name
+                                           :ent-type ent-type})))
                         (generator schema))))))
 
 (defn generate

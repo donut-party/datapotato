@@ -51,7 +51,7 @@
       (throw (ex-info "connection required" {})))
 
     (when-not table-name
-      (throw (ex-info (format "no table name provided. add under [:schema %s :fixtures :table-name]" ent-type)
+      (throw (ex-info (format "No table name provided. Add under [:schema %s :fixtures :table-name]" ent-type)
                       {:ent-name ent-name
                        :ent-type ent-type})))
 

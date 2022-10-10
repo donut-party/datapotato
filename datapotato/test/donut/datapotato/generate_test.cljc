@@ -258,11 +258,11 @@
        (is (only-has-ents? gen #{:tl0 :u0}))))
 
    "spec"
-   {:schema    spec-schema
+   {:schema   spec-schema
     :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
+   {:schema   malli-schema
     :generate {:generator malli-generator}}))
 
 (deftest test-spec-gen-nested
