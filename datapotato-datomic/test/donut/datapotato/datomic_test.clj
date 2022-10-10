@@ -4,7 +4,8 @@
    [datomic.api :as d]
    [donut.datapotato.core :as dc]
    [donut.datapotato.datomic :as dd]
-   [malli.generator :as mg]))
+   [malli.generator :as mg]
+   [matcher-combinators.test]))
 
 
 (def node-atom (atom nil))
