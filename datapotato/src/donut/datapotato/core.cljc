@@ -45,14 +45,16 @@
 (s/def :datapotato.fixtures/get-connection fn?)
 (s/def :datapotato.fixtures/setup fn?)
 (s/def :datapotato/fixtures
-  (s/keys :req-un [:datapotato.fixtures/insert]
-          :opt-un [:datapotato.fixtures/get-connection
+  (s/keys :opt-un [:datapotato.fixtures/get-connection
+                   :datapotato.fixtures/insert
                    :datapotato.fixtures/setup]))
 
 (s/def :datapotato.generate/generator any?)
-(s/def :datapotato/generate
-  (s/keys :opt-un [:datapotato.generate/generator]))
+(s/def :datapotato.generate/schema any?)
 
+(s/def :datapotato/generate
+  (s/keys :opt-un [:datapotato.generate/generator
+                   :datapotato.generate/schema]))
 
 ;; -----------------
 ;; -----------------
