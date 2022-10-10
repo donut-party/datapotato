@@ -4,7 +4,8 @@
    [donut.datapotato.core :as dc]
    [donut.datapotato.atom :as da]
    [donut.datapotato.generate-test :as dgt]
-   [malli.generator :as mg])
+   [malli.generator :as mg]
+   [matcher-combinators.test])
   #?(:cljs (:require-macros [donut.datapotato.core])))
 
 ;;---
@@ -17,7 +18,7 @@
 (def User
   [:map
    [:users/id ID]
-   [:users/username [:enum "Luigi"]]])
+   [:users/username string?]])
 
 (def Todo
   [:map
@@ -70,49 +71,49 @@
 (deftest inserts-simple-generated-data
   (dc/with-fixtures ent-db
     (dc/insert-fixtures ent-db {:user [{:count 2}]})
-    (is (= [[:user #:users{:id 1 :username "Luigi"}]
-            [:user #:users{:id 2 :username "Luigi"}]]
-           @fixture-atom))))
+    (is (match? [[:user #:users{:id 1 :username string?}]
+                 [:user #:users{:id 2 :username string?}]]
+                @fixture-atom))))
 
 
 (deftest inserts-generated-data-hierarchy
   (dc/with-fixtures ent-db
     (dc/insert-fixtures ent-db {:todo [{:count 2}]})
-    (is (= [[:user #:users{:id 1 :username "Luigi"}]
-            [:todo-list #:todo_lists{:id            2
-                                     :created_by_id 1
-                                     :updated_by_id 1}]
-            [:todo #:todos{:id            5
-                           :todo_title    "write unit tests"
-                           :created_by_id 1
-                           :updated_by_id 1
-                           :todo_list_id  2}]
-            [:todo #:todos{:id            8
-                           :todo_title    "write unit tests"
-                           :created_by_id 1
-                           :updated_by_id 1
-                           :todo_list_id  2}]]
-           @fixture-atom))))
+    (is (match? [[:user #:users{:id 1 :username string?}]
+                 [:todo-list #:todo_lists{:id            2
+                                          :created_by_id 1
+                                          :updated_by_id 1}]
+                 [:todo #:todos{:id            5
+                                :todo_title    "write unit tests"
+                                :created_by_id 1
+                                :updated_by_id 1
+                                :todo_list_id  2}]
+                 [:todo #:todos{:id            8
+                                :todo_title    "write unit tests"
+                                :created_by_id 1
+                                :updated_by_id 1
+                                :todo_list_id  2}]]
+                @fixture-atom))))
 
 (deftest overwrite-data-to-insert
   (dc/with-fixtures ent-db
     (dc/insert-fixtures ent-db {:todo [{:count    2
                                         :generate {:todos/todo_title "overwritten"}}]})
-    (is (= [[:user #:users{:id 1 :username "Luigi"}]
-            [:todo-list #:todo_lists{:id            2
-                                     :created_by_id 1
-                                     :updated_by_id 1}]
-            [:todo #:todos{:id            5
-                           :todo_title    "overwritten"
-                           :created_by_id 1
-                           :updated_by_id 1
-                           :todo_list_id  2}]
-            [:todo #:todos{:id            8
-                           :todo_title    "overwritten"
-                           :created_by_id 1
-                           :updated_by_id 1
-                           :todo_list_id  2}]]
-           @fixture-atom))))
+    (is (match? [[:user #:users{:id 1 :username string?}]
+                 [:todo-list #:todo_lists{:id            2
+                                          :created_by_id 1
+                                          :updated_by_id 1}]
+                 [:todo #:todos{:id            5
+                                :todo_title    "overwritten"
+                                :created_by_id 1
+                                :updated_by_id 1
+                                :todo_list_id  2}]
+                 [:todo #:todos{:id            8
+                                :todo_title    "overwritten"
+                                :created_by_id 1
+                                :updated_by_id 1
+                                :todo_list_id  2}]]
+                @fixture-atom))))
 
 (deftest incremental-insert
   (dc/with-fixtures ent-db
@@ -120,18 +121,18 @@
                                             :generate {:todos/todo_title "step 1"}}]})
         (dc/insert-fixtures {:todo [{:count    1
                                      :generate {:todos/todo_title "step 2"}}]}))
-    (is (= [[:user #:users{:id 1 :username "Luigi"}]
-            [:todo-list #:todo_lists{:id            2
-                                     :created_by_id 1
-                                     :updated_by_id 1}]
-            [:todo #:todos{:id            5
-                           :todo_title    "step 1"
-                           :created_by_id 1
-                           :updated_by_id 1
-                           :todo_list_id  2}]
-            [:todo #:todos{:id            8
-                           :todo_title    "step 2"
-                           :created_by_id 1
-                           :updated_by_id 1
-                           :todo_list_id  2}]]
-           @fixture-atom))))
+    (is (match? [[:user #:users{:id 1 :username string?}]
+                 [:todo-list #:todo_lists{:id            2
+                                          :created_by_id 1
+                                          :updated_by_id 1}]
+                 [:todo #:todos{:id            5
+                                :todo_title    "step 1"
+                                :created_by_id 1
+                                :updated_by_id 1
+                                :todo_list_id  2}]
+                 [:todo #:todos{:id            8
+                                :todo_title    "step 2"
+                                :created_by_id 1
+                                :updated_by_id 1
+                                :todo_list_id  2}]]
+                @fixture-atom))))

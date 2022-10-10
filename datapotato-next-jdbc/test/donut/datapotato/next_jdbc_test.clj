@@ -5,6 +5,7 @@
    [donut.datapotato.generate-test :as dgt]
    [donut.datapotato.next-jdbc :as dnj]
    [malli.generator :as mg]
+   [matcher-combinators.test]
    [next.jdbc :as jdbc]
    [next.jdbc.sql :as sql])
   (:import (io.zonky.test.db.postgres.embedded EmbeddedPostgres)))
@@ -78,7 +79,7 @@
 (def User
   [:map
    [:users/id ID]
-   [:users/username [:enum "Luigi"]]])
+   [:users/username string?]])
 
 (def Todo
   [:map
@@ -130,29 +131,29 @@
 (deftest inserts-simple-generated-data
   (dc/with-fixtures (ent-db)
     (dc/insert-fixtures {:user [{:count 2}]})
-    (is (= [#:users{:id 1 :username "Luigi"}
-            #:users{:id 2 :username "Luigi"}]
-           (sql/query dc/*connection* ["SELECT * FROM users"])))))
+    (is (match? [#:users{:id 1 :username string?}
+                 #:users{:id 2 :username string?}]
+                (sql/query dc/*connection* ["SELECT * FROM users"])))))
 
 (deftest inserts-generated-data-hierarchy
   (dc/with-fixtures (ent-db)
     (dc/insert-fixtures {:todo [{:count 2}]})
-    (is (= [#:users{:id 1 :username "Luigi"}]
-           (sql/query dc/*connection* ["SELECT * FROM users"])))
+    (is (match? [#:users{:id 1 :username string?}]
+                (sql/query dc/*connection* ["SELECT * FROM users"])))
 
-    (is (= [#:todos{:id            5,
-                    :todo_list_id  2
-                    :todo_title    "write unit tests"
-                    :created_by_id 1
-                    :updated_by_id 1}
-            #:todos{:id            8
-                    :todo_list_id  2
-                    :todo_title    "write unit tests"
-                    :created_by_id 1
-                    :updated_by_id 1}]
-           (sql/query dc/*connection* ["SELECT * FROM todos"])))
-
-    (is (= [#:todo_lists{:id            2
+    (is (match? [#:todos{:id            5,
+                         :todo_list_id  2
+                         :todo_title    "write unit tests"
+                         :created_by_id 1
+                         :updated_by_id 1}
+                 #:todos{:id            8
+                         :todo_list_id  2
+                         :todo_title    "write unit tests"
                          :created_by_id 1
                          :updated_by_id 1}]
-           (sql/query dc/*connection* ["SELECT * FROM todo_lists"])))))
+                (sql/query dc/*connection* ["SELECT * FROM todos"])))
+
+    (is (match? [#:todo_lists{:id            2
+                              :created_by_id 1
+                              :updated_by_id 1}]
+                (sql/query dc/*connection* ["SELECT * FROM todo_lists"])))))

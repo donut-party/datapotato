@@ -5,6 +5,7 @@
    [donut.datapotato.generate-test :as dgt]
    [donut.datapotato.xtdb :as dxtdb]
    [malli.generator :as mg]
+   [matcher-combinators.test]
    [xtdb.api :as xt]))
 
 (def node-atom (atom nil))
@@ -21,7 +22,7 @@
 (def User
   [:map
    [:xt/id ID]
-   [:user/username [:enum "Luigi"]]])
+   [:user/username string?]])
 
 (def Todo
   [:map
@@ -75,34 +76,34 @@
 (deftest inserts-simple-generated-data
   (dc/with-fixtures ent-db
     (dc/insert-fixtures {:user [{:count 2}]})
-    (is (= [{:xt/id 1 :user/username "Luigi"}
-            {:xt/id 2 :user/username "Luigi"}]
-           (q '{:find  [(pull ?u [*])]
-                :where [[?u :user/username]]})))))
+    (is (match? [{:xt/id 1 :user/username string?}
+                 {:xt/id 2 :user/username string?}]
+                (q '{:find  [(pull ?u [*])]
+                     :where [[?u :user/username]]})))))
 
 
 (deftest inserts-generated-data-hierarchy
   (dc/with-fixtures ent-db
     (dc/insert-fixtures {:todo [{:count 2}]})
-    (is (= [{:xt/id 1 :user/username "Luigi"}]
-           (q '{:find  [(pull ?u [*])]
-                :where [[?u :user/username]]})))
+    (is (match? [{:xt/id 1 :user/username string?}]
+                (q '{:find  [(pull ?u [*])]
+                     :where [[?u :user/username]]})))
 
-    (is (= [{:xt/id           5
-             :todo/todo-list  2
-             :todo/todo-title "write unit tests"
-             :todo/created-by 1
-             :todo/updated-by 1}
-            {:xt/id           8
-             :todo/todo-list  2
-             :todo/todo-title "write unit tests"
-             :todo/created-by 1
-             :todo/updated-by 1}]
-           (q '{:find  [(pull ?u [*])]
-                :where [[?u :todo/todo-title]]})))
+    (is (match? [{:xt/id           5
+                  :todo/todo-list  2
+                  :todo/todo-title "write unit tests"
+                  :todo/created-by 1
+                  :todo/updated-by 1}
+                 {:xt/id           8
+                  :todo/todo-list  2
+                  :todo/todo-title "write unit tests"
+                  :todo/created-by 1
+                  :todo/updated-by 1}]
+                (q '{:find  [(pull ?u [*])]
+                     :where [[?u :todo/todo-title]]})))
 
-    (is (= [{:xt/id                2
-             :todo-list/created-by 1
-             :todo-list/updated-by 1}]
-           (q '{:find  [(pull ?u [*])]
-                :where [[?u :todo-list/created-by]]})))))
+    (is (match? [{:xt/id                2
+                  :todo-list/created-by 1
+                  :todo-list/updated-by 1}]
+                (q '{:find  [(pull ?u [*])]
+                     :where [[?u :todo-list/created-by]]})))))

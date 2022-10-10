@@ -15,7 +15,7 @@
 
 (def User
   [:map
-   [:user/username [:enum "Luigi"]]])
+   [:user/username string?]])
 
 (def TodoList
   [:map
@@ -127,8 +127,8 @@
 (deftest inserts-simple-generated-data
   (dc/with-fixtures ent-db
     (dc/insert-fixtures {:user [{:count 2}]})
-    (is (= [{:db/id 17592186045418 :user/username "Luigi"}
-            {:db/id 17592186045420 :user/username "Luigi"}]
+    (is (match? [{:db/id 17592186045418 :user/username string?}
+            {:db/id 17592186045420 :user/username string?}]
            (q dc/*connection*
               '{:find  [(pull ?u [*])]
                 :where [[?u :user/username]]})))))
@@ -137,54 +137,54 @@
 (deftest inserts-generated-data-hierarchy
   (dc/with-fixtures ent-db
     (dc/insert-fixtures {:todo [{:count 2}]})
-    (is (= [{:db/id 17592186045418
-             :user/username "Luigi"}]
-           (q dc/*connection*
-              '{:find  [(pull ?u [*])]
-                :where [[?u :user/username]]})))
+    (is (match? [{:db/id 17592186045418
+                  :user/username string?}]
+                (q dc/*connection*
+                   '{:find  [(pull ?u [*])]
+                     :where [[?u :user/username]]})))
 
-    (is (= [{:db/id           17592186045422
-             :todo/todo-title "write unit tests"
-             :todo/created-by #:db{:id 17592186045418}
-             :todo/todo-list  #:db{:id 17592186045420}}
-            {:db/id           17592186045424
-             :todo/todo-title "write unit tests"
-             :todo/created-by #:db{:id 17592186045418}
-             :todo/todo-list  #:db{:id 17592186045420}}]
-           (q dc/*connection*
-              '{:find  [(pull ?u [*])]
-                :where [[?u :todo/todo-title]]})))
+    (is (match? [{:db/id           17592186045422
+                  :todo/todo-title "write unit tests"
+                  :todo/created-by #:db{:id 17592186045418}
+                  :todo/todo-list  #:db{:id 17592186045420}}
+                 {:db/id           17592186045424
+                  :todo/todo-title "write unit tests"
+                  :todo/created-by #:db{:id 17592186045418}
+                  :todo/todo-list  #:db{:id 17592186045420}}]
+                (q dc/*connection*
+                   '{:find  [(pull ?u [*])]
+                     :where [[?u :todo/todo-title]]})))
 
-    (is (= [{:db/id 17592186045420,
-             :todo-list/created-by #:db{:id 17592186045418}}]
-           (q dc/*connection*
-              '{:find  [(pull ?u [*])]
-                :where [[?u :todo-list/created-by]]})))))
+    (is (match? [{:db/id 17592186045420,
+                  :todo-list/created-by #:db{:id 17592186045418}}]
+                (q dc/*connection*
+                   '{:find  [(pull ?u [*])]
+                     :where [[?u :todo-list/created-by]]})))))
 
 (deftest inserts-colls
   (dc/with-fixtures ent-db
     (dc/insert-fixtures {:project [{:refs {:project/todo-lists 2}}]})
 
-    (is (= [{:db/id         17592186045418
-             :user/username "Luigi"}]
-           (q dc/*connection*
-              '{:find  [(pull ?u [*])]
-                :where [[?u :user/username]]})))
+    (is (match? [{:db/id         17592186045418
+                  :user/username string?}]
+                (q dc/*connection*
+                   '{:find  [(pull ?u [*])]
+                     :where [[?u :user/username]]})))
 
-    (is (= [{:db/id                17592186045420,
-             :todo-list/created-by #:db{:id 17592186045418}}
-            {:db/id                17592186045422,
-             :todo-list/created-by #:db{:id 17592186045418}}]
-           (q dc/*connection*
-              '{:find  [(pull ?u [*])]
-                :where [[?u :todo-list/created-by]]})))
+    (is (match? [{:db/id                17592186045420,
+                  :todo-list/created-by #:db{:id 17592186045418}}
+                 {:db/id                17592186045422,
+                  :todo-list/created-by #:db{:id 17592186045418}}]
+                (q dc/*connection*
+                   '{:find  [(pull ?u [*])]
+                     :where [[?u :todo-list/created-by]]})))
 
-    (is (= [{:db/id              17592186045424,
-             :project/todo-lists [{:db/id 17592186045420} {:db/id 17592186045422}]
-             :project/created-by {:db/id 17592186045418}}]
-           (q dc/*connection*
-              '{:find  [(pull ?u [*])]
-                :where [[?u :project/created-by]]})))))
+    (is (match? [{:db/id              17592186045424,
+                  :project/todo-lists [{:db/id 17592186045420} {:db/id 17592186045422}]
+                  :project/created-by {:db/id 17592186045418}}]
+                (q dc/*connection*
+                   '{:find  [(pull ?u [*])]
+                     :where [[?u :project/created-by]]})))))
 
 ;;---
 ;; polymorphic test
@@ -256,54 +256,54 @@
       (let [updated-db (dc/insert-fixtures {:watch [{:count     1
                                                      :ref-types {:watch/watched :topic-category}}]})]
 
-        (is (= [{:db/id               17592186045418
-                 :topic-category/name "topic category"}]
-               (q dc/*connection*
-                  '{:find  [(pull ?e [*])]
-                    :where [[?e :topic-category/name]]})))
+        (is (match? [{:db/id               17592186045418
+                      :topic-category/name "topic category"}]
+                    (q dc/*connection*
+                       '{:find  [(pull ?e [*])]
+                         :where [[?e :topic-category/name]]})))
 
-        (is (= [{:db/id         17592186045420
-                 :watch/watched {:db/id 17592186045418}}]
-               (q dc/*connection*
-                  '{:find  [(pull ?e [*])]
-                    :where [[?e :watch/watched]]})))
+        (is (match? [{:db/id         17592186045420
+                      :watch/watched {:db/id 17592186045418}}]
+                    (q dc/*connection*
+                       '{:find  [(pull ?e [*])]
+                         :where [[?e :watch/watched]]})))
 
         (dc/insert-fixtures updated-db {:watch [{:count     1
                                                  :ref-types {:watch/watched :topic}}]})
 
-        (is (= [{:db/id                17592186045422
-                 :topic/topic-category {:db/id 17592186045418}}]
-               (q dc/*connection*
-                  '{:find  [(pull ?e [*])]
-                    :where [[?e :topic/topic-category]]})))
+        (is (match? [{:db/id                17592186045422
+                      :topic/topic-category {:db/id 17592186045418}}]
+                    (q dc/*connection*
+                       '{:find  [(pull ?e [*])]
+                         :where [[?e :topic/topic-category]]})))
 
-        (is (= [{:db/id         17592186045420
-                 :watch/watched {:db/id 17592186045418}}
-                {:db/id         17592186045424
-                 :watch/watched {:db/id 17592186045422}}]
-               (q dc/*connection*
-                  '{:find  [(pull ?e [*])]
-                    :where [[?e :watch/watched]]}))))))
+        (is (match? [{:db/id         17592186045420
+                      :watch/watched {:db/id 17592186045418}}
+                     {:db/id         17592186045424
+                      :watch/watched {:db/id 17592186045422}}]
+                    (q dc/*connection*
+                       '{:find  [(pull ?e [*])]
+                         :where [[?e :watch/watched]]}))))))
 
   (testing "single polymorphic ref"
     (dc/with-fixtures polymorphic-ent-db
       (dc/insert-fixtures {:watch [{:count     1
                                     :ref-types {:watch/watched :topic}}]})
 
-      (is (= [{:db/id               17592186045418
-               :topic-category/name "topic category"}]
-             (q dc/*connection*
-                '{:find  [(pull ?e [*])]
-                  :where [[?e :topic-category/name]]})))
+      (is (match? [{:db/id               17592186045418
+                    :topic-category/name "topic category"}]
+                  (q dc/*connection*
+                     '{:find  [(pull ?e [*])]
+                       :where [[?e :topic-category/name]]})))
 
-      (is (= [{:db/id                17592186045420
-               :topic/topic-category {:db/id 17592186045418}}]
-             (q dc/*connection*
-                '{:find  [(pull ?e [*])]
-                  :where [[?e :topic/topic-category]]})))
+      (is (match? [{:db/id                17592186045420
+                    :topic/topic-category {:db/id 17592186045418}}]
+                  (q dc/*connection*
+                     '{:find  [(pull ?e [*])]
+                       :where [[?e :topic/topic-category]]})))
 
-      (is (= [{:db/id         17592186045422
-               :watch/watched {:db/id 17592186045420}}]
-             (q dc/*connection*
-                '{:find  [(pull ?e [*])]
-                  :where [[?e :watch/watched]]}))))))
+      (is (match? [{:db/id         17592186045422
+                    :watch/watched {:db/id 17592186045420}}]
+                  (q dc/*connection*
+                     '{:find  [(pull ?e [*])]
+                       :where [[?e :watch/watched]]}))))))

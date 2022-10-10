@@ -4,6 +4,7 @@
  :deps  {party.donut/datapotato               {:local/root "datapotato"}
          io.github.cognitect-labs/test-runner {:git/tag "v0.5.0" :git/sha "48c3c67"}
          metosin/malli                        {:mvn/version "0.8.9"}
+         nubank/matcher-combinators           {:mvn/version "3.5.1"}
 
          ;; next-jdbc
          party.donut/datapotato-datomic                                 {:local/root "datapotato-datomic"}

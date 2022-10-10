@@ -3,7 +3,6 @@
   within the ent db"
   #?(:cljs (:require-macros [clojure.template :as ct]))
   (:require
-   [clojure.data :as data]
    [clojure.spec.alpha :as s]
    [clojure.spec.gen.alpha :as sg]
    #?(:clj [clojure.template :as ct])
@@ -11,7 +10,8 @@
    #?(:clj [clojure.test :refer [deftest is use-fixtures testing]]
       :cljs [cljs.test :include-macros true :refer [deftest is use-fixtures testing]])
    [donut.datapotato.core :as dc]
-   [malli.generator :as mg]))
+   [malli.generator :as mg]
+   [matcher-combinators.test]))
 
 
 ;;---
@@ -21,11 +21,6 @@
 (def id-seq (atom 0))
 (def monotonic-id-gen
   (gen/fmap (fn [_] (swap! id-seq inc)) (gen/return nil)))
-
-(defn submap?
-  "All vals in m1 are present in m2"
-  [m1 m2]
-  (nil? (first (data/diff m1 m2))))
 
 (def gen-data-db (atom []))
 (def gen-data-cycle-db (atom []))
@@ -176,7 +171,7 @@
 (def User
   [:map
    [:id ID]
-   [:username [:enum "Luigi"]]])
+   [:username string?]])
 
 (def Todo
   [:map
@@ -249,8 +244,8 @@
      (let [gen (dc/generate-attr-map
                 ent-db
                 {:todo-list [[1]]})]
-       (is (submap? {:u0 {:username "Luigi"}}
-                    gen))
+       (is (match? {:u0 {:username string?}}
+                   gen))
        (is (ids-present? gen))
        (is (ids-match? gen
                        {:tl0 {:created-by-id [:u0 :id]
@@ -272,7 +267,7 @@
      (let [gen (dc/generate-attr-map
                 ent-db
                 {:project [[:_ {:refs {:todo-list-ids 3}}]]})]
-       (is (submap? {:u0 {:username "Luigi"}} gen))
+       (is (match? {:u0 {:username string?}} gen))
        (is (ids-present? gen))
        (is (ids-match? gen
                        {:tl0 {:created-by-id [:u0 :id]
@@ -304,9 +299,9 @@
        (let [gen (dc/generate-attr-map
                   ent-db
                   {:todo [[:_ {:generate {:todo-title "pet the dog"}}]]})]
-         (is (submap? {:u0 {:username "Luigi"}
-                       :t0 {:todo-title "pet the dog"}}
-                      gen))
+         (is (match? {:u0 {:username string?}
+                      :t0 {:todo-title "pet the dog"}}
+                     gen))
          (is (ids-present? gen))
          (is (ids-match? gen
                          {:tl0 {:created-by-id [:u0 :id]
@@ -320,9 +315,9 @@
        (let [gen (dc/generate-attr-map
                   ent-db
                   {:todo [[:_ {:generate {:created-by-id 1}}]]})]
-         (is (submap? {:u0 {:username "Luigi"}
-                       :t0 {:created-by-id 1}}
-                      gen))
+         (is (match? {:u0 {:username string?}
+                      :t0 {:created-by-id 1}}
+                     gen))
          (is (ids-present? gen))
          (is (ids-match? gen
                          {:tl0 {:created-by-id [:u0 :id]
@@ -350,18 +345,18 @@
                                            :updated-by-id ::dc/omit}}]]})]
          (is (ids-present? gen))
          (is (only-has-ents? gen #{:tl0}))
-         (is (= [:id] (keys (:tl0 gen))))))
+         (is (match? [:id] (keys (:tl0 gen))))))
 
      (testing "Ref is created when at least 1 field references it, but omitted attrs are still not present"
        (let [gen (dc/generate-attr-map
                   ent-db
                   {:todo-list [[:_ {:refs {:updated-by-id ::dc/omit}}]]})]
-         (is (submap? {:u0 {:username "Luigi"}} gen))
+         (is (match? {:u0 {:username string?}} gen))
          (is (ids-present? gen))
          (is (ids-match? gen
                          {:tl0 {:created-by-id [:u0 :id]}}))
          (is (only-has-ents? gen #{:tl0 :u0}))
-         (is (= [:id :created-by-id] (keys (:tl0 gen))))))
+         (is (match? [:id :created-by-id] (keys (:tl0 gen))))))
 
      (testing "Overwriting value of omitted ref with custom value"
        (let [gen (dc/generate-attr-map
@@ -369,7 +364,7 @@
                   {:todo-list [[:_ {:refs     {:updated-by-id ::dc/omit}
                                     :generate {:updated-by-id 42}}]]})]
          (is (ids-present? gen))
-         (is (= 42 (-> gen :tl0 :updated-by-id)))))
+         (is (match? 42 (-> gen :tl0 :updated-by-id)))))
 
      (testing "Overwriting value of omitted ref with nil"
        (let [gen (dc/generate-attr-map
@@ -377,7 +372,7 @@
                   {:todo-list [[:_ {:refs     {:updated-by-id ::dc/omit}
                                     :generate {:updated-by-id nil}}]]})]
          (is (ids-present? gen))
-         (is (= nil (-> gen :tl0 :updated-by-id))))))
+         (is (match? nil (-> gen :tl0 :updated-by-id))))))
 
    "spec"
    {:schema   spec-schema
@@ -396,28 +391,28 @@
                   ent-db
                   {:todo-list [[:_ {:generate {:updated-by-id 42}}]]})]
          (is (ids-present? gen))
-         (is (= 42 (-> gen :tl0 :updated-by-id)))))
+         (is (match? 42 (-> gen :tl0 :updated-by-id)))))
 
      (testing "Overwriting generated value with query fn"
        (let [gen (dc/generate-attr-map
                   ent-db
                   {:todo-list [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
          (is (ids-present? gen))
-         (is (= :foo (-> gen :tl0 :updated-by-id)))))
+         (is (match? :foo (-> gen :tl0 :updated-by-id)))))
 
      (testing "Overwriting generated value with schema map"
        (let [gen (dc/generate-attr-map
                   (assoc-in ent-db [:schema :todo :generate :overwrites :todo-title] "schema title")
                   {:todo [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
          (is (ids-present? gen))
-         (is (= "schema title" (-> gen :t0 :todo-title)))))
+         (is (match? "schema title" (-> gen :t0 :todo-title)))))
 
      (testing "Overwriting generated value with schema fn"
        (let [gen (dc/generate-attr-map
                   (assoc-in ent-db [:schema :todo :generate :overwrites] #(assoc % :todo-title "boop whooop"))
                   {:todo [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
          (is (ids-present? gen))
-         (is (= "boop whooop" (-> gen :t0 :todo-title))))))
+         (is (match? "boop whooop" (-> gen :t0 :todo-title))))))
 
    "spec"
    {:schema   spec-schema
@@ -434,8 +429,8 @@
      (testing "Gen traversal won't replace already generated data with newly generated data"
        (let [gen-fn     #(dc/generate % {:todo [[:t0 {:generate {:todo-title "pet the dog"}}]]})
              first-pass (gen-fn ent-db)]
-         (is (= (:data first-pass)
-                (:data (gen-fn first-pass)))))))
+         (is (match? (:data first-pass)
+                     (:data (gen-fn first-pass)))))))
 
    "spec"
    {:schema   spec-schema
@@ -453,12 +448,12 @@
      (let [gen (dc/generate-attr-map
                 ent-db
                 {:project [[:_ {:refs {:todo-list-ids 3}}]]})]
-       (is (submap? {:u0 {:username "Luigi"}} gen))
+       (is (match? {:u0 {:username string?}} gen))
        (is (ids-present? gen))
-       (is (= (:todo-list-ids (:p0 gen))
-              [(:id (:tl0 gen))
-               (:id (:tl1 gen))
-               (:id (:tl2 gen))]))
+       (is (match? (:todo-list-ids (:p0 gen))
+                   [(:id (:tl0 gen))
+                    (:id (:tl1 gen))
+                    (:id (:tl2 gen))]))
        (is (only-has-ents? gen #{:tl0 :tl1 :tl2 :u0 :p0}))))
 
    "spec"
@@ -478,9 +473,9 @@
                 {:user      [[:custom-user {:generate {:id 100}}]]
                  :todo-list [[:custom-tl {:refs {:created-by-id :custom-user
                                                  :updated-by-id :custom-user}}]]})]
-       (is (submap? {:custom-user {:username "Luigi"
-                                   :id       100}}
-                    gen))
+       (is (match? {:custom-user {:username string?
+                                  :id       100}}
+                   gen))
        (is (ids-present? gen))
        (is (ids-match? gen
                        {:custom-tl {:created-by-id [:custom-user :id]
@@ -509,7 +504,7 @@
          (dc/visit-ents-once :inserted-data insert))
 
      ;; gen data is something like:
-     ;; [[:user :u0 {:id 1 :username "Luigi"}]
+     ;; [[:user :u0 {:id 1 :username string?}]
      ;;  [:todo-list :tl0 {:id 2 :created-by-id 1 :updated-by-id 1}]
      ;;  [:todo :t0 {:id            5
      ;;              :todo-title    "write unit tests"
@@ -518,15 +513,15 @@
      ;;              :todo-list-id  2}]]
 
      (let [gen-data @gen-data-db]
-       (is (= #{[:user :u0]
-                [:todo-list :tl0]
-                [:todo :t0]}
-              (set (map #(take 2 %) gen-data))))
+       (is (match? #{[:user :u0]
+                     [:todo-list :tl0]
+                     [:todo :t0]}
+                   (set (map #(take 2 %) gen-data))))
 
        (let [ent-map (into {} (map #(vec (drop 1 %)) gen-data))]
-         (is (submap? {:u0 {:username "Luigi"}
-                       :t0 {:todo-title "write unit tests"}}
-                      ent-map))
+         (is (match? {:u0 {:username string?}
+                      :t0 {:todo-title "write unit tests"}}
+                     ent-map))
          (is (ids-present? ent-map))
          (is (ids-match? ent-map
                          {:tl0 {:created-by-id [:u0 :id]
@@ -554,17 +549,17 @@
              (dc/visit-ents-once :inserted-data insert))
 
          (let [gen-data @gen-data-db]
-           (is (= (set (map #(take 2 %) gen-data))
-                  #{[:user :u0]
-                    [:todo-list :tl0]
-                    [:todo :t0]
-                    [:todo :t1]}))
+           (is (match? (set (map #(take 2 %) gen-data))
+                       #{[:user :u0]
+                         [:todo-list :tl0]
+                         [:todo :t0]
+                         [:todo :t1]}))
 
            (let [ent-map (into {} (map #(vec (drop 1 %)) gen-data))]
-             (is (submap? {:u0 {:username "Luigi"}
-                           :t0 {:todo-title "write unit tests"}
-                           :t1 {:todo-title "write unit tests"}}
-                          ent-map))
+             (is (match? {:u0 {:username string?}
+                          :t0 {:todo-title "write unit tests"}
+                          :t1 {:todo-title "write unit tests"}}
+                         ent-map))
              (is (ids-present? ent-map))
              (is (ids-match? ent-map
                              {:tl0 {:created-by-id [:u0 :id]
@@ -581,7 +576,7 @@
     :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
+   {:schema   malli-schema
     :generate {:generator malli-generator}}))
 
 ;;---
@@ -603,8 +598,8 @@
             ent-db
             {:todo [[1]]})
            (dc/visit-ents :insert-cycle insert-cycle))
-       (is (= [:tl0 :t0]
-              @gen-data-cycle-db))))
+       (is (match? [:tl0 :t0]
+                   @gen-data-cycle-db))))
 
    "spec"
    {:schema   spec-cycle-schema
