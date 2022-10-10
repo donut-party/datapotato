@@ -8,8 +8,6 @@
    [matcher-combinators.test]))
 
 
-(def node-atom (atom nil))
-
 ;;---
 ;; schemas
 ;;---
