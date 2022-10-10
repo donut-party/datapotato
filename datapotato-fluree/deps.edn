@@ -10,7 +10,8 @@
    :extra-deps  {party.donut/datapotato               {:local/root "../datapotato"}
                  com.fluree/db                        {:mvn/version "1.0.4"}
                  io.github.cognitect-labs/test-runner {:git/tag "v0.5.0" :git/sha "48c3c67"}
-                 metosin/malli                        {:mvn/version "0.8.9"}}
+                 metosin/malli                        {:mvn/version "0.8.9"}
+                 nubank/matcher-combinators           {:mvn/version "3.5.1"}}
    :exec-fn     cognitect.test-runner.api/test}
 
   :build
