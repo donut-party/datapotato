@@ -1,8 +1,8 @@
 (ns donut.datapotato.atom-test
   (:require
    [clojure.test :refer [deftest is]]
-   [donut.datapotato.core :as dc]
    [donut.datapotato.atom :as da]
+   [donut.datapotato.core :as dc]
    [donut.datapotato.generate-test :as dgt]
    [malli.generator :as mg]
    [matcher-combinators.test])
