@@ -50,7 +50,7 @@
 ;; generate records fo that type. The `:relations` key specifies how ents
 ;; reference each other. Relations correspond to foreign keys.
 
-(def datapotato-schema
+(def potato-schema
   {:user {:prefix   :u
           :generate {:schema User}
           :fixtures {:table-name "users"}}
@@ -68,7 +68,7 @@
 ;; The potato-db contains configuration for generating records and ensuring their
 ;; foreign keys are correct, and for managing test lifecycle
 (def potato-db
-  {:schema   datapotato-schema
+  {:schema   potato-schema
    :generate {:generator mg/generate}
    :fixtures {:insert da/insert
               :setup  (fn [_]
