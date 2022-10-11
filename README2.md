@@ -1,4 +1,4 @@
-# Datapotato: better database fixtures for tests!
+# datapotato: better database fixtures for tests!
 
 * [Purpose](#purpose)
 * [Getting started](#getting-started)
@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Datapotato lets you manage test fixtures in a way that's clear, concise, and
+datapotato lets you manage test fixtures in a way that's clear, concise, and
 easy to maintain. It's great for dramatically reducing test boilerplate.
 
 Say you want to test a scenario where a forum post has gotten three likes by
@@ -37,7 +37,7 @@ Normally, you'd have to write code like this 😭
                                                     :created-by-id (:id user-3)}))])
 ```
 
-With Datapotato, all you have to do is **write code like this**:
+With datapotato, all you have to do is **write code like this**:
 
 ```clojure
 (dc/with-fixtures potato-db
@@ -69,19 +69,19 @@ what's not. What's more, you have to slog through the tedium of making sure that
 foreign keys are set correctly. You weren't meant to spend your one wild and
 precious life making sure you lined up your test ids right.
 
-Datapotato handles all that for you, and the result is something that's easier
+datapotato handles all that for you, and the result is something that's easier
 to write and easier to understand.
 
 ## Example
 
-This example is meant to give you a feel for working with Datapotato. It shows
-the pieces you need to set up so that you can start using Datapotato to generate
+This example is meant to give you a feel for working with datapotato. It shows
+the pieces you need to set up so that you can start using datapotato to generate
 and insert fixtures. These pieces include:
 
 * Specs to generate data (malli is used here, but you can also use clojure.spec
   or plumatic schema or even your own bespoke data generators)
 * A `potato-db` configuration, which includes:
-  * A schema that tells Datapotato what types of entities there are, how they're
+  * A schema that tells datapotato what types of entities there are, how they're
     related, and how to generate them
   * Configuration for data generation
   * Configuration for insertion
@@ -210,7 +210,7 @@ TODO link to examples with next.jdbc
 
 Extended docs are in the wiki. Docs include:
 
-* Getting Started, begin using Datapotato for your project
-* Advanced Potatoes, exploring more Datapotato handles cases like polymorphic
+* Getting Started, begin using datapotato for your project
+* Advanced Potatoes, exploring more datapotato handles cases like polymorphic
   types
-* Inner Workings explains the inner model Datapotato uses to generate records
+* Inner Workings explains the inner model datapotato uses to generate records
