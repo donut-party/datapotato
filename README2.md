@@ -40,7 +40,7 @@ Normally, you'd have to write code like this 😭
 With Datapotato, all you have to do is **write code like this**:
 
 ```clojure
-(dc/with-fixtures potatodb
+(dc/with-fixtures potato-db
   (dc/insert-fixtures {:like [{:count 3}]}))
 ```
 
@@ -80,7 +80,7 @@ and insert fixtures. These pieces include:
 
 * Specs to generate data (malli is used here, but you can also use clojure.spec
   or plumatic schema or even your own bespoke data generators)
-* A `potatodb` configuration, which includes:
+* A `potato-db` configuration, which includes:
   * A schema that tells Datapotato what types of entities there are, how they're
     related, and how to generate them
   * Configuration for data generation
@@ -159,9 +159,9 @@ TODO link to examples with next.jdbc
                         :created-by-id [:user :id]}
           :constraints {:created-by-id #{:uniq}}}})
 
-;; The potatodb contains configuration for generating records and ensuring their
+;; The potato-db contains configuration for generating records and ensuring their
 ;; foreign keys are correct, and for managing test lifecycle
-(def potatodb
+(def potato-db
   {:schema   datapotato-schema
    :generate {:generator mg/generate}
    :fixtures {:insert da/insert
@@ -178,11 +178,11 @@ TODO link to examples with next.jdbc
 
 ;; The next two examples show that records are inserted into the simulated
 ;; "database" (`mock-db`) in correct dependency order:
-(dc/with-fixtures potatodb
+(dc/with-fixtures potato-db
   (dc/insert-fixtures {:like [{:count 1}]}))
 @mock-db
 
-(dc/with-fixtures potatodb
+(dc/with-fixtures potato-db
   (dc/insert-fixtures {:post [{:count 2}]
                        :like [{:count 3}]}))
 @mock-db
@@ -191,19 +191,19 @@ TODO link to examples with next.jdbc
 ;; inserting it.
 
 ;; Return a map of user entities and their spec-generated data
-(dc/generate-attr-map potatodb {:user [{:count 3}]})
+(dc/generate-attr-map potato-db {:user [{:count 3}]})
 
 ;; You can specify a username and id
-(dc/generate-attr-map potatodb {:user [{:count    1
+(dc/generate-attr-map potato-db {:user [{:count    1
                                         :generate {:username "Meeghan"
                                                    :id       100}}]})
 
 ;; Generating a post generates the user the post belongs to, with
 ;; foreign keys correct
-(dc/generate-attr-map potatodb {:post [{:count 1}]})
+(dc/generate-attr-map potato-db {:post [{:count 1}]})
 
 ;; Generating a like also generates a post and user
-(dc/generate-attr-map potatodb {:like [{:count 1}]})
+(dc/generate-attr-map potato-db {:like [{:count 1}]})
 ```
 
 ## Docs
@@ -213,3 +213,4 @@ Extended docs are in the wiki. Docs include:
 * Getting Started, begin using Datapotato for your project
 * Advanced Potatoes, exploring more Datapotato handles cases like polymorphic
   types
+* Inner Workings explains the inner model Datapotato uses to generate records
