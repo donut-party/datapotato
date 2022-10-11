@@ -40,12 +40,17 @@
    [:like/created-by-id pos-int?]])
 
 ;; ---
-;; The schema defines datapotato `ent-types`, which roughly
-;; correspond to db tables. It also defines the `:schema` for generating
-;; records of that type, and defines ent `relations` that specify how
-;; ents reference each other. Relations correspond to foreign keys.
+;; Our "db" is an atom holding a vector of inserted records we can use to show
+;; that entities are inserted in the correct order
+(def mock-db (atom []))
 
-(def schema
+;; The datapotato schema defines `ent-types`, which roughly correspond to db
+;; tables. Below, the ent-types are `:user`, `:post`, and `:like.` The ent-type
+;; schemas include a `:generate` key, which includes the `:schema` used to
+;; generate records fo that type. The `:relations` key specifies how ents
+;; reference each other. Relations correspond to foreign keys.
+
+(def datapotato-schema
   {:user {:prefix   :u
           :generate {:schema User}
           :fixtures {:table-name "users"}}
@@ -60,12 +65,10 @@
                         :created-by-id [:user :id]}
           :constraints {:created-by-id #{:uniq}}}})
 
-;; Our "db" is a vector of inserted records we can use to show that
-;; entities are inserted in the correct order
-(def mock-db (atom []))
-
+;; The potatodb contains configuration for generating records and ensuring their
+;; foreign keys are correct, and for managing test lifecycle
 (def potatodb
-  {:schema   schema
+  {:schema   datapotato-schema
    :generate {:generator mg/generate}
    :fixtures {:insert da/insert
               :setup  (fn [_]
@@ -79,12 +82,16 @@
 ;; Begin snippets to try in REPL
 ;;-------*****--------
 
-;; The `insert` function shows that records are inserted into the
-;; simulated "database" (`mock-db`) in correct dependency order:
+;; The next two examples show that records are inserted into the simulated
+;; "database" (`mock-db`) in correct dependency order:
 (dc/with-fixtures potatodb
   (dc/insert-fixtures {:like [{:count 1}]}))
 @mock-db
 
+(dc/with-fixtures potatodb
+  (dc/insert-fixtures {:post [{:count 2}]
+                       :like [{:count 3}]}))
+@mock-db
 
 ;; The examples below show how you can experiment with generating data without
 ;; inserting it.
