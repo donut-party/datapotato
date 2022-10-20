@@ -403,16 +403,23 @@
      (testing "Overwriting generated value with schema map"
        (let [gen (dc/generate
                   (assoc-in ent-db [:schema :todo :generate :overwrites :todo-title] "schema title")
-                  {:todo [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
+                  {:todo [{}]})]
          (is (ids-present? gen))
          (is (match? "schema title" (-> gen :t0 :todo-title)))))
 
      (testing "Overwriting generated value with schema fn"
        (let [gen (dc/generate
                   (assoc-in ent-db [:schema :todo :generate :overwrites] #(assoc % :todo-title "boop whooop"))
-                  {:todo [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
+                  {:todo [{}]})]
          (is (ids-present? gen))
-         (is (match? "boop whooop" (-> gen :t0 :todo-title))))))
+         (is (match? "boop whooop" (-> gen :t0 :todo-title)))))
+
+     (testing "Overwriting generated value with spec-gen for backwrads-compatibility"
+       (let [gen (dc/generate
+                  ent-db
+                  {:todo [[:_ {:spec-gen {:todo-title "with spec-gen"}}]]})]
+         (is (ids-present? gen))
+         (is (match? "with spec-gen" (-> gen :t0 :todo-title))))))
 
    "spec"
    {:schema   spec-schema

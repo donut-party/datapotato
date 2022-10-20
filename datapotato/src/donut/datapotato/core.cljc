@@ -981,7 +981,7 @@
 (defn merge-overwrites
   "Overwrites generated data with what's found in schema-opts or
   visit-query-opts."
-  [_potato-db {:keys [visit-val visit-query-opts schema-opts]}]
+  [_potato-db {:keys [visit-val visit-query-opts schema-opts query-opts]}]
   (let [schema-overwrites (:overwrites schema-opts)
         merged            (cond-> visit-val
                             ;; the schema can include vals to merge into each ent
@@ -990,7 +990,10 @@
 
                             ;; visit query opts can also specify merge vals
                             (fn? visit-query-opts)  visit-query-opts
-                            (map? visit-query-opts) (merge visit-query-opts))
+                            (map? visit-query-opts) (merge visit-query-opts)
+
+                            ;; backwards compatibility with spec-gen
+                            (:spec-gen query-opts) (merge (:spec-gen query-opts)))
         changed-keys (->> (data/diff visit-val merged)
                           (take 2)
                           (map keys)
