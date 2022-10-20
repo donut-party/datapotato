@@ -9,6 +9,18 @@
    [:id pos-int?]
    [:username string?]])
 
+(def DreamJournal
+  [:map
+   [:id pos-int?]
+   [:owner-id pos-int?]
+   [:dream-journal-name string?]])
+
+(def Entry
+  [:map
+   [:id pos-int?]
+   [:dream-journal-id pos-int?]
+   [:content string?]])
+
 ;; use mg/generate to generate examples
 (mg/generate User)
 
@@ -22,8 +34,14 @@
 (def fixture-atom (atom []))
 
 (def potato-schema
-  {:user {:prefix   :u
-          :generate {:schema User}}})
+  {:user          {:prefix   :u
+                   :generate {:schema User}}
+   :dream-journal {:prefix    :dj
+                   :generate  {:schema DreamJournal}
+                   :relations {:owner-id [:user :id]}}
+   :entry         {:prefix    :e
+                   :generate  {:schema Entry}
+                   :relations {:dream-journal-id [:dream-journal :id]}}})
 
 (def potato-db
   {:schema   potato-schema
@@ -37,4 +55,7 @@
 ;;---
 
 (dc/with-fixtures potato-db
-  (dc/insert-fixtures {:user {:count 5}}))
+  (dc/insert-fixtures {:user [{:count 3}]}))
+
+(dc/with-fixtures potato-db
+  (dc/insert-fixtures {:entry [{:count 2}]}))

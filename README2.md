@@ -191,19 +191,19 @@ TODO link to examples with next.jdbc
 ;; inserting it.
 
 ;; Return a map of user entities and their spec-generated data
-(dc/generate-attr-map potato-db {:user [{:count 3}]})
+(dc/generate potato-db {:user [{:count 3}]})
 
 ;; You can specify a username and id
-(dc/generate-attr-map potato-db {:user [{:count    1
+(dc/generate potato-db {:user [{:count    1
                                         :generate {:username "Meeghan"
                                                    :id       100}}]})
 
 ;; Generating a post generates the user the post belongs to, with
 ;; foreign keys correct
-(dc/generate-attr-map potato-db {:post [{:count 1}]})
+(dc/generate potato-db {:post [{:count 1}]})
 
 ;; Generating a like also generates a post and user
-(dc/generate-attr-map potato-db {:like [{:count 1}]})
+(dc/generate potato-db {:like [{:count 1}]})
 ```
 
 ## Docs

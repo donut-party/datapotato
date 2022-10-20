@@ -1038,13 +1038,12 @@
                    generate-visit-key
                    (wrap-generate-visiting-fn
                     (fn generate-visiting-fn [db {:keys [ent-name visit-query-opts ent-type]}]
-                      (let [ent-schema-generate       (generate-visit-key (ent-schema db ent-name))
-                            visit-query-opts-generate (generate-visit-key visit-query-opts)
-                            schema                    (or (:schema visit-query-opts-generate)
-                                                          (:schema ent-schema-generate))
-                            generator                 (or (:generator visit-query-opts-generate)
-                                                          (:generator ent-schema-generate)
-                                                          (get-in potato-db [generate-visit-key :generator]))]
+                      (let [ent-schema-generate (generate-visit-key (ent-schema db ent-name))
+                            schema              (or (:schema visit-query-opts)
+                                                    (:schema ent-schema-generate))
+                            generator           (or (:generator visit-query-opts)
+                                                    (:generator ent-schema-generate)
+                                                    (get-in potato-db [generate-visit-key :generator]))]
                         (when-not generator
                           (throw (ex-info "No generator specified. Try adding [:generate :generator] to potato-db" {})))
                         (when-not schema
@@ -1055,18 +1054,18 @@
                                            :ent-type ent-type})))
                         (generator schema))))))
 
-(defn generate
+(defn generate-potato-db
   [potato-db query]
   (-> potato-db
       (add-ents query)
       (generate*)))
 
-(defn generate-attr-map
+(defn generate
   "Generates data and returns a map of {ent-id generated-data} rather than the
   entire potato-db"
   [potato-db query]
   (-> potato-db
-      (generate query)
+      (generate-potato-db query)
       (attr-map generate-visit-key)))
 
 ;;---
