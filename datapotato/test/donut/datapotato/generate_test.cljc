@@ -417,7 +417,7 @@
      (testing "Overwriting generated value with spec-gen for backwrads-compatibility"
        (let [gen (dc/generate
                   ent-db
-                  {:todo [[:_ {:spec-gen {:todo-title "with spec-gen"}}]]})]
+                  {:todo [{:spec-gen {:todo-title "with spec-gen"}}]})]
          (is (ids-present? gen))
          (is (match? "with spec-gen" (-> gen :t0 :todo-title))))))
 

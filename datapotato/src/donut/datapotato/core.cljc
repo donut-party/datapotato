@@ -985,12 +985,12 @@
   (let [schema-overwrites      (:set schema-opts)
         visit-query-overwrites (:set visit-query-opts)
         merged                 (cond-> visit-val
-                                 ;; backwards compatibility with spec-gen
-                                 (:spec-gen query-opts) (merge (:spec-gen query-opts))
-
                                  ;; the schema can include vals to merge into each ent
                                  (fn? schema-overwrites)  schema-overwrites
                                  (map? schema-overwrites) (merge schema-overwrites)
+
+                                 ;; backwards compatibility with spec-gen
+                                 (:spec-gen query-opts) (merge (:spec-gen query-opts))
 
                                  ;; visit query opts can also specify merge vals
                                  (fn? visit-query-overwrites)  visit-query-overwrites
