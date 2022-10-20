@@ -64,7 +64,7 @@
 
 (def schema
   {:user            {:prefix :u}
-   :todo            {:generate  {:overwrites {:todo-title "write unit tests"}}
+   :todo            {:generate  {:set {:todo-title "write unit tests"}}
                      :relations {:created-by-id [:user :id]
                                  :updated-by-id [:user :id]
                                  :todo-list-id  [:todo-list :id]}
@@ -85,7 +85,7 @@
 (def cycle-schema
   {:user      {:prefix    :u
                :relations {:updated-by-id [:user :id]}}
-   :todo      {:generate    {:overwrites {:todo-title "write unit tests"}}
+   :todo      {:generate    {:set {:todo-title "write unit tests"}}
                :relations   {:todo-list-id [:todo-list :id]}
                :constraints {:todo-list-id #{:required}}
                :prefix      :t}
@@ -298,7 +298,7 @@
      (testing "Manual attribute setting for non-reference field"
        (let [gen (dc/generate
                   ent-db
-                  {:todo [[:_ {:generate {:todo-title "pet the dog"}}]]})]
+                  {:todo [[:_ {:generate {:set {:todo-title "pet the dog"}}}]]})]
          (is (match? {:u0 {:username string?}
                       :t0 {:todo-title "pet the dog"}}
                      gen))
@@ -314,7 +314,7 @@
      (testing "Manual attribute setting for reference field"
        (let [gen (dc/generate
                   ent-db
-                  {:todo [[:_ {:generate {:created-by-id 1}}]]})]
+                  {:todo [[:_ {:generate {:set {:created-by-id 1}}}]]})]
          (is (match? {:u0 {:username string?}
                       :t0 {:created-by-id 1}}
                      gen))
@@ -362,7 +362,7 @@
        (let [gen (dc/generate
                   ent-db
                   {:todo-list [[:_ {:refs     {:updated-by-id ::dc/omit}
-                                    :generate {:updated-by-id 42}}]]})]
+                                    :generate {:set {:updated-by-id 42}}}]]})]
          (is (ids-present? gen))
          (is (match? 42 (-> gen :tl0 :updated-by-id)))))
 
@@ -370,7 +370,7 @@
        (let [gen (dc/generate
                   ent-db
                   {:todo-list [[:_ {:refs     {:updated-by-id ::dc/omit}
-                                    :generate {:updated-by-id nil}}]]})]
+                                    :generate {:set {:updated-by-id nil}}}]]})]
          (is (ids-present? gen))
          (is (match? nil (-> gen :tl0 :updated-by-id))))))
 
@@ -389,27 +389,27 @@
      (testing "Overwriting generated value with query map"
        (let [gen (dc/generate
                   ent-db
-                  {:todo-list [[:_ {:generate {:updated-by-id 42}}]]})]
+                  {:todo-list [[:_ {:generate {:set {:updated-by-id 42}}}]]})]
          (is (ids-present? gen))
          (is (match? 42 (-> gen :tl0 :updated-by-id)))))
 
      (testing "Overwriting generated value with query fn"
        (let [gen (dc/generate
                   ent-db
-                  {:todo-list [[:_ {:generate #(assoc % :updated-by-id :foo)}]]})]
+                  {:todo-list [[:_ {:generate {:set #(assoc % :updated-by-id :foo)}}]]})]
          (is (ids-present? gen))
          (is (match? :foo (-> gen :tl0 :updated-by-id)))))
 
      (testing "Overwriting generated value with schema map"
        (let [gen (dc/generate
-                  (assoc-in ent-db [:schema :todo :generate :overwrites :todo-title] "schema title")
+                  (assoc-in ent-db [:schema :todo :generate :set :todo-title] "schema title")
                   {:todo [{}]})]
          (is (ids-present? gen))
          (is (match? "schema title" (-> gen :t0 :todo-title)))))
 
      (testing "Overwriting generated value with schema fn"
        (let [gen (dc/generate
-                  (assoc-in ent-db [:schema :todo :generate :overwrites] #(assoc % :todo-title "boop whooop"))
+                  (assoc-in ent-db [:schema :todo :generate :set] #(assoc % :todo-title "boop whooop"))
                   {:todo [{}]})]
          (is (ids-present? gen))
          (is (match? "boop whooop" (-> gen :t0 :todo-title)))))
@@ -477,7 +477,7 @@
    (testing generator-name
      (let [gen (dc/generate
                 ent-db
-                {:user      [[:custom-user {:generate {:id 100}}]]
+                {:user      [[:custom-user {:generate {:set {:id 100}}}]]
                  :todo-list [[:custom-tl {:refs {:created-by-id :custom-user
                                                  :updated-by-id :custom-user}}]]})]
        (is (match? {:custom-user {:username string?
@@ -494,7 +494,7 @@
     :generate {:generator spec-generator}}
 
    "malli"
-   {:schema    malli-schema
+   {:schema   malli-schema
     :generate {:generator malli-generator}}))
 
 ;; testing inserting

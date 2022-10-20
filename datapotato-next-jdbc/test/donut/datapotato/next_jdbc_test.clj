@@ -100,8 +100,8 @@
   {:user      {:prefix   :u
                :generate {:schema User}
                :fixtures {:table-name "users"}}
-   :todo      {:generate  {:overwrites {:todos/todo_title "write unit tests"}
-                           :schema     Todo}
+   :todo      {:generate  {:set    {:todos/todo_title "write unit tests"}
+                           :schema Todo}
                :fixtures  {:table-name "todos"}
                :relations {:todos/created_by_id [:user :users/id]
                            :todos/updated_by_id [:user :users/id]

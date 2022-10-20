@@ -43,8 +43,8 @@
   {:user      {:prefix   :u
                :generate {:schema User}
                :fixtures {:table-name "users"}}
-   :todo      {:generate  {:overwrites {:todo/todo-title "write unit tests"}
-                           :schema     Todo}
+   :todo      {:generate  {:set    {:todo/todo-title "write unit tests"}
+                           :schema Todo}
                :fixtures  {:table-name "todos"}
                :relations {:todo/created-by [:user :xt/id]
                            :todo/updated-by [:user :xt/id]

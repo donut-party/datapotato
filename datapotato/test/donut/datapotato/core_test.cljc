@@ -816,6 +816,8 @@
 ;; visiting w/ referenced vals
 ;; -----------------
 
+(def test-visiting-key :test-visiting-fn)
+
 (deftest test-assoc-referenced-vals
   (let [gen-id (fn [db {:keys [ent-name] :as v}]
                  {:id (str ent-name "-id")})]
@@ -829,8 +831,8 @@
                     :created-by-id ":u0-id"
                     :updated-by-id ":u0-id"}}
              (-> (dc/add-ents {:schema td/schema} {:todo [[1]]})
-                 (dc/visit-ents-once :test [gen-id dc/assoc-referenced-vals])
-                 (dc/attr-map :test)))))
+                 (dc/visit-ents-once test-visiting-key [gen-id dc/assoc-referenced-vals])
+                 (dc/attr-map test-visiting-key)))))
 
     (testing "with custom refs"
       (is (= {:custom-user {:id ":custom-user-id"}
@@ -841,8 +843,8 @@
                   {:schema td/schema}
                   {:todo-list [[1 {:refs {:created-by-id :custom-user
                                           :updated-by-id :custom-user}}]]})
-                 (dc/visit-ents-once :test [gen-id dc/assoc-referenced-vals])
-                 (dc/attr-map :test)))))
+                 (dc/visit-ents-once test-visiting-key [gen-id dc/assoc-referenced-vals])
+                 (dc/attr-map test-visiting-key)))))
 
     (testing "with overwrites"
       (is (= {:custom-user {:id ":overwritten-id"}
@@ -851,13 +853,13 @@
                             :updated-by-id ":overwritten-id"}}
              (-> (dc/add-ents
                   {:schema td/schema}
-                  {:user      [[:custom-user {:test {:id ":overwritten-id"}}]]
+                  {:user      [[:custom-user {test-visiting-key {:set {:id ":overwritten-id"}}}]]
                    :todo-list [[1 {:refs {:created-by-id :custom-user
                                           :updated-by-id :custom-user}}]]})
-                 (dc/visit-ents-once :test [gen-id
-                                            dc/merge-overwrites
-                                            dc/assoc-referenced-vals])
-                 (dc/attr-map :test)))))))
+                 (dc/visit-ents-once test-visiting-key [gen-id
+                                                        dc/merge-overwrites
+                                                        dc/assoc-referenced-vals])
+                 (dc/attr-map test-visiting-key)))))))
 
 ;;---
 ;; generating and inserting
@@ -865,7 +867,7 @@
 
 (deftest test-wrap-generate-visiting-fn
   (let [gen-id (dc/wrap-generate-visiting-fn
-                (fn [_db {:keys [ent-name] :as v}]
+                (fn [_db {:keys [ent-name]}]
                   {:id (str ent-name "-id")}))]
     (is (= {:custom-user {:id ":overwritten-id"}
             :tl0         {:id            ":tl0-id"
@@ -873,18 +875,18 @@
                           :updated-by-id ":overwritten-id"}}
            (-> (dc/add-ents
                 {:schema td/schema}
-                {:user      [[:custom-user {:test {:id ":overwritten-id"}}]]
+                {:user      [[:custom-user {test-visiting-key {:set {:id ":overwritten-id"}}}]]
                  :todo-list [[1 {:refs {:created-by-id :custom-user
                                         :updated-by-id :custom-user}
-                                 :test {:created-by-id ":visiting-overwritten-id"}}]]})
-               (dc/visit-ents-once :test gen-id)
-               (dc/attr-map :test))))))
+                                 test-visiting-key {:set {:created-by-id ":visiting-overwritten-id"}}}]]})
+               (dc/visit-ents-once test-visiting-key gen-id)
+               (dc/attr-map test-visiting-key))))))
 
 (deftest test-wrap-generate-visiting-fn-overwrites
   (let [gen-id      (dc/wrap-generate-visiting-fn
-                     (fn [_db {:keys [ent-name] :as v}]
+                     (fn [_db {:keys [ent-name]}]
                        {:id (str ent-name "-id")}))
-        test-schema (assoc-in td/schema [:user :test :overwrites] {:id ":schema-overwrite"})]
+        test-schema (assoc-in td/schema [:user test-visiting-key :set] {:id ":schema-overwrite"})]
     (is (= {:custom-user   {:id ":overwritten-id"}
             :custom-user-2 {:id ":schema-overwrite"}
             :tl0           {:id            ":tl0-id"
@@ -892,13 +894,13 @@
                             :updated-by-id ":overwritten-id"}}
            (-> (dc/add-ents
                 {:schema test-schema}
-                {:user      [[:custom-user {:test {:id ":overwritten-id"}}]
+                {:user      [[:custom-user {test-visiting-key {:set {:id ":overwritten-id"}}}]
                              [:custom-user-2]]
                  :todo-list [[1 {:refs {:created-by-id :custom-user
                                         :updated-by-id :custom-user}
-                                 :test {:created-by-id ":visiting-overwritten-id"}}]]})
-               (dc/visit-ents-once :test gen-id)
-               (dc/attr-map :test))))))
+                                 test-visiting-key {:set {:created-by-id ":visiting-overwritten-id"}}}]]})
+               (dc/visit-ents-once test-visiting-key gen-id)
+               (dc/attr-map test-visiting-key))))))
 
 (deftest test-wrap-incremental-insert-visiting-fn
   (let [inserted (atom [])
@@ -912,10 +914,10 @@
                     visit-val))]
     (-> (dc/add-ents
          {:schema td/schema}
-         {:user      [[:custom-user {:gen {:id ":overwritten-id"}}]]
+         {:user      [[:custom-user {:gen {:set {:id ":overwritten-id"}}}]]
           :todo-list [[1 {:refs {:created-by-id :custom-user
                                  :updated-by-id :custom-user}
-                          :gen  {:created-by-id ":this-wont-be-used"}}]]})
+                          :gen  {:set {:created-by-id ":this-wont-be-used"}}}]]})
         (dc/visit-ents-once :gen gen-id)
         (dc/visit-ents-once :insert insert))
 
@@ -929,10 +931,10 @@
 
     (-> (dc/add-ents
          {:schema td/schema}
-         {:user      [[:custom-user {:gen {:id ":overwritten-id"}}]]
+         {:user      [[:custom-user {:gen {:set {:id ":overwritten-id"}}}]]
           :todo-list [[1 {:refs   {:created-by-id :custom-user
                                    :updated-by-id :custom-user}
-                          :insert {:created-by-id ":this-will-be-used"}}]]})
+                          :insert {:set {:created-by-id ":this-will-be-used"}}}]]})
         (dc/visit-ents-once :gen gen-id)
         (dc/visit-ents-once :insert insert))
 

@@ -36,8 +36,8 @@
                :fixtures  {:collection :todo-list}
                :relations {:todo-list/created-by [:user :_id]}
                :prefix    :tl}
-   :todo      {:generate  {:overwrites {:todo/todo-title "write unit tests"}
-                           :schema     Todo}
+   :todo      {:generate  {:set    {:todo/todo-title "write unit tests"}
+                           :schema Todo}
                :fixtures  {:collection :todo}
                :relations {:todo/created-by [:user :_id]
                            :todo/todo-list  [:todo-list :_id]}

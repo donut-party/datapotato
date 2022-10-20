@@ -40,7 +40,7 @@
                :fixtures  {:collection :todo-list}
                :relations {:todo-list/created-by [:user :db/id]}
                :prefix    :tl}
-   :todo      {:generate  {:overwrites {:todo/todo-title "write unit tests"}
+   :todo      {:generate  {:set {:todo/todo-title "write unit tests"}
                            :schema     Todo}
                :fixtures  {:collection :todo}
                :relations {:todo/created-by [:user :db/id]
@@ -202,8 +202,8 @@
    [:watch/watched pos-int?]])
 
 (def polymorphic-schema
-  {:topic-category {:generate {:schema     TopicCategory
-                               :overwrites {:topic-category/name "topic category"}}
+  {:topic-category {:generate {:schema TopicCategory
+                               :set    {:topic-category/name "topic category"}}
                     :prefix   :tc}
    :topic          {:generate  {:schema Topic}
                     :relations {:topic/topic-category [:topic-category :db/id]}

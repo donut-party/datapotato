@@ -982,18 +982,19 @@
   "Overwrites generated data with what's found in schema-opts or
   visit-query-opts."
   [_potato-db {:keys [visit-val visit-query-opts schema-opts query-opts]}]
-  (let [schema-overwrites (:overwrites schema-opts)
-        merged            (cond-> visit-val
-                            ;; the schema can include vals to merge into each ent
-                            (fn? schema-overwrites)  schema-overwrites
-                            (map? schema-overwrites) (merge schema-overwrites)
+  (let [schema-overwrites      (:set schema-opts)
+        visit-query-overwrites (:set visit-query-opts)
+        merged                 (cond-> visit-val
+                                 ;; backwards compatibility with spec-gen
+                                 (:spec-gen query-opts) (merge (:spec-gen query-opts))
 
-                            ;; visit query opts can also specify merge vals
-                            (fn? visit-query-opts)  visit-query-opts
-                            (map? visit-query-opts) (merge visit-query-opts)
+                                 ;; the schema can include vals to merge into each ent
+                                 (fn? schema-overwrites)  schema-overwrites
+                                 (map? schema-overwrites) (merge schema-overwrites)
 
-                            ;; backwards compatibility with spec-gen
-                            (:spec-gen query-opts) (merge (:spec-gen query-opts)))
+                                 ;; visit query opts can also specify merge vals
+                                 (fn? visit-query-overwrites)  visit-query-overwrites
+                                 (map? visit-query-overwrites) (merge visit-query-overwrites))
         changed-keys (->> (data/diff visit-val merged)
                           (take 2)
                           (map keys)
@@ -1106,7 +1107,7 @@
                      (wrap-incremental-insert-visiting-fn
                       generate-visit-key
                       (fn insert-visiting-fn [potato-db {:keys [ent-name visit-query-opts] :as visit-data}]
-                        (let [insert (or (get-in visit-query-opts [fixtures-visit-key insert-key])
+                        (let [insert (or (insert-key visit-query-opts)
                                          (get-in (ent-schema potato-db ent-name) [fixtures-visit-key insert-key])
                                          (get-in potato-db [fixtures-visit-key insert-key]))]
                           (when-not insert

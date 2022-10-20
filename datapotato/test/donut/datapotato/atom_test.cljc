@@ -39,7 +39,7 @@
   {:user      {:prefix   :u
                :generate {:schema User}
                :fixtures {:table-name "users"}}
-   :todo      {:generate  {:overwrites {:todos/todo_title "write unit tests"}
+   :todo      {:generate  {:set {:todos/todo_title "write unit tests"}
                            :schema     Todo}
                :fixtures  {:table-name "todos"}
                :relations {:todos/created_by_id [:user :users/id]
@@ -98,7 +98,7 @@
 (deftest overwrite-data-to-insert
   (dc/with-fixtures ent-db
     (dc/insert-fixtures ent-db {:todo [{:count    2
-                                        :generate {:todos/todo_title "overwritten"}}]})
+                                        :generate {:set {:todos/todo_title "overwritten"}}}]})
     (is (match? [[:user #:users{:id 1 :username string?}]
                  [:todo-list #:todo_lists{:id            2
                                           :created_by_id 1
@@ -118,9 +118,9 @@
 (deftest incremental-insert
   (dc/with-fixtures ent-db
     (-> (dc/insert-fixtures ent-db {:todo [{:count    1
-                                            :generate {:todos/todo_title "step 1"}}]})
+                                            :generate {:set {:todos/todo_title "step 1"}}}]})
         (dc/insert-fixtures {:todo [{:count    1
-                                     :generate {:todos/todo_title "step 2"}}]}))
+                                     :generate {:set {:todos/todo_title "step 2"}}}]}))
     (is (match? [[:user #:users{:id 1 :username string?}]
                  [:todo-list #:todo_lists{:id            2
                                           :created_by_id 1
@@ -135,4 +135,30 @@
                                 :created_by_id 1
                                 :updated_by_id 1
                                 :todo_list_id  2}]]
+                @fixture-atom))))
+
+(deftest override-insert-fn
+  (dc/with-fixtures ent-db
+    (dc/insert-fixtures
+     ent-db
+     {:user [{:count    2
+              :fixtures {:insert (fn insert
+                                   [{{:keys [atom]} dc/fixtures-visit-key}
+                                    {:keys [ent-type visit-val]}]
+                                   (swap! atom conj [:query-override ent-type visit-val])
+                                   visit-val)}}]})
+    (is (match? [[:query-override :user #:users{:id 1 :username string?}]
+                 [:query-override :user #:users{:id 2 :username string?}]]
+                @fixture-atom)))
+
+  (dc/with-fixtures ent-db
+    (dc/insert-fixtures
+     (assoc-in ent-db [:schema :user :fixtures :insert] (fn insert
+                                                          [{{:keys [atom]} dc/fixtures-visit-key}
+                                                           {:keys [ent-type visit-val]}]
+                                                          (swap! atom conj [:schema-override ent-type visit-val])
+                                                          visit-val))
+     {:user [{:count 2}]})
+    (is (match? [[:schema-override :user #:users{:id 1 :username string?}]
+                 [:schema-override :user #:users{:id 2 :username string?}]]
                 @fixture-atom))))
