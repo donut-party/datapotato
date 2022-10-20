@@ -60,7 +60,7 @@
    :fixtures {:insert da/insert
               :setup  (fn [_]
                         (reset! fixture-atom [])
-                        (reset! dgt/id-seq 0))
+                        (reset! dgt/id-atom 0))
               :atom   fixture-atom}})
 
 
