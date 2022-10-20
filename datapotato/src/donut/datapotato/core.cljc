@@ -1113,13 +1113,21 @@
                             (throw (ex-info "No insert function specified. Try adding [:fixtures :insert] to potato-db" {})))
                           (insert potato-db visit-data)))))))
 
-(defn insert-fixtures
+(defn insert-fixtures-potato-db
   ([query]
-   (insert-fixtures *potato-db* query))
+   (insert-fixtures-potato-db *potato-db* query))
   ([potato-db query]
    (-> potato-db
        (generate-potato-db query)
-       insert-fixtures*
+       insert-fixtures*)))
+
+(defn insert-fixtures
+  ([query]
+   (-> (insert-fixtures-potato-db query)
+       (attr-map fixtures-visit-key)))
+  ([potato-db query]
+   (-> potato-db
+       (insert-fixtures-potato-db query)
        (attr-map fixtures-visit-key))))
 
 (defmacro with-fixtures
