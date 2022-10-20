@@ -65,7 +65,7 @@
                                   (.close node))
                                 (reset! node-atom (xt/start-node {}))
                                 @node-atom)
-              :setup          (fn setup [_] (reset! dgt/id-seq 0))}})
+              :setup          (fn setup [_] (reset! dgt/id-atom 0))}})
 
 (defn q
   [query]

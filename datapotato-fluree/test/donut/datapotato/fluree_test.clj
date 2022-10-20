@@ -70,7 +70,7 @@
 
               :setup
               (fn setup [{:keys [fixtures]}]
-                (reset! dgt/id-seq 0)
+                (reset! dgt/id-atom 0)
                 (let [{:keys [connection]}  fixtures
                       {:keys [conn ledger]} connection]
                   @(fdb/transact conn ledger [{:_id              :_collection

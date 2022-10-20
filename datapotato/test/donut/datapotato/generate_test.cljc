@@ -18,9 +18,9 @@
 ;; test helpers
 ;;---
 
-(def id-seq (atom 0))
+(def id-atom (atom 0))
 (def monotonic-id-gen
-  (gen/fmap (fn [_] (swap! id-seq inc)) (gen/return nil)))
+  (gen/fmap (fn [_] (swap! id-atom inc)) (gen/return nil)))
 
 (def gen-data-db (atom []))
 (def gen-data-cycle-db (atom []))

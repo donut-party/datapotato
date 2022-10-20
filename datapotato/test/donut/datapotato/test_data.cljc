@@ -10,16 +10,16 @@
   [m1 m2]
   (nil? (first (data/diff m1 m2))))
 
-(def id-seq (atom 0))
+(def id-atom (atom 0))
 
 (defn test-fixture [f]
-  (reset! id-seq 0)
+  (reset! id-atom 0)
   (f))
 
 (s/def ::id
   (s/with-gen
     pos-int?
-    #(gen/fmap (fn [_] (swap! id-seq inc)) (gen/return nil))))
+    #(gen/fmap (fn [_] (swap! id-atom inc)) (gen/return nil))))
 
 
 (s/def ::user-name #{"Luigi"})

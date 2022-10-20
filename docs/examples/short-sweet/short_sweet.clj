@@ -13,10 +13,10 @@
 ;; Define specs for our domain entities
 
 ;; IDs should be a positive int, and to generate it we increment the number
-;; stored in `id-seq`. This ensures unique ids and produces predictable values
-(def id-seq (atom 0))
+;; stored in `id-atom`. This ensures unique ids and produces predictable values
+(def id-atom (atom 0))
 (def monotonic-id-gen
-  (gen/fmap (fn [_] (swap! id-seq inc)) (gen/return nil)))
+  (gen/fmap (fn [_] (swap! id-atom inc)) (gen/return nil)))
 
 (def ID
   [:and {:gen/gen monotonic-id-gen} pos-int?])
@@ -73,7 +73,7 @@
    :fixtures {:insert da/insert
               :setup  (fn [_]
                         (reset! mock-db [])
-                        (reset! id-seq 0))
+                        (reset! id-atom 0))
               :atom   mock-db}})
 
 

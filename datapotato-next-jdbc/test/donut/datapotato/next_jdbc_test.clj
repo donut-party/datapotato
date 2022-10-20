@@ -122,7 +122,7 @@
                     {:dbspec @test-dbspec
                      :setup  (fn [_]
                                (create-tables dc/*connection*)
-                               (reset! dgt/id-seq 0))})})
+                               (reset! dgt/id-atom 0))})})
 
 ;;---
 ;; tests

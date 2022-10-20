@@ -4,9 +4,9 @@
             [donut.datapotato.core :as sm]
             [donut.datapotato.spec-gen :as sg]))
 
-(def id-seq (atom 0))
+(def id-atom (atom 0))
 (s/def ::id (s/with-gen pos-int?
-              #(gen/fmap (fn [_] (swap! id-seq inc))
+              #(gen/fmap (fn [_] (swap! id-atom inc))
                          (gen/return nil))))
 (s/def ::topic-id ::id)
 (s/def ::first-post-id ::id)
@@ -63,7 +63,7 @@
 (defn ex-03
   []
   (reset! database [])
-  (reset! id-seq 0)
+  (reset! id-atom 0)
   (-> (sg/ent-db-spec-gen {:schema schema} {:post [[3]]})
       (sm/visit-ents :conform conform))
   @database)
@@ -71,7 +71,7 @@
 (defn ex-04
   []
   (reset! database [])
-  (reset! id-seq 0)
+  (reset! id-atom 0)
   (-> (sg/ent-db-spec-gen {:schema schema} {:topic [[1]]})
       (sm/visit-ents :conform conform))
   @database)

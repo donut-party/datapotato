@@ -86,10 +86,10 @@ todos or todo lists?
 ;; Define specs for our domain entities
 
 ;; The ::id should be a positive int, and to generate it we increment
-;; the number stored in `id-seq`. This ensures unique ids and produces
+;; the number stored in `id-atom`. This ensures unique ids and produces
 ;; values that are easier for humans to understand
-(def id-seq (atom 0))
-(s/def ::id (s/with-gen pos-int? #(gen/fmap (fn [_] (swap! id-seq inc)) (gen/return nil))))
+(def id-atom (atom 0))
+(s/def ::id (s/with-gen pos-int? #(gen/fmap (fn [_] (swap! id-atom inc)) (gen/return nil))))
 (s/def ::not-empty-string (s/and string? not-empty #(< (count %) 10)))
 
 (s/def ::username ::not-empty-string)
@@ -139,7 +139,7 @@ todos or todo lists?
 
 (defn insert
   [query]
-  (reset! id-seq 0)
+  (reset! id-atom 0)
   (reset! mock-db [])
   (-> ent-db
       (dc/generate query)

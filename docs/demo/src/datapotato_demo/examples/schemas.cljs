@@ -3,12 +3,12 @@
             [clojure.test.check.generators :as gen :include-macros true]
             [shadow.resource :as rc]))
 
-(def id-seq (atom 0))
+(def id-atom (atom 0))
 
 (s/def ::id
   (s/with-gen
     pos-int?
-    #(gen/fmap (fn [_] (swap! id-seq inc)) (gen/return nil))))
+    #(gen/fmap (fn [_] (swap! id-atom inc)) (gen/return nil))))
 
 
 (s/def ::user-name #{"Maggie" "Linh" "Bubba" "Tomm" "Rory" "Link" "Janie"})

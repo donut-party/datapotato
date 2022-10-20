@@ -5,8 +5,8 @@
    [donut.datapotato.core :as dc]
    [donut.datapotato.spec-gen :as sg]))
 
-(def id-seq (atom 0))
-(s/def ::id (s/with-gen pos-int? #(gen/fmap (fn [_] (swap! id-seq inc)) (gen/return nil))))
+(def id-atom (atom 0))
+(s/def ::id (s/with-gen pos-int? #(gen/fmap (fn [_] (swap! id-atom inc)) (gen/return nil))))
 
 (s/def ::not-empty-string (s/and string? not-empty #(< (count %) 20)))
 (s/def ::created-by-id ::id)
@@ -69,7 +69,7 @@
   (swap! mock-db conj [ent-type spec-gen]))
 
 (defn insert [query]
-  (reset! id-seq 0)
+  (reset! id-atom 0)
   (reset! mock-db [])
   (-> (sg/ent-db-spec-gen {:schema schema} query)
       (dc/visit-ents-once :inserted-data insert*)))
