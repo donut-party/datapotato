@@ -434,7 +434,7 @@
    [generator-name ent-db]
    (testing generator-name
      (testing "Gen traversal won't replace already generated data with newly generated data"
-       (let [gen-fn     #(dc/generate % {:todo [[:t0 {:generate {:todo-title "pet the dog"}}]]})
+       (let [gen-fn     #(dc/generate % {:todo [{}]})
              first-pass (gen-fn ent-db)]
          (is (match? (:data first-pass)
                      (:data (gen-fn first-pass)))))))
