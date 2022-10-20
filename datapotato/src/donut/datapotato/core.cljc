@@ -1115,7 +1115,7 @@
    (insert-fixtures *potato-db* query))
   ([potato-db query]
    (-> potato-db
-       (generate query)
+       (generate-potato-db query)
        insert-fixtures*
        (attr-map fixtures-visit-key))))
 
