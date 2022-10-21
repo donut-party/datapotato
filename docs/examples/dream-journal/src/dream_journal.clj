@@ -62,4 +62,4 @@
 
 
 (dc/with-fixtures potato-db
-  (dc/insert-fixtures {:entry [{:generate {:set {:content "hotdogs again."}}}]}))
+  (dc/insert-fixtures {:entry [{:set {:content "hotdogs again."}}]}))
