@@ -999,6 +999,9 @@
                                  ;; backwards compatibility with spec-gen
                                  (:spec-gen query-opts) (merge (:spec-gen query-opts))
 
+                                 ;; this is just intuitive
+                                 (:set query-opts) (merge (:set query-opts))
+
                                  ;; visit query opts can also specify merge vals
                                  (fn? visit-query-overwrites)  visit-query-overwrites
                                  (map? visit-query-overwrites) (merge visit-query-overwrites))

@@ -414,12 +414,19 @@
          (is (ids-present? gen))
          (is (match? "boop whooop" (-> gen :t0 :todo-title)))))
 
-     (testing "Overwriting generated value with spec-gen for backwrads-compatibility"
+     (testing "Overwriting generated value with :set"
        (let [gen (dc/generate
                   potato-db
-                  {:todo [{:spec-gen {:todo-title "with spec-gen"}}]})]
+                  {:todo [{:set {:todo-title "with :set"}}]})]
          (is (ids-present? gen))
-         (is (match? "with spec-gen" (-> gen :t0 :todo-title))))))
+         (is (match? "with :set" (-> gen :t0 :todo-title)))))
+
+     (testing "Overwriting generated value with :spec-gen for backwrads-compatibility"
+       (let [gen (dc/generate
+                  potato-db
+                  {:todo [{:spec-gen {:todo-title "with :spec-gen"}}]})]
+         (is (ids-present? gen))
+         (is (match? "with :spec-gen" (-> gen :t0 :todo-title))))))
 
    "spec"
    {:schema   spec-schema
