@@ -113,8 +113,8 @@
                            :todo_lists/updated_by_id [:user :users/id]}
                :prefix    :tl}})
 
-(defn ent-db
-  "returns an ent-db. a function so that it can deref test-dbspec"
+(defn potato-db
+  "returns an potato-db. a function so that it can deref test-dbspec"
   []
   {:schema   schema
    :generate {:generator mg/generate}
@@ -129,14 +129,14 @@
 ;;---
 
 (deftest inserts-simple-generated-data
-  (dc/with-fixtures (ent-db)
+  (dc/with-fixtures (potato-db)
     (dc/insert-fixtures {:user [{:count 2}]})
     (is (match? [#:users{:id 1 :username string?}
                  #:users{:id 2 :username string?}]
                 (sql/query dc/*connection* ["SELECT * FROM users"])))))
 
 (deftest inserts-generated-data-hierarchy
-  (dc/with-fixtures (ent-db)
+  (dc/with-fixtures (potato-db)
     (dc/insert-fixtures {:todo [{:count 2}]})
     (is (match? [#:users{:id 1 :username string?}]
                 (sql/query dc/*connection* ["SELECT * FROM users"])))
