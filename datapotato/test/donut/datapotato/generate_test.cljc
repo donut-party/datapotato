@@ -239,10 +239,10 @@
 
 (deftest test-generate
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing generator-name
      (let [gen (dc/generate
-                ent-db
+                potato-db
                 {:todo-list [[1]]})]
        (is (match? {:u0 {:username string?}}
                    gen))
@@ -262,10 +262,10 @@
 
 (deftest test-spec-gen-nested
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing generator-name
      (let [gen (dc/generate
-                ent-db
+                potato-db
                 {:project [[:_ {:refs {:todo-list-ids 3}}]]})]
        (is (match? {:u0 {:username string?}} gen))
        (is (ids-present? gen))
@@ -293,11 +293,11 @@
 
 (deftest test-spec-gen-manual-attr
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing generator-name
      (testing "Manual attribute setting for non-reference field"
        (let [gen (dc/generate
-                  ent-db
+                  potato-db
                   {:todo [[:_ {:generate {:set {:todo-title "pet the dog"}}}]]})]
          (is (match? {:u0 {:username string?}
                       :t0 {:todo-title "pet the dog"}}
@@ -313,7 +313,7 @@
 
      (testing "Manual attribute setting for reference field"
        (let [gen (dc/generate
-                  ent-db
+                  potato-db
                   {:todo [[:_ {:generate {:set {:created-by-id 1}}}]]})]
          (is (match? {:u0 {:username string?}
                       :t0 {:created-by-id 1}}
@@ -336,11 +336,11 @@
 
 (deftest test-spec-gen-omit
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing generator-name
      (testing "Ref not created and attr is not present when omitted"
        (let [gen (dc/generate
-                  ent-db
+                  potato-db
                   {:todo-list [[:_ {:refs {:created-by-id ::dc/omit
                                            :updated-by-id ::dc/omit}}]]})]
          (is (ids-present? gen))
@@ -349,7 +349,7 @@
 
      (testing "Ref is created when at least 1 field references it, but omitted attrs are still not present"
        (let [gen (dc/generate
-                  ent-db
+                  potato-db
                   {:todo-list [[:_ {:refs {:updated-by-id ::dc/omit}}]]})]
          (is (match? {:u0 {:username string?}} gen))
          (is (ids-present? gen))
@@ -360,7 +360,7 @@
 
      (testing "Overwriting value of omitted ref with custom value"
        (let [gen (dc/generate
-                  ent-db
+                  potato-db
                   {:todo-list [[:_ {:refs     {:updated-by-id ::dc/omit}
                                     :generate {:set {:updated-by-id 42}}}]]})]
          (is (ids-present? gen))
@@ -368,7 +368,7 @@
 
      (testing "Overwriting value of omitted ref with nil"
        (let [gen (dc/generate
-                  ent-db
+                  potato-db
                   {:todo-list [[:_ {:refs     {:updated-by-id ::dc/omit}
                                     :generate {:set {:updated-by-id nil}}}]]})]
          (is (ids-present? gen))
@@ -384,39 +384,39 @@
 
 (deftest test-overwriting
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing generator-name
      (testing "Overwriting generated value with query map"
        (let [gen (dc/generate
-                  ent-db
+                  potato-db
                   {:todo-list [[:_ {:generate {:set {:updated-by-id 42}}}]]})]
          (is (ids-present? gen))
          (is (match? 42 (-> gen :tl0 :updated-by-id)))))
 
      (testing "Overwriting generated value with query fn"
        (let [gen (dc/generate
-                  ent-db
+                  potato-db
                   {:todo-list [[:_ {:generate {:set #(assoc % :updated-by-id :foo)}}]]})]
          (is (ids-present? gen))
          (is (match? :foo (-> gen :tl0 :updated-by-id)))))
 
      (testing "Overwriting generated value with schema map"
        (let [gen (dc/generate
-                  (assoc-in ent-db [:schema :todo :generate :set :todo-title] "schema title")
+                  (assoc-in potato-db [:schema :todo :generate :set :todo-title] "schema title")
                   {:todo [{}]})]
          (is (ids-present? gen))
          (is (match? "schema title" (-> gen :t0 :todo-title)))))
 
      (testing "Overwriting generated value with schema fn"
        (let [gen (dc/generate
-                  (assoc-in ent-db [:schema :todo :generate :set] #(assoc % :todo-title "boop whooop"))
+                  (assoc-in potato-db [:schema :todo :generate :set] #(assoc % :todo-title "boop whooop"))
                   {:todo [{}]})]
          (is (ids-present? gen))
          (is (match? "boop whooop" (-> gen :t0 :todo-title)))))
 
      (testing "Overwriting generated value with spec-gen for backwrads-compatibility"
        (let [gen (dc/generate
-                  ent-db
+                  potato-db
                   {:todo [{:spec-gen {:todo-title "with spec-gen"}}]})]
          (is (ids-present? gen))
          (is (match? "with spec-gen" (-> gen :t0 :todo-title))))))
@@ -431,11 +431,11 @@
 
 (deftest test-idempotency
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing generator-name
      (testing "Gen traversal won't replace already generated data with newly generated data"
        (let [gen-fn     #(dc/generate % {:todo [{}]})
-             first-pass (gen-fn ent-db)]
+             first-pass (gen-fn potato-db)]
          (is (match? (:data first-pass)
                      (:data (gen-fn first-pass)))))))
 
@@ -450,10 +450,10 @@
 
 (deftest test-coll-relval-order
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing "When a relation has a `:coll` constraint, order its vals correctly"
      (let [gen (dc/generate
-                ent-db
+                potato-db
                 {:project [[:_ {:refs {:todo-list-ids 3}}]]})]
        (is (match? {:u0 {:username string?}} gen))
        (is (ids-present? gen))
@@ -473,10 +473,10 @@
 
 (deftest test-sets-custom-relation-val
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing generator-name
      (let [gen (dc/generate
-                ent-db
+                potato-db
                 {:user      [[:custom-user {:generate {:set {:id 100}}}]]
                  :todo-list [[:custom-tl {:refs {:created-by-id :custom-user
                                                  :updated-by-id :custom-user}}]]})]
@@ -504,10 +504,10 @@
 
 (deftest test-insert-gen-data
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing generator-name
      (reset-dbs*)
-     (-> (dc/generate-potato-db ent-db {:todo [[1]]})
+     (-> (dc/generate-potato-db potato-db {:todo [[1]]})
          (dc/visit-ents-once :inserted-data insert))
 
      ;; gen data is something like:
@@ -546,11 +546,11 @@
 
 (deftest test-inserts-novel-data
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing generator-name
      (testing "Given a db with a todo already added, next call adds a new
   todo that references the same todo list and user"
-       (let [db1 (-> (dc/generate-potato-db ent-db {:todo [[1]]})
+       (let [db1 (-> (dc/generate-potato-db potato-db {:todo [[1]]})
                      (dc/visit-ents-once :inserted-data insert))]
          (-> (dc/generate-potato-db db1 {:todo [[1]]})
              (dc/visit-ents-once :inserted-data insert))
@@ -597,11 +597,11 @@
 
 (deftest test-handle-cycles-with-constraints-and-reordering
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing generator-name
      (testing "todo-list is inserted before todo because todo requires todo-list"
        (reset! gen-data-cycle-db [])
-       (-> (dc/generate-potato-db ent-db {:todo [[1]]})
+       (-> (dc/generate-potato-db potato-db {:todo [[1]]})
            (dc/visit-ents :insert-cycle insert-cycle))
        (is (match? [:tl0 :t0]
                    @gen-data-cycle-db))))
@@ -616,11 +616,11 @@
 
 (deftest test-handles-cycle-ids
   (ct/do-template
-   [generator-name ent-db]
+   [generator-name potato-db]
    (testing generator-name
      (testing "generate correctly sets foreign keys for cycles"
        (let [gen (dc/generate
-                  ent-db
+                  potato-db
                   {:todo [[1]]})]
          (is (ids-present? gen))
          (is (ids-match? gen

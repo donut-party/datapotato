@@ -40,11 +40,11 @@
 (defn insert
   "inserts a single record in the next.jdbc db for an ent"
   [{{:keys [connection dbspec dbtype]} dc/fixtures-visit-key
-    :as                                ent-db}
+    :as                                potato-db}
    {:keys [ent-name ent-type visit-val]}]
-  (let [get-inserted_ (or (get-in ent-db [dc/fixtures-visit-key :get-inserted])
+  (let [get-inserted_ (or (get-in potato-db [dc/fixtures-visit-key :get-inserted])
                           get-inserted)
-        table-name    (get-in (dc/ent-schema ent-db ent-name)
+        table-name    (get-in (dc/ent-schema potato-db ent-name)
                               [dc/fixtures-visit-key :table-name])]
 
     (when-not connection
@@ -66,11 +66,11 @@
   "Good defaults for configuring database insertion with next-jdbc
 
   Use this value under the `:fixtures` key in your potatodb, e.g.
-  (def ent-db
+  (def potato-db
    {:schema schema
     :generate {:generator mg/generate}
     :fixtures donut.datapotato.next-jdbc/config})"
   {:insert           insert
-   :get-connection   (fn next-jdbc-get-connection [ent-db]
-                       (jdbc/get-connection (get-in ent-db [:fixtures :dbspec])))
+   :get-connection   (fn next-jdbc-get-connection [potato-db]
+                       (jdbc/get-connection (get-in potato-db [:fixtures :dbspec])))
    :close-connection (fn next-jdbc-close-connection [connection] (.close connection))})

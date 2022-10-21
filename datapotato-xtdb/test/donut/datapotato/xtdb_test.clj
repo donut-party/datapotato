@@ -56,7 +56,7 @@
                            :todo-list/updated-by [:user :xt/id]}
                :prefix    :tl}})
 
-(def ent-db
+(def potato-db
   {:schema   schema
    :generate {:generator mg/generate}
    :fixtures {:insert         dxtdb/insert
@@ -74,7 +74,7 @@
        (sort-by :xt/id)))
 
 (deftest inserts-simple-generated-data
-  (dc/with-fixtures ent-db
+  (dc/with-fixtures potato-db
     (dc/insert-fixtures {:user [{:count 2}]})
     (is (match? [{:xt/id 1 :user/username string?}
                  {:xt/id 2 :user/username string?}]
@@ -83,7 +83,7 @@
 
 
 (deftest inserts-generated-data-hierarchy
-  (dc/with-fixtures ent-db
+  (dc/with-fixtures potato-db
     (dc/insert-fixtures {:todo [{:count 2}]})
     (is (match? [{:xt/id 1 :user/username string?}]
                 (q '{:find  [(pull ?u [*])]

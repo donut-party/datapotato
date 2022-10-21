@@ -54,7 +54,7 @@
 
 (def fixture-atom (atom []))
 
-(def ent-db
+(def potato-db
   {:schema   schema
    :generate {:generator mg/generate}
    :fixtures {:insert da/insert
@@ -69,16 +69,16 @@
 ;;---
 
 (deftest inserts-simple-generated-data
-  (dc/with-fixtures ent-db
-    (dc/insert-fixtures ent-db {:user [{:count 2}]})
+  (dc/with-fixtures potato-db
+    (dc/insert-fixtures potato-db {:user [{:count 2}]})
     (is (match? [[:user #:users{:id 1 :username string?}]
                  [:user #:users{:id 2 :username string?}]]
                 @fixture-atom))))
 
 
 (deftest inserts-generated-data-hierarchy
-  (dc/with-fixtures ent-db
-    (dc/insert-fixtures ent-db {:todo [{:count 2}]})
+  (dc/with-fixtures potato-db
+    (dc/insert-fixtures potato-db {:todo [{:count 2}]})
     (is (match? [[:user #:users{:id 1 :username string?}]
                  [:todo-list #:todo_lists{:id            2
                                           :created_by_id 1
@@ -96,9 +96,9 @@
                 @fixture-atom))))
 
 (deftest overwrite-data-to-insert
-  (dc/with-fixtures ent-db
-    (dc/insert-fixtures ent-db {:todo [{:count    2
-                                        :generate {:set {:todos/todo_title "overwritten"}}}]})
+  (dc/with-fixtures potato-db
+    (dc/insert-fixtures potato-db {:todo [{:count    2
+                                           :generate {:set {:todos/todo_title "overwritten"}}}]})
     (is (match? [[:user #:users{:id 1 :username string?}]
                  [:todo-list #:todo_lists{:id            2
                                           :created_by_id 1
@@ -116,9 +116,9 @@
                 @fixture-atom))))
 
 (deftest incremental-insert
-  (dc/with-fixtures ent-db
-    (-> (dc/insert-fixtures ent-db {:todo [{:count    1
-                                            :generate {:set {:todos/todo_title "step 1"}}}]})
+  (dc/with-fixtures potato-db
+    (-> (dc/insert-fixtures potato-db {:todo [{:count    1
+                                               :generate {:set {:todos/todo_title "step 1"}}}]})
         (dc/insert-fixtures {:todo [{:count    1
                                      :generate {:set {:todos/todo_title "step 2"}}}]}))
     (is (match? [[:user #:users{:id 1 :username string?}]
@@ -138,9 +138,9 @@
                 @fixture-atom))))
 
 (deftest override-insert-fn
-  (dc/with-fixtures ent-db
+  (dc/with-fixtures potato-db
     (dc/insert-fixtures
-     ent-db
+     potato-db
      {:user [{:count    2
               :fixtures {:insert (fn insert
                                    [{{:keys [atom]} dc/fixtures-visit-key}
@@ -151,13 +151,13 @@
                  [:query-override :user #:users{:id 2 :username string?}]]
                 @fixture-atom)))
 
-  (dc/with-fixtures ent-db
+  (dc/with-fixtures potato-db
     (dc/insert-fixtures
-     (assoc-in ent-db [:schema :user :fixtures :insert] (fn insert
-                                                          [{{:keys [atom]} dc/fixtures-visit-key}
-                                                           {:keys [ent-type visit-val]}]
-                                                          (swap! atom conj [:schema-override ent-type visit-val])
-                                                          visit-val))
+     (assoc-in potato-db [:schema :user :fixtures :insert] (fn insert
+                                                             [{{:keys [atom]} dc/fixtures-visit-key}
+                                                              {:keys [ent-type visit-val]}]
+                                                             (swap! atom conj [:schema-override ent-type visit-val])
+                                                             visit-val))
      {:user [{:count 2}]})
     (is (match? [[:schema-override :user #:users{:id 1 :username string?}]
                  [:schema-override :user #:users{:id 2 :username string?}]]

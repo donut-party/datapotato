@@ -48,7 +48,7 @@
   []
   (str "datapotato/test-ledger-" (swap! ledger-suffix inc)))
 
-(def ent-db
+(def potato-db
   {:schema   schema
    :generate {:generator mg/generate}
    :fixtures {:insert
@@ -111,7 +111,7 @@
 
 #_
 (deftest inserts-simple-generated-data
-  (dc/with-fixtures ent-db
+  (dc/with-fixtures potato-db
     (dc/insert-fixtures {:user [{:count 2}]})
     (is (= [{:_id            351843720888321
              "user/username" "Luigi"}
@@ -123,7 +123,7 @@
 
 #_
 (deftest inserts-generated-data-hierarchy
-  (dc/with-fixtures ent-db
+  (dc/with-fixtures potato-db
     (dc/insert-fixtures {:todo [{:count 2}]})
     (is (= [{:_id            351843720888320
              "user/username" "Luigi"}]

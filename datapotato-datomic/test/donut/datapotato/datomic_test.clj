@@ -54,7 +54,7 @@
 
 (def uri "datomic:mem://datapotato-test")
 
-(def ent-db
+(def potato-db
   {:schema   schema
    :generate {:generator mg/generate}
    :fixtures {:insert
@@ -124,17 +124,17 @@
        (sort-by :db/id)))
 
 (deftest inserts-simple-generated-data
-  (dc/with-fixtures ent-db
+  (dc/with-fixtures potato-db
     (dc/insert-fixtures {:user [{:count 2}]})
     (is (match? [{:db/id 17592186045418 :user/username string?}
-            {:db/id 17592186045420 :user/username string?}]
-           (q dc/*connection*
-              '{:find  [(pull ?u [*])]
-                :where [[?u :user/username]]})))))
+                 {:db/id 17592186045420 :user/username string?}]
+                (q dc/*connection*
+                   '{:find  [(pull ?u [*])]
+                     :where [[?u :user/username]]})))))
 
 
 (deftest inserts-generated-data-hierarchy
-  (dc/with-fixtures ent-db
+  (dc/with-fixtures potato-db
     (dc/insert-fixtures {:todo [{:count 2}]})
     (is (match? [{:db/id 17592186045418
                   :user/username string?}]
@@ -161,7 +161,7 @@
                      :where [[?u :todo-list/created-by]]})))))
 
 (deftest inserts-colls
-  (dc/with-fixtures ent-db
+  (dc/with-fixtures potato-db
     (dc/insert-fixtures {:project [{:refs {:project/todo-lists 2}}]})
 
     (is (match? [{:db/id         17592186045418
@@ -213,7 +213,7 @@
                                                  [:topic :db/id]}}
                     :prefix    :w}})
 
-(def polymorphic-ent-db
+(def polymorphic-potato-db
   {:schema   polymorphic-schema
    :generate {:generator mg/generate}
    :fixtures {:insert
@@ -251,7 +251,7 @@
 
 (deftest polymorphic-refs
   (testing "incremental insert two different polymorphic refs"
-    (dc/with-fixtures polymorphic-ent-db
+    (dc/with-fixtures polymorphic-potato-db
       (let [updated-db (dc/insert-fixtures {:watch [{:count     1
                                                      :ref-types {:watch/watched :topic-category}}]})]
 
@@ -285,7 +285,7 @@
                          :where [[?e :watch/watched]]}))))))
 
   (testing "single polymorphic ref"
-    (dc/with-fixtures polymorphic-ent-db
+    (dc/with-fixtures polymorphic-potato-db
       (dc/insert-fixtures {:watch [{:count     1
                                     :ref-types {:watch/watched :topic}}]})
 

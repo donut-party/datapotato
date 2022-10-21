@@ -5,11 +5,11 @@
 
 (defn insert
   [{{:keys [connection]} dc/fixtures-visit-key
-    :as                  ent-db}
+    :as                  potato-db}
    {:keys [ent-name visit-val]}]
 
   (let [{:keys [conn ledger]} connection
-        collection            (get-in (dc/ent-schema ent-db ent-name) [dc/fixtures-visit-key :collection])
+        collection            (get-in (dc/ent-schema potato-db ent-name) [dc/fixtures-visit-key :collection])
         result                @(fdb/transact conn ledger [(assoc visit-val :_id collection)])]
     (assoc visit-val :_id (let [tempids (get-in result [:tempids collection])]
                             (if (vector? tempids)
