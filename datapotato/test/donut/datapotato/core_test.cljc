@@ -644,6 +644,17 @@
                                                          :refs     {:first-todo-id :t0}}]})
                               :data)))))
 
+(deftest test-add-ents-handles-A->self-cycles
+  (testing "Handle cycles where an entity references itself"
+    (is-graph= (:data (dc/add-ents {:schema td/cycle-schema} {:user [[:u0 {:refs {:updated-by-id :u0}}]]}))
+               (-> (lg/digraph [:user :u0] [:u0 :u0])
+                   (lat/add-attr :user :type :ent-type)
+                   (lat/add-attr :u0 :type :ent)
+                   (lat/add-attr :u0 :index 0)
+                   (lat/add-attr :u0 :query-term {:ent-name :u0, :count 1, :refs {:updated-by-id :u0}})
+                   (lat/add-attr :u0 :ent-type :user)
+                   (lat/add-attr :u0 :u0 :relation-attrs #{:updated-by-id})))))
+
 ;; -----------------
 ;; polymorphism tests
 ;; -----------------
@@ -860,6 +871,30 @@
                                                         dc/merge-overwrites
                                                         dc/assoc-referenced-vals])
                  (dc/attr-map test-visiting-key)))))))
+
+(deftest test-visit-self-reference
+  (let [user-gen (fn [query]
+                   (-> (dc/add-ents {:schema td/cycle-schema} query)
+                       (dc/visit-ents-once :gen
+                                           [(let [id (partial swap!
+                                                              (atom 0)
+                                                              inc)]
+                                              (fn [_ _]
+                                                (let [i (id)]
+                                                  {:id i :updated-by-id i})))
+                                            dc/merge-overwrites
+                                            dc/assoc-referenced-vals])
+                       (dc/attr-map :gen)))]
+    (is (= {:u0 {:id 1, :updated-by-id 1}} (user-gen {:user [[1]]}))
+        "only create one entity with self reference")
+    (testing "self reference can be specified explicitly"
+      (let [{:keys [u0 u1]} (user-gen
+                             {:user [[1]
+                                     [1 {:refs {:updated-by-id :u1}}]]})]
+        (is (= (:id u0) (:updated-by-id u0)))
+        (is (= (:id u1) (:updated-by-id u1)))
+        (is (not= (:id u0) (:id u1)))
+        (is (not= (:version u0) (:updated-by-id u1)))))))
 
 ;;---
 ;; generating and inserting
