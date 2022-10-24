@@ -1,0 +1,5 @@
+{:paths ["."]
+ :deps  {org.clojure/clojure    {:mvn/version "1.10.0"}
+         metosin/malli          {:mvn/version "0.8.9"}
+         org.clojure/test.check {:mvn/version "0.9.0"}
+         party.donut/datapotato {:local/root "../../../datapotato"}}}

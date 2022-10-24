@@ -195,8 +195,8 @@ TODO link to examples with next.jdbc
 
 ;; You can specify a username and id
 (dc/generate potato-db {:user [{:count    1
-                                        :generate {:username "Meeghan"
-                                                   :id       100}}]})
+                                :generate {:username "Meeghan"
+                                           :id       100}}]})
 
 ;; Generating a post generates the user the post belongs to, with
 ;; foreign keys correct

@@ -67,51 +67,50 @@
                 (d/connect uri))
 
               :setup
-              (fn setup [{:keys [fixtures]}]
-                (let [{:keys [connection]} fixtures]
-                  @(d/transact
-                    connection
-                    [{:db/ident              :user/username
-                      :db/id                 #db/id [:db.part/db]
-                      :db/valueType          :db.type/string
-                      :db/cardinality        :db.cardinality/one
-                      :db.install/_attribute :db.part/db}
+              (fn setup [_]
+                @(d/transact
+                  dc/*connection*
+                  [{:db/ident              :user/username
+                    :db/id                 #db/id [:db.part/db]
+                    :db/valueType          :db.type/string
+                    :db/cardinality        :db.cardinality/one
+                    :db.install/_attribute :db.part/db}
 
-                     {:db/ident              :todo-list/created-by
-                      :db/id                 #db/id [:db.part/db]
-                      :db/valueType          :db.type/ref
-                      :db/cardinality        :db.cardinality/one
-                      :db.install/_attribute :db.part/db}
+                   {:db/ident              :todo-list/created-by
+                    :db/id                 #db/id [:db.part/db]
+                    :db/valueType          :db.type/ref
+                    :db/cardinality        :db.cardinality/one
+                    :db.install/_attribute :db.part/db}
 
-                     {:db/ident              :todo/todo-title
-                      :db/id                 #db/id [:db.part/db]
-                      :db/valueType          :db.type/string
-                      :db/cardinality        :db.cardinality/one
-                      :db.install/_attribute :db.part/db}
+                   {:db/ident              :todo/todo-title
+                    :db/id                 #db/id [:db.part/db]
+                    :db/valueType          :db.type/string
+                    :db/cardinality        :db.cardinality/one
+                    :db.install/_attribute :db.part/db}
 
-                     {:db/ident              :todo/created-by
-                      :db/id                 #db/id [:db.part/db]
-                      :db/valueType          :db.type/ref
-                      :db/cardinality        :db.cardinality/one
-                      :db.install/_attribute :db.part/db}
+                   {:db/ident              :todo/created-by
+                    :db/id                 #db/id [:db.part/db]
+                    :db/valueType          :db.type/ref
+                    :db/cardinality        :db.cardinality/one
+                    :db.install/_attribute :db.part/db}
 
-                     {:db/ident              :todo/todo-list
-                      :db/id                 #db/id [:db.part/db]
-                      :db/valueType          :db.type/ref
-                      :db/cardinality        :db.cardinality/one
-                      :db.install/_attribute :db.part/db}
+                   {:db/ident              :todo/todo-list
+                    :db/id                 #db/id [:db.part/db]
+                    :db/valueType          :db.type/ref
+                    :db/cardinality        :db.cardinality/one
+                    :db.install/_attribute :db.part/db}
 
-                     {:db/ident              :project/todo-lists
-                      :db/id                 #db/id [:db.part/db]
-                      :db/valueType          :db.type/ref
-                      :db/cardinality        :db.cardinality/many
-                      :db.install/_attribute :db.part/db}
+                   {:db/ident              :project/todo-lists
+                    :db/id                 #db/id [:db.part/db]
+                    :db/valueType          :db.type/ref
+                    :db/cardinality        :db.cardinality/many
+                    :db.install/_attribute :db.part/db}
 
-                     {:db/ident              :project/created-by
-                      :db/id                 #db/id [:db.part/db]
-                      :db/valueType          :db.type/ref
-                      :db/cardinality        :db.cardinality/one
-                      :db.install/_attribute :db.part/db}])))}})
+                   {:db/ident              :project/created-by
+                    :db/id                 #db/id [:db.part/db]
+                    :db/valueType          :db.type/ref
+                    :db/cardinality        :db.cardinality/one
+                    :db.install/_attribute :db.part/db}]))}})
 
 ;;---
 ;; tests

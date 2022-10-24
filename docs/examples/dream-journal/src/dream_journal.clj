@@ -24,9 +24,6 @@
 ;; use mg/generate to generate examples
 (mg/generate User)
 
-;; =>
-{:id 37550, :username "EiaB5V3xqYDa11x7rZ"}
-
 ;;---
 ;; now we set up datapotato
 ;;---
