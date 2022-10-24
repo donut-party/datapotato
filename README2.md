@@ -211,6 +211,6 @@ TODO link to examples with next.jdbc
 Extended docs are in the wiki. Docs include:
 
 * Getting Started, begin using datapotato for your project
-* Advanced Potatoes, exploring more datapotato handles cases like polymorphic
+* Advanced Potatoes, exploring how datapotato handles cases like polymorphic
   types
 * Inner Workings explains the inner model datapotato uses to generate records

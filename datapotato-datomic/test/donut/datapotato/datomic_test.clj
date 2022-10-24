@@ -117,6 +117,7 @@
 ;;---
 
 (defn q
+  "lil helper helpin out"
   [connection query]
   (->> (d/q query (d/db connection))
        (map first)

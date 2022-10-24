@@ -22,7 +22,14 @@
 
 (defmulti get-inserted
   "retrieve data from the db after it's been inserted to account for e.g.
-  auto-incrementing ids"
+  auto-incrementing ids. Takes a map of:
+
+  * :dbtype - \"postgres\", \"mysql\", etc. if present, used to dispatch to
+    method
+  * :dbspec - used to connect to a database if needed
+  * :connection - the active connection created by with-fixtures
+  * :table-name - name of the table that record was inserted into
+  * :insert-result - return value of sql/insert!"
   (fn get-inserted-dispatch [{:keys [dbtype dbspec]}]
     (or dbtype (:dbtype dbspec))))
 
