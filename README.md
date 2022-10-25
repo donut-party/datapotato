@@ -1,20 +1,13 @@
-<img align="right" src="docs/small-monstahs.png">
+# datapotato: better database fixtures for tests!
 
-# Datapotato
-
-* [Short Sweet Example](https://sweet-tooth.gitbook.io/datapotato/#short-sweet-example)
-* [Infomercial](https://sweet-tooth.gitbook.io/datapotato/infomercial)
-* [Tutorial](https://sweet-tooth.gitbook.io/datapotato/tutorial)
-* [Interactive Demo](https://donut.github.io/datapotato/)
-
-## Deps
-
-[![Clojars Project](https://img.shields.io/clojars/v/party.donut/datapotato.svg)](https://clojars.org/party.donut/datapotato)
+* [Purpose](#purpose)
+* [Getting started](#getting-started)
+* [Docs](#docs)
 
 ## Purpose
 
-Datapotato lets you write test fixtures that are clear, concise, and easy to
-maintain. It's great for dramatically reducing test boilerplate.
+datapotato lets you manage test fixtures in a way that's clear, concise, and
+easy to maintain. It's great for dramatically reducing test boilerplate.
 
 Say you want to test a scenario where a forum post has gotten three likes by
 three different users. You'd first have to create a hierarchy of records for the
@@ -22,10 +15,33 @@ post, topic, topic category, and users. You have to make sure that all the
 foreign keys are correct (e.g. the post's `:topic-id` is set to the topic's
 `:id`) and that everything is inserted in the right order.
 
-With Datapotato, all you have to do is **write code like this**:
+Normally, you'd have to write code like this 😭
 
 ```clojure
-(insert {:like [{:count 3}]})
+(let [user-1         (insert :users (generate-user))
+      user-2         (insert :users (generate-user))
+      user-3         (insert :users (generate-user))
+      topic-category (insert :topic-categories (generate-topic-category {:created-by-id (:id user-1)
+                                                                         :updated-by-id (:id user-1)}))
+      topic          (insert :topics (generate-topic {:topic-category-id (:id topic-category)
+                                                      :created-by-id     (:id user-1)
+                                                      :updated-by-id     (:id user-1)}))
+      post           (insert :posts (generate-post {:topic-id      (:id topic)
+                                                    :created-by-id (:id user-1)
+                                                    :updated-by-id (:id user-1)}))
+      like-1         (insert :likes (generate-like {:post-id       (:id post)
+                                                    :created-by-id (:id user-1)}))
+      like-2         (insert :likes (generate-like {:post-id       (:id post)
+                                                    :created-by-id (:id user-2)}))
+      like-3         (insert :likes (generate-like {:post-id       (:id post)
+                                                    :created-by-id (:id user-3)}))])
+```
+
+With datapotato, all you have to do is **write code like this**:
+
+```clojure
+(dc/with-fixtures potato-db
+  (dc/insert-fixtures {:like [{:count 3}]}))
 ```
 
 and **these records get inserted** in a database (in the order displayed):
@@ -46,37 +62,42 @@ and **these records get inserted** in a database (in the order displayed):
  [:like {:id 21 :post-id 10 :created-by-id 20}]]
 ```
 
-If you like tools that help you write code that's **clear**, **concise**, and
-**easy to maintain**, then [check out the
-tutorial](https://sweet-tooth.gitbook.io/datapotato/tutorial) and learn how to
-use Datapotato :)
+When you're dealing with fixture data by hand, you end up obscuring your code's
+intent because you have to create so many let bindings that aren't directly
+related to what you're trying to test; it's hard to see what's relevant and
+what's not. What's more, you have to slog through the tedium of making sure that
+foreign keys are set correctly. You weren't meant to spend your one wild and
+precious life making sure you lined up your test ids right.
 
-## Short Sweet Example
+datapotato handles all that for you, and the result is something that's easier
+to write and easier to understand.
 
-If you're more of a _gimme fun now_ kind of person, then try out this
-little interactive example. First, clone Datapotato:
+## Example
 
-```
-git clone https://github.com/donut-power/datapotato.git
-```
+This example is meant to give you a feel for working with datapotato. It shows
+the pieces you need to set up so that you can start using datapotato to generate
+and insert fixtures. These pieces include:
 
-Open `examples/short-sweet/short_sweet.clj` in your favorite editor
-and start a REPL. I've also included the code below in case for
-example you don't have access to a REPL because, say, you're in some
-kind of Taken situation and you only have access to a phone and you're
-using your precious battery life to go through this README.
+* Specs to generate data (malli is used here, but you can also use clojure.spec
+  or plumatic schema or even your own bespoke data generators)
+* A `potato-db` configuration, which includes:
+  * A schema that tells datapotato what types of entities there are, how they're
+    related, and how to generate them
+  * Configuration for data generation
+  * Configuration for insertion
 
-The first ~66 lines of code include all the setup necessary for the
-examples to run, followed by snippets to try out with example
-output. Definitely play with the snippets 😀 Can you generate multiple
-todos or todo lists?
+It doesn't interact with a real database. Rather, it adds generated data to an
+atom containing a vector.
 
-``` clojure
+TODO link to examples with next.jdbc
+
+```clojure
 (ns short-sweet
   (:require
-   [clojure.spec.alpha :as s]
-   [clojure.spec.gen.alpha :as gen]
-   [donut.datapotato.core :as dc]))
+   [clojure.test.check.generators :as gen :include-macros true]
+   [donut.datapotato.atom :as da]
+   [donut.datapotato.core :as dc]
+   [malli.generator :as mg]))
 
 ;;-------*****--------
 ;; Begin example setup
@@ -85,198 +106,113 @@ todos or todo lists?
 ;; ---
 ;; Define specs for our domain entities
 
-;; The ::id should be a positive int, and to generate it we increment
-;; the number stored in `id-atom`. This ensures unique ids and produces
-;; values that are easier for humans to understand
+;; IDs should be a positive int, and to generate it we increment the number
+;; stored in `id-atom`. This ensures unique ids and produces predictable values
 (def id-atom (atom 0))
-(s/def ::id (s/with-gen pos-int? #(gen/fmap (fn [_] (swap! id-atom inc)) (gen/return nil))))
-(s/def ::not-empty-string (s/and string? not-empty #(< (count %) 10)))
+(def monotonic-id-gen
+  (gen/fmap (fn [_] (swap! id-atom inc)) (gen/return nil)))
 
-(s/def ::username ::not-empty-string)
-(s/def ::user (s/keys :req-un [::id ::username]))
+(def ID
+  [:and {:gen/gen monotonic-id-gen} pos-int?])
 
-(s/def ::created-by-id ::id)
-(s/def ::content ::not-empty-string)
-(s/def ::post (s/keys :req-un [::id ::created-by-id ::content]))
+(def User
+  [:map
+   [:user/id ID]
+   [:user/username string?]])
 
-(s/def ::post-id ::id)
-(s/def ::like (s/keys :req-un [::id ::post-id ::created-by-id]))
+(def Post
+  [:map
+   [:post/id ID]
+   [:post/created-by-id pos-int?]
+   [:post/content string?]])
+
+
+(def Like
+  [:map
+   [:like/id ID]
+   [:like/post-id pos-int?]
+   [:like/created-by-id pos-int?]])
 
 ;; ---
-;; The schema defines datapotato `ent-types`, which roughly
-;; correspond to db tables. It also defines the `:spec` for generting
-;; ents of that type, and defines ent `relations` that specify how
-;; ents reference each other
-(def schema
+;; Our "db" is an atom holding a vector of inserted records we can use to show
+;; that entities are inserted in the correct order
+(def mock-db (atom []))
+
+;; The datapotato schema defines `ent-types`, which roughly correspond to db
+;; tables. Below, the ent-types are `:user`, `:post`, and `:like.` The ent-type
+;; schemas include a `:generate` key, which includes the `:schema` used to
+;; generate records fo that type. The `:relations` key specifies how ents
+;; reference each other. Relations correspond to foreign keys.
+
+(def potato-schema
   {:user {:prefix   :u
-          :generate {:schema ::user}}
+          :generate {:schema User}
+          :fixtures {:table-name "users"}}
    :post {:prefix    :p
-          :generate  {:schema ::post}
+          :generate  {:schema Post}
+          :fixtures  {:table-name "posts"}
           :relations {:created-by-id [:user :id]}}
    :like {:prefix      :l
-          :generate    {:schema ::like}
+          :generate    {:schema Like}
+          :fixtures    {:table-name "likes"}
           :relations   {:post-id       [:post :id]
                         :created-by-id [:user :id]}
           :constraints {:created-by-id #{:uniq}}}})
 
-;; Our "db" is a vector of inserted records we can use to show that
-;; entities are inserted in the correct order
-(def mock-db (atom []))
+;; The potato-db contains configuration for generating records and ensuring their
+;; foreign keys are correct, and for managing test lifecycle
+(def potato-db
+  {:schema   potato-schema
+   :generate {:generator mg/generate}
+   :fixtures {:insert da/insert
+              :setup  (fn [_]
+                        (reset! mock-db [])
+                        (reset! id-atom 0))
+              :atom   mock-db}})
 
-(defn insert-in-atom
-  "Simulates inserting records in a db by conjing values onto an atom. ent-type is
-  `:user`, `:post`, or `:like`, corresponding to the keys in the schema.
-  `visit-val` is the map generated by clojure.spec"
-  [_ent-db {:keys [ent-type visit-val]}]
-  (swap! mock-db conj [ent-type visit-val]))
 
-(def insert-visiting-fn
-  (dc/wrap-incremental-insert-visiting-fn :generate insert-in-atom))
-
-(def ent-db
-  {:schema   schema
-   :generate {:generator (comp gen/generate s/gen)}})
-
-(defn insert
-  [query]
-  (reset! id-atom 0)
-  (reset! mock-db [])
-  (-> ent-db
-      (dc/generate query)
-      (dc/visit-ents-once :inserted-data insert-visiting-fn))
-  ;; normally you'd return the expression above, but return nil for
-  ;; the example to not produce overwhelming output
-  nil)
 
 ;;-------*****--------
 ;; Begin snippets to try in REPL
 ;;-------*****--------
 
+;; The next two examples show that records are inserted into the simulated
+;; "database" (`mock-db`) in correct dependency order:
+(dc/with-fixtures potato-db
+  (dc/insert-fixtures {:like [{:count 1}]}))
+@mock-db
+
+(dc/with-fixtures potato-db
+  (dc/insert-fixtures {:post [{:count 2}]
+                       :like [{:count 3}]}))
+@mock-db
+
+;; The examples below show how you can experiment with generating data without
+;; inserting it.
+
 ;; Return a map of user entities and their spec-generated data
-(dc/generate-attr-map ent-db {:user [{:count 3}]})
+(dc/generate potato-db {:user [{:count 3}]})
 
 ;; You can specify a username and id
-(dc/generate-attr-map ent-db {:user [{:count      1
-                                      :generate {:username "Meeghan"
-                                                 :id       100}}]})
+(dc/generate potato-db {:user [{:count    1
+                                :generate {:username "Meeghan"
+                                           :id       100}}]})
 
 ;; Generating a post generates the user the post belongs to, with
 ;; foreign keys correct
-(dc/generate-attr-map ent-db {:post [{:count 1}]})
+(dc/generate potato-db {:post [{:count 1}]})
 
 ;; Generating a like also generates a post and user
-(dc/generate-attr-map ent-db {:like [{:count 1}]})
-
-;; The `insert` function shows that records are inserted into the
-;; simulate "database" (`mock-db`) in correct dependency order:
-(insert {:like [{:count 1}]})
-@mock-db
+(dc/generate potato-db {:like [{:count 1}]})
 ```
 
-## Usage
+## Docs
 
-This is meant as a quick reference. If none of the terms below make
-sense, [check out the
-tutorial](https://sweet-tooth.gitbook.io/datapotato/tutorial).
+Extended docs are in the wiki. Docs include:
 
-In Datapotato, you _add ents_ to an _ent db_ using a _schema_ and
-_query_. You associate ents with attributes (and perform side effects
-like db insertion) using _visiting functions_.
-
-### Schema
-
-A schema is a map of _ent types_ to _ent type schemas_:
-
-```clojure
-;; example schema
-(def schema
-  {:user {:prefix :u}
-   :post {:prefix :p}
-   :like {:prefix      :l
-          :generate    {:schema ::like}
-          :relations   {:post-id       [:post :id]
-                        :created-by-id [:user :id]}
-          :constraints {:created-by-id #{:uniq}}}})
-```
-
-* Every ent type schema must have a `:prefix` key. This is used to
-  name the ents Datapotato generates.
-* `:generate` is used by `donut.datapotato.core/generate` to generate values for
-   ents. Its value is a map that includes a `:schema` key, whose value is used
-   by a _generator_ (like `clojure.spec.gen.alpha/generate` or
-   `malli.generator`)
-* `:relations` specify how ents of different types reference each other
-* `:constraints` provide additional rules around ent generation and visitation:
-  * `:uniq` means that every generated ent must reference a unique ent of the
-    given type. In the schema above, multiple `:like`s must each reference a
-    distinct `:user`.
-  * `:coll` indicates that the given attribute can reference multiple ents. [See
-    the
-    tutorial](https://sweet-tooth.gitbook.io/datapotato/tutorial/11-collect-constraint-vector-of-foreign-keys)
-  * `:required` is used to indicate ent sort order when your ent graph has a cycle
-
-You can also add arbitrary keys to the schema matching the `visit-key`s you give
-to visiting functions. The schema will be available to the visiting function
-under the key `schema-opts`.
-
-### Queries
-
-You specify ents to add to an _ent db_ using a _query_:
-
-```clojure
-(dc/add-ents {:schema schema} {:like [{:count 3}})
-```
-
-Above, `{:like [{:count 3}}` is a query meaning "Add 3 likes to the ent db, as
-well as the hierarchy of ents necessary for 3 likes to be present."
-
-When you add ents to the ent db, that means that Datapotato has created a graph
-node to represent the ent and added it an internal graph that represents all
-their ents and their relationships.
-
-### Visiting functions
-
-You can apply a function to each ent's graph node in topologically sorted
-(topsort) order and associate the return value as a node attribute.
-
-(Topsort means that if a `:post` references a `:user`, then the `:user` will be
-placed before the `:post` in the sort.)
-
-```clojure
-(-> (dc/add-ents {:schema good-schema} {:like [{:count 3}})
-    (dc/visit-ents :prn (fn [db {:keys [ent-name ent-type]}]
-                          (prn [ent-name ent-type]))))
-[:u1 :user]
-[:p0 :post]
-[:l1 :like]
-[:u0 :user]
-[:l0 :like]
-[:u2 :user]
-[:l2 :like]
-```
-
-In the example above, `dc/visit-ents` is used to apply an anonymous function to
-every ent, printing the ent's name and type. The `:prn` key is called the _visit
-key_. The return value of the visiting function is associated with each ent node
-using the visit key.
-
-The first argument to the visit function is always the entire ent db. The second
-argument is a map that includes the following keys:
-
-* `:ent-name`: `:u0`, `:u1` and the like
-* `:attrs`: a map of all node attrs for the ent. These attrs are also merged
-  into the map passed to the visit function
-* `:visit-val` - current value of the visit attr for this node. Could be present
-  from previous visits.
-* `:visit-key`, the key used to associate the return value of the visit fn with
-  the node
-* `:query-opts`: any options you might have included in the query used to
-  generate this node
-* `:visit-query-opts`: just looks up the value of `:visit-key` in the
-  `:query-opts` map
-* `:schema-opts`: any options set for `:visit-key` in the schema
-
-## TODO
-
-- document `:bind` syntax
-- document `wrap-generate-visiting-fn`
+* [Getting Started](../../../wiki/getting-started.md), begin using datapotato for your project
+* Database integration has instructions on working with datomic, next-jdbc,
+  xtdb, or the database of your choice
+* Advanced Potatoes, exploring how datapotato handles cases like polymorphic
+  types
+* Inner Workings explains the inner model datapotato uses to generate records
