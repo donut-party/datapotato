@@ -1,23 +1,23 @@
 (ns donut.datapotato-tutorial.03
-  (:require [donut.datapotato.core :as sm]))
+  (:require [donut.datapotato.core :as dc]))
 
-(def schema
+(def potato-schema
   {:user {:prefix :u}
    :post {:prefix    :p
           :relations {:owner-id [:user :id]}}})
 
+(def potato-db
+  {:schema potato-schema})
+
 (defn ex-01
   []
-  (sm/add-ents {:schema schema} {:post [[2]]}))
+  (dc/add-ents potato-db {:post [{:count 2}]}))
 
 (defn ex-02
   []
-  (sm/add-ents {:schema schema} {:post [[:my-post]
-                                        [:blorp-post]]}))
+  (dc/add-ents potato-db {:user [{:ent-name :admin}]}))
 
 (defn ex-03
   []
-  (sm/add-ents {:schema schema} {:post [[1]
-                                        [:work]
-                                        [1]
-                                        [:cones-of-dunshire-club]]}))
+  (dc/add-ents potato-db {:post [{:count 3}
+                                 {:ent-name :most-favorited-post}]}))

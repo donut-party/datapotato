@@ -1,7 +1,9 @@
 # datapotato: better database fixtures for tests! 🥔
 
 * [Purpose](#purpose)
-* [Getting started](#getting-started)
+* [Example](#example)
+* [Spec Example](#spec-example)
+* [Advanced usage](#advanced-usage)
 * [Docs](#docs)
 
 ## Purpose
@@ -205,6 +207,8 @@ with a real database.)
 ;; Generating a like also generates a post and user
 (dc/generate potato-db {:like [{:count 1}]})
 ```
+
+## Advanced usage
 
 ## Docs
 

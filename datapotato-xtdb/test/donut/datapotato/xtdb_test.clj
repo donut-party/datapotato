@@ -69,7 +69,7 @@
 
 (defn q
   [query]
-  (->> (xt/q (xt/db @node-atom) query)
+  (->> (xt/q (xt/db dc/*connection*) query)
        (map first)
        (sort-by :xt/id)))
 

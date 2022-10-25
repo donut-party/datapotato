@@ -1,19 +1,21 @@
 (ns donut.datapotato-tutorial.01
-  (:require [donut.datapotato.core :as sm]
-            [loom.io :as lio]))
+  (:require [donut.datapotato.core :as dc]))
 
-(def schema
+(def potato-schema
   {:user {:prefix :u}})
+
+(def potato-db
+  {:schema potato-schema})
 
 (defn ex-01
   []
-  (sm/add-ents {:schema schema} {:user [[3]]}))
+  (dc/add-ents potato-db {:user [{:count 3}]}))
 
-(-> (ex-01) (sm/ents-by-type))
+(-> (ex-01) (dc/ents-by-type))
 
-(-> (ex-01) (sm/ent-relations :u0))
+(-> (ex-01) (dc/ent-relations :u0))
 
-(-> (ex-01) (sm/all-ent-relations))
+(-> (ex-01) (dc/all-ent-relations))
 
 (comment
   ;; evaluating this:
