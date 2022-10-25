@@ -1,4 +1,4 @@
-# datapotato: better database fixtures for tests!
+# datapotato: better database fixtures for tests! 🥔
 
 * [Purpose](#purpose)
 * [Getting started](#getting-started)
@@ -87,9 +87,9 @@ and insert fixtures. These pieces include:
   * Configuration for insertion
 
 It doesn't interact with a real database. Rather, it adds generated data to an
-atom containing a vector.
-
-TODO link to examples with next.jdbc
+atom containing a vector. (See [database
+integration](../../wiki/database-integration.md) for instructions on working
+with a real database.)
 
 ```clojure
 (ns short-sweet
@@ -208,11 +208,8 @@ TODO link to examples with next.jdbc
 
 ## Docs
 
-Extended docs are in the wiki. Docs include:
+Extended docs are in the [wiki](../../wiki). Docs include:
 
-* [Getting Started](../../../wiki/getting-started.md), begin using datapotato for your project
-* Database integration has instructions on working with datomic, next-jdbc,
-  xtdb, or the database of your choice
-* Advanced Potatoes, exploring how datapotato handles cases like polymorphic
-  types
-* Inner Workings explains the inner model datapotato uses to generate records
+* [Getting Started](../../wiki/getting-started.md), begin using datapotato for your project
+* [Database integration](../../wiki/database-integration.md) has instructions on
+  working with datomic, next-jdbc, xtdb, or the database of your choice
