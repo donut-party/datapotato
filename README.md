@@ -88,7 +88,7 @@ and insert fixtures. These pieces include:
 
 It doesn't interact with a real database. Rather, it adds generated data to an
 atom containing a vector. (See [database
-integration](../../wiki/database-integration.md) for instructions on working
+integration](../../wiki/database-integration) for instructions on working
 with a real database.)
 
 ```clojure
@@ -210,6 +210,6 @@ with a real database.)
 
 Extended docs are in the [wiki](../../wiki). Docs include:
 
-* [Getting Started](../../wiki/getting-started.md), begin using datapotato for your project
-* [Database integration](../../wiki/database-integration.md) has instructions on
+* [Getting Started](../../wiki/getting-started), begin using datapotato for your project
+* [Database integration](../../wiki/database-integration) has instructions on
   working with datomic, next-jdbc, xtdb, or the database of your choice
