@@ -827,7 +827,7 @@
 ;; visiting w/ referenced vals
 ;; -----------------
 
-(def test-visiting-key :test-visiting-fn)
+(def test-visiting-key :test-visit-fn)
 
 (deftest test-assoc-referenced-vals
   (let [gen-id (fn [db {:keys [ent-name] :as v}]
@@ -900,8 +900,8 @@
 ;; generating and inserting
 ;;---
 
-(deftest test-wrap-generate-visiting-fn
-  (let [gen-id (dc/wrap-generate-visiting-fn
+(deftest test-wrap-generate-visit-fn
+  (let [gen-id (dc/wrap-generate-visit-fn
                 (fn [_db {:keys [ent-name]}]
                   {:id (str ent-name "-id")}))]
     (is (= {:custom-user {:id ":overwritten-id"}
@@ -917,8 +917,8 @@
                (dc/visit-ents-once test-visiting-key gen-id)
                (dc/attr-map test-visiting-key))))))
 
-(deftest test-wrap-generate-visiting-fn-overwrites
-  (let [gen-id      (dc/wrap-generate-visiting-fn
+(deftest test-wrap-generate-visit-fn-overwrites
+  (let [gen-id      (dc/wrap-generate-visit-fn
                      (fn [_db {:keys [ent-name]}]
                        {:id (str ent-name "-id")}))
         test-schema (assoc-in td/schema [:user test-visiting-key :set] {:id ":schema-overwrite"})]
@@ -937,12 +937,12 @@
                (dc/visit-ents-once test-visiting-key gen-id)
                (dc/attr-map test-visiting-key))))))
 
-(deftest test-wrap-incremental-insert-visiting-fn
+(deftest test-wrap-incremental-insert-visit-fn
   (let [inserted (atom [])
-        gen-id   (dc/wrap-generate-visiting-fn
+        gen-id   (dc/wrap-generate-visit-fn
                   (fn [_db {:keys [ent-name]}]
                     {:id (str ent-name "-id")}))
-        insert   (dc/wrap-incremental-insert-visiting-fn
+        insert   (dc/wrap-incremental-insert-visit-fn
                   :gen
                   (fn [_db {:keys [visit-val]}]
                     (swap! inserted conj visit-val)

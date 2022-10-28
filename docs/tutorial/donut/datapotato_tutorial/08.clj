@@ -1,42 +1,44 @@
 (ns donut.datapotato-tutorial.08
-  (:require [donut.datapotato.core :as sm]))
+  (:require [donut.datapotato.core :as dc]
+            [malli.generator :as mg]))
 
-(def schema
-  {:user  {:prefix :u}
-   :topic {:prefix    :t
-           :relations {:owner-id [:user :id]}}
-   :post  {:prefix    :p
-           :relations {:topic-id [:topic :id]}}})
+(def User
+  [:map
+   [:id pos-int?]
+   [:favorite-ids [:vector pos-int?]]])
 
-(defn announce
-  [db {:keys [ent-name]}]
-  (str "announcing... " ent-name "!"))
+(def Topic
+  [:map
+   [:id pos-int?]])
+
+(def potato-schema
+  {:user  {:prefix      :u
+           :generate    {:schema User}
+           :relations   {:favorite-ids [:topic :id]}
+           :constraints {:favorite-ids #{:coll}}}
+   :topic {:prefix   :t
+           :generate {:schema Topic}}})
+
+(def potato-db
+  {:schema   potato-schema
+   :generate {:generator mg/generate}})
 
 (defn ex-01
   []
-  (-> (sm/add-ents {:schema schema} {:post [[1]]})
-      (sm/visit-ents :announce announce)
-      (get-in [:data :attrs])))
+  (dc/generate potato-db {:user [{:count 1}]}))
 
-(ex-01)
-;; =>
-{:post  {:type :ent-type},
- :p0    {:type                 :ent,
-         :index                0,
-         :ent-type             :post,
-         :query-term           [1],
-         :loom.attr/edge-attrs {:t0 {:relation-attrs #{:topic-id}}},
-         :announce             "announcing... :p0!"},
- :topic {:type :ent-type},
- :t0    {:type                 :ent,
-         :index                0,
-         :ent-type             :topic,
-         :query-term           [:_],
-         :loom.attr/edge-attrs {:u0 {:relation-attrs #{:owner-id}}},
-         :announce             "announcing... :t0!"},
- :user  {:type :ent-type},
- :u0    {:type       :ent,
-         :index      0,
-         :ent-type   :user,
-         :query-term [:_],
-         :announce   "announcing... :u0!"}}
+(defn ex-02
+  []
+  (dc/generate potato-db {:user [{:refs {:favorite-ids 3}}]}))
+
+(defn ex-03
+  []
+  (dc/view (dc/add-ents potato-db
+                        {:user [{:refs {:count 2
+                                        :favorite-ids 3}}]})))
+
+(defn ex-04
+  []
+  (dc/view (dc/add-ents potato-db
+                        {:user [[1 {:refs {:favorite-ids [:my-p0 :my-p1]}}]
+                                [1 {:refs {:favorite-ids [:my-p2 :my-p3]}}]]})))

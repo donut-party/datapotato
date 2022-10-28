@@ -1016,11 +1016,11 @@
 ;; generating
 ;;---
 
-(defn wrap-generate-visiting-fn
+(defn wrap-generate-visit-fn
   "Useful when writing visiting fns where data generated for ent A needs to be
   referenced by ent B."
-  [data-generating-visiting-fn]
-  [data-generating-visiting-fn
+  [data-generating-visit-fn]
+  [data-generating-visit-fn
    reset-relations
    merge-overwrites
    assoc-referenced-vals])
@@ -1050,8 +1050,8 @@
   [potato-db]
   (visit-ents-once potato-db
                    generate-visit-key
-                   (wrap-generate-visiting-fn
-                    (fn generate-visiting-fn [db {:keys [ent-name visit-query-opts ent-type]}]
+                   (wrap-generate-visit-fn
+                    (fn generate-visit-fn [db {:keys [ent-name visit-query-opts ent-type]}]
                       (let [ent-schema-generate (generate-visit-key (ent-schema db ent-name))
                             schema              (or (:schema visit-query-opts)
                                                     (:schema ent-schema-generate))
@@ -1091,21 +1091,21 @@
 (def ^:dynamic *connection*)
 (def ^:dynamic *potato-db*)
 
-(defn wrap-incremental-insert-visiting-fn
+(defn wrap-incremental-insert-visit-fn
   "Takes generated data stored as an attributed under `source-key` and inserts it
-  using `inserting-visiting-fn`.
+  using `inserting-visit-fn`.
 
   Respects overwrites and ensures that referenced vals are assoc'd in before
   inserting. Useful when dealing with db-generated ids."
-  [source-key inserting-visiting-fn]
-  (fn incremental-insert-visiting-fn [potato-db opts]
-    (reduce (fn [visit-val visiting-fn]
-              (visiting-fn potato-db (assoc opts :visit-val visit-val)))
+  [source-key inserting-visit-fn]
+  (fn incremental-insert-visit-fn [potato-db opts]
+    (reduce (fn [visit-val visit-fn]
+              (visit-fn potato-db (assoc opts :visit-val visit-val)))
             (source-key opts)
             [reset-relations
              merge-overwrites
              assoc-referenced-vals
-             inserting-visiting-fn])))
+             inserting-visit-fn])))
 
 (defn insert-fixtures*
   [potato-db]
@@ -1114,9 +1114,9 @@
                          (get-connection potato-db)))]
     (visit-ents-once (assoc-in potato-db [fixtures-visit-key :connection] connection)
                      fixtures-visit-key
-                     (wrap-incremental-insert-visiting-fn
+                     (wrap-incremental-insert-visit-fn
                       generate-visit-key
-                      (fn insert-visiting-fn [potato-db {:keys [ent-name visit-query-opts] :as visit-data}]
+                      (fn insert-visit-fn [potato-db {:keys [ent-name visit-query-opts] :as visit-data}]
                         (let [insert (or (insert-key visit-query-opts)
                                          (get-in (ent-schema potato-db ent-name) [fixtures-visit-key insert-key])
                                          (get-in potato-db [fixtures-visit-key insert-key]))]

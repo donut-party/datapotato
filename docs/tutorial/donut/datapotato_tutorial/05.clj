@@ -1,21 +1,20 @@
 (ns donut.datapotato-tutorial.05
-  (:require [donut.datapotato.core :as sm]))
+  (:require [donut.datapotato.core :as dc]))
 
-(def schema
+(def potato-schema
   {:user  {:prefix :u}
    :topic {:prefix    :t
            :relations {:owner-id [:user :id]}}})
 
+(def potato-db
+  {:schema potato-schema})
+
 (defn ex-01
   []
-  (let [ent-db-1 (sm/add-ents {:schema schema} {:topic [[1]]})
-        ent-db-2 (sm/add-ents ent-db-1 {:topic [[1]
-                                                [1 {:refs {:owner-id :hamburglar}}]]})]
-    (sm/view ent-db-1)
-    (sm/view ent-db-2)))
+  (let [potato-db-1 (dc/add-ents {:schema potato-schema} {:topic [{:count 1}]})
+        potato-db-2 (dc/add-ents potato-db-1 {:topic [{:count 1}
+                                                      {:refs {:owner-id :hamburglar}}]})]
+    (dc/view potato-db-1)
+    (dc/view potato-db-2)))
 
 (ex-01)
-
-
-(sm/add-ents ent-db-1 {:topic [[1]
-                               [1 {:refs {:owner-id :hamburglar}}]]})

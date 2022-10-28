@@ -32,3 +32,7 @@
                                    :refs     {:owner-id :hamburglar}}]
                           :post  [{:refs {:topic :tl0}}
                                   {:refs {:topic :tl1}}]}))
+
+(defn ex-04
+  []
+  (dc/add-ents potato-db {:topic [{:refs {:owner-id ::dc/omit}}]}))
