@@ -5,7 +5,6 @@
 * [Purpose](#purpose)
 * [Example](#example)
 * [Spec Example](#spec-example)
-* [Advanced usage](#advanced-usage)
 * [Docs](#docs)
 
 ## Purpose
@@ -209,6 +208,31 @@ with a real database.)
 ;; Generating a like also generates a post and user
 (dc/generate potato-db {:like [{:count 1}]})
 ```
+
+## Spec Example
+
+To use clojure spec, you'd write code that looks like this:
+
+
+``` clojure
+(s/def ::user ...)
+(def potato-schema
+  {:user {:prefix   :u
+          :generate {:schema ::user}
+          :fixtures {:table-name "users"}}})
+
+(def potato-db
+  {:schema   potato-schema
+   :generate {:generator (comp clojure.spec.gen.alph/generate clojure.spec.alpha/gen)}
+   :fixtures {:insert da/insert
+              :setup  (fn [_]
+                        (reset! mock-db [])
+                        (reset! id-atom 0))
+              :atom   mock-db}})
+```
+
+Note the use of `::user` and `(comp clojure.spec.gen.alph/generate
+clojure.spec.alpha/gen)`.
 
 ## Docs
 
