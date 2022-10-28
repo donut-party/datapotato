@@ -1,4 +1,5 @@
 (ns donut.datapotato-tutorial.05
+  "progressive construction"
   (:require [donut.datapotato.core :as dc]))
 
 (def potato-schema
@@ -14,7 +15,7 @@
   (let [potato-db-1 (dc/add-ents {:schema potato-schema} {:topic [{:count 1}]})
         potato-db-2 (dc/add-ents potato-db-1 {:topic [{:count 1}
                                                       {:refs {:owner-id :hamburglar}}]})]
-    (dc/view potato-db-1)
-    (dc/view potato-db-2)))
+    (dc/view potato-db-1 :fmt :svg)
+    (dc/view potato-db-2 :fmt :svg)))
 
 (ex-01)
