@@ -1,5 +1,7 @@
 # datapotato: better database fixtures for tests! 🥔
 
+[![Clojars Project](https://img.shields.io/clojars/v/party.donut/datapotato.svg)](https://clojars.org/party.donut/datapotato)
+
 * [Purpose](#purpose)
 * [Example](#example)
 * [Spec Example](#spec-example)
