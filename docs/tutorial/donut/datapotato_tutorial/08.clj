@@ -1,4 +1,5 @@
 (ns donut.datapotato-tutorial.08
+  "collect constraint"
   (:require [donut.datapotato.core :as dc]
             [malli.generator :as mg]))
 
@@ -33,12 +34,16 @@
 
 (defn ex-03
   []
-  (dc/view (dc/add-ents potato-db
-                        {:user [{:refs {:count 2
-                                        :favorite-ids 3}}]})))
+  (dc/add-ents potato-db
+               {:user [{:refs {:count 2
+                               :favorite-ids 3}}]}))
 
 (defn ex-04
   []
-  (dc/view (dc/add-ents potato-db
-                        {:user [[1 {:refs {:favorite-ids [:my-p0 :my-p1]}}]
-                                [1 {:refs {:favorite-ids [:my-p2 :my-p3]}}]]})))
+  (dc/add-ents potato-db
+               {:user [[1 {:refs {:favorite-ids [:my-p0 :my-p1]}}]
+                       [1 {:refs {:favorite-ids [:my-p2 :my-p3]}}]]}))
+
+(comment
+  (dc/view (ex-03) :fmt :svg)
+  (dc/view (ex-04) :fmt :svg))
