@@ -55,3 +55,10 @@
   []
   (dc/generate potato-db {:topic [{:count 1
                                    :refs  {:owner-id ::dc/omit}}]}))
+
+(comment
+  (dc/view (ex-01) :fmt :svg)
+  (dc/view (ex-02) :fmt :svg)
+  (dc/view (ex-03) :fmt :svg)
+  (dc/view (ex-04) :fmt :svg)
+  (dc/view (ex-05) :fmt :svg))

@@ -1,4 +1,5 @@
 (ns donut.datapotato-tutorial.07
+  "uniqueness constraint"
   (:require [donut.datapotato.core :as dc]))
 
 (def bad-schema
@@ -11,7 +12,7 @@
 
 (defn ex-01
   []
-  (dc/view (dc/add-ents {:schema bad-schema} {:like [[3]]})))
+  (dc/add-ents {:schema bad-schema} {:like [[3]]}))
 
 (def good-schema
   {:user {:prefix :u}
@@ -24,4 +25,8 @@
 
 (defn ex-02
   []
-  (dc/view (dc/add-ents {:schema good-schema} {:like [[3]]})))
+  (dc/add-ents {:schema good-schema} {:like [[3]]}))
+
+(comment
+  (dc/view (ex-01) :fmt :svg)
+  (dc/view (ex-02) :fmt :svg))
