@@ -1,4 +1,5 @@
 (ns donut.datapotato-tutorial.04
+  "refs"
   (:require [donut.datapotato.core :as dc]))
 
 (def potato-schema
@@ -36,3 +37,9 @@
 (defn ex-04
   []
   (dc/add-ents potato-db {:topic [{:refs {:owner-id ::dc/omit}}]}))
+
+(comment
+  (dc/view (ex-01) :fmt :svg)
+  (dc/view (ex-02) :fmt :svg)
+  (dc/view (ex-03) :fmt :svg)
+  (dc/view (ex-04) :fmt :svg))
