@@ -208,12 +208,23 @@ with a real database.)
 (dc/generate potato-db {:like [{:count 1}]})
 ```
 
-## Advanced usage
-
 ## Docs
 
 Extended docs are in the [wiki](../../wiki). Docs include:
 
-* [Getting Started](../../wiki/getting-started), begin using datapotato for your project
+* [Getting Started](../../wiki/getting-started), begin using datapotato for your
+  project
 * [Database integration](../../wiki/database-integration) has instructions on
   working with datomic, next-jdbc, xtdb, or the database of your choice
+* [Tutorial](../../wiki/01-potato-db), a walkthrough that covers some of
+  datapotato's underlying mechanisms and explains how to handle more complicated
+  scenarios, including:
+  * Uniqueness constraints (when two records shouldn't have the same pair of
+    foreign keys, e.g. when your app allows users to like posts, but a post
+    shouldn't be liked twice by the same user)
+  * Collection constraints (when a field refers to a sequence of foreign keys)
+  * Polymorphic references (when a field can refer to entities of different
+    types)
+* [Visiting Functions](../../wiki/visiting-functions), a look at one of
+  datapotato's underlying interfaces that is unlikely to be relevant for
+  day-to-day work but may be useful if you're trying to extend the library
