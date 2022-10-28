@@ -11,6 +11,8 @@
   []
   (dc/add-ents potato-db {:user [{:count 3}]}))
 
+(dc/view (ex-01) :fmt :svg)
+
 (-> (ex-01) (dc/ents-by-type))
 
 (-> (ex-01) (dc/ent-relations :u0))

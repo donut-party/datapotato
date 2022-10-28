@@ -923,8 +923,8 @@
      (require '[loom.io :as lio])
      (defn view
        "View with loom"
-       [{:keys [data]}]
-       (lio/view data))))
+       [{:keys [data]} & args]
+       (apply lio/view data args))))
 
 ;; -----------------
 ;; visiting w/ referenced vals
