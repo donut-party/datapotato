@@ -94,7 +94,7 @@ atom containing a vector. (See [database
 integration](../../wiki/database-integration) for instructions on working
 with a real database.)
 
-```clojure
+``` clojure
 (ns short-sweet
   (:require
    [clojure.test.check.generators :as gen :include-macros true]
@@ -154,13 +154,13 @@ with a real database.)
    :post {:prefix    :p
           :generate  {:schema Post}
           :fixtures  {:table-name "posts"}
-          :relations {:created-by-id [:user :id]}}
+          :relations {:post/created-by-id [:user :user/id]}}
    :like {:prefix      :l
           :generate    {:schema Like}
           :fixtures    {:table-name "likes"}
-          :relations   {:post-id       [:post :id]
-                        :created-by-id [:user :id]}
-          :constraints {:created-by-id #{:uniq}}}})
+          :relations   {:like/post-id       [:post :post/id]
+                        :like/created-by-id [:user :user/id]}
+          :constraints {:like/created-by-id #{:uniq}}}})
 
 ;; The potato-db contains configuration for generating records and ensuring their
 ;; foreign keys are correct, and for managing test lifecycle
@@ -181,14 +181,31 @@ with a real database.)
 
 ;; The next two examples show that records are inserted into the simulated
 ;; "database" (`mock-db`) in correct dependency order:
+
+;; example 1
 (dc/with-fixtures potato-db
   (dc/insert-fixtures {:like [{:count 1}]}))
 @mock-db
+;; =>
+[[:user #:user{:id 1, :username "l6DvOOzTz4BnuUV8E6DMOqx5"}]
+ [:post #:post{:id 2, :created-by-id 1, :content "2axPd3IG6"}]
+ [:like #:like{:id 3, :post-id 2, :created-by-id 1}]]
 
+;; example 2
 (dc/with-fixtures potato-db
   (dc/insert-fixtures {:post [{:count 2}]
                        :like [{:count 3}]}))
 @mock-db
+;; =>
+[[:user #:user{:id 1, :username "OW84O7k2Jor1bW6aK3"}]
+ [:user #:user{:id 2, :username "7MkRWt27W2q29Ehev"}]
+ [:post #:post{:id 3, :created-by-id 2, :content "i1xCUw8"}]
+ [:like #:like{:id 4, :post-id 3, :created-by-id 1}]
+ [:like #:like{:id 5, :post-id 3, :created-by-id 2}]
+ [:post #:post{:id 6, :created-by-id 2, :content "0JBdK4y7J7s0"}]
+ [:user #:user{:id 7, :username "42QN79LEmJ6NCw85oaSqmq1"}]
+ [:like #:like{:id 8, :post-id 3, :created-by-id 7}]]
+
 
 ;; The examples below show how you can experiment with generating data without
 ;; inserting it.

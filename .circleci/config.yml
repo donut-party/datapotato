@@ -97,7 +97,7 @@ jobs:
 
 workflows:
   version: 2
-  deploy:
+  build:
     jobs:
       - test-and-build
       - deploy:
