@@ -10,7 +10,14 @@
 ## Purpose
 
 datapotato lets you manage test fixtures in a way that's clear, concise, and
-easy to maintain. It's great for dramatically reducing test boilerplate.
+easy to maintain. It's great for dramatically reducing test boilerplate. It has
+integrations for
+[next-jdbc](https://github.com/donut-party/datapotato/wiki/database-integration#next-jdbc),
+[XTDB](https://github.com/donut-party/datapotato/wiki/database-integration#xtdb),
+and
+[datomic](https://github.com/donut-party/datapotato/wiki/database-integration#datomic).
+[Fluree](https://github.com/donut-party/datapotato/blob/main/datapotato-fluree/src/donut/datapotato/fluree.clj)
+integration is in progress.
 
 Say you want to test a scenario where a forum post has gotten three likes by
 three different users. You'd first have to create a hierarchy of records for the
