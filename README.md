@@ -84,9 +84,8 @@ to write and easier to understand.
 
 ## Example
 
-This example is meant to give you a feel for working with datapotato. It shows
-the pieces you need to set up so that you can start using datapotato to generate
-and insert fixtures. These pieces include:
+This example shows the pieces you need to start using datapotato to generate and
+insert fixtures:
 
 * Specs to generate data (malli is used here, but you can also use clojure.spec
   or plumatic schema or even your own bespoke data generators)
@@ -278,3 +277,33 @@ Extended docs are in the [wiki](../../wiki). Docs include:
 * [Visiting Functions](../../wiki/visiting-functions), a look at one of
   datapotato's underlying interfaces that is unlikely to be relevant for
   day-to-day work but may be useful if you're trying to extend the library
+
+## Forking Specmonstah
+
+This is a fork of [Specmonstah](https://github.com/reifyhealth/specmonstah). It
+should be 100% backwards-compatible; if you're using Specmonstah, the only thing
+you should have to change when switching to datapotato is namespace requires.
+
+Changes include:
+
+* **A flexible model for handling data generation.** The old model
+  provided out-of-the-box support for clojure.spec, but it was difficult to
+  understand how to support another tool like malli or plumatic schema. The new
+  model makes data generation pluggable.
+* **First-class support for inserting fixtures into databases.** With
+  Specmonstah, you have to roll your own tools for inserting the generated data
+  into a database, and learning how to do that is a bit of a time commitment.
+  datapotato provides helper libraries for working with xtdb, next-jdbc, and
+  datomic.
+  
+  Its improved design makes it easier for you to roll your own database
+  integration, if you need to. You only have to learn the insert API, instead of
+  having to learn the entire underlying model.
+* **Fixture lifecycle management.** The `with-fixtures` macro makes it easier to
+  manage fixture setup and teardown.
+* **User friendlier.** The main idea behind the fork is to provide interfaces
+  that are optimized for the primary intended use case, working with test
+  fixtures, rather than giving you the building blocks and asking you to
+  assemble them yourself. The building blocks are still there, but these changes
+  should make it easier for the majority of devs to do something useful with
+  this library.
