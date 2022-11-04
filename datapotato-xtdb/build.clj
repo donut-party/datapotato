@@ -13,7 +13,7 @@
             [org.corfield.build :as bb]))
 
 (def lib 'party.donut/datapotato-xtdb)
-(def version (format "0.0.%s" (b/git-count-revs nil)))
+(def version (format "1.0.%s" (b/git-count-revs nil)))
 
 (defn deploy "Deploy the JAR to Clojars"
   [opts]
