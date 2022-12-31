@@ -18,8 +18,7 @@
 (def monotonic-id-gen
   (gen/fmap (fn [_] (swap! id-atom inc)) (gen/return nil)))
 
-(def ID
-  [:and {:gen/gen monotonic-id-gen} pos-int?])
+(def ID uuid?)
 
 (def User
   [:map
@@ -31,7 +30,6 @@
    [:post/id ID]
    [:post/created-by-id pos-int?]
    [:post/content string?]])
-
 
 (def Like
   [:map
@@ -52,7 +50,8 @@
 
 (def potato-schema
   {:user {:prefix   :u
-          :generate {:schema User}
+          :generate {:generator (fn [_] {:users/username "my username"})
+                     :schema User}
           :fixtures {:table-name "users"}}
    :post {:prefix    :p
           :generate  {:schema Post}
