@@ -4,7 +4,8 @@
   (:require
    [donut.datapotato.core :as dc]
    [next.jdbc :as jdbc]
-   [next.jdbc.sql :as sql]))
+   [next.jdbc.sql :as sql]
+   [clojure.string :as str]))
 
 ;;---
 ;; fixtures
@@ -30,8 +31,13 @@
   * :connection - the active connection created by with-fixtures
   * :table-name - name of the table that record was inserted into
   * :insert-result - return value of sql/insert!"
-  (fn get-inserted-dispatch [{:keys [dbtype dbspec]}]
-    (or dbtype (:dbtype dbspec))))
+  (fn get-inserted-dispatch [{:keys [dbtype dbspec connection]}]
+    (or dbtype
+        (:dbtype dbspec)
+        (-> connection
+            .getMetaData
+            .getDatabaseProductName
+            str/lower-case))))
 
 (defmethod get-inserted
   "sqlite"
