@@ -76,7 +76,7 @@
                      :prefix      :p}})
 
 
-(def cycle-schema
+(def cycle-schem
   {:user      {:spec      ::user
                :prefix    :u
                :relations {:updated-by-id [:user :id]}}
@@ -107,3 +107,18 @@
                     :relations {:watched-id #{[:topic-category :id]
                                               [:topic :id]}}
                     :prefix :w}})
+
+(s/def ::user-id ::id)
+
+(s/def ::meta
+  (s/keys :req-un [::user-id]))
+
+(s/def ::doc
+  (s/keys :req-un [::meta]))
+
+(def doc-schema
+  {:user {:spec   ::user
+          :prefix :u}
+   :doc  {:spec      ::doc
+          :prefix    :d
+          :relations {[:donut.datapotato.core/path [:meta :user-id]] [:user :id]}}})

@@ -956,13 +956,31 @@
                 (map (fn [[k v]] (when-not (omit-relation? potato-db ent-name k) [k v]))))
           visit-val)))
 
+(defn- assoc-path-referenced-val
+  [ent-data relation-attr relation-val]
+  (if (seq (filter #{::*} relation-attr))
+    (let [[head & tail] relation-attr]
+      (cond
+        (nil? head)
+        relation-val
+
+        (= ::* head)
+        (let [k (first tail)]
+          (mapv #(assoc % k (assoc-path-referenced-val (get % k) (rest tail) relation-val)) ent-data))
+
+        :else
+        (assoc ent-data head (assoc-path-referenced-val (get ent-data head) tail relation-val))))
+    (assoc-in ent-data relation-attr relation-val)))
+
 (defn assoc-referenced-val
   "Look up related ent's attr value and assoc with parent ent
   attr. `:coll` relations will add value to a vector."
   [ent-data relation-attr relation-val constraints]
-  (if (contains? (relation-attr constraints) :coll)
-    (update ent-data relation-attr #((fnil conj []) % relation-val))
-    (assoc ent-data relation-attr relation-val)))
+  (cond
+    (contains? (relation-attr constraints) :coll) (update ent-data relation-attr #((fnil conj []) % relation-val))
+    (and (vector? relation-attr)
+         (= ::path (first relation-attr)))        (assoc-path-referenced-val ent-data (second relation-attr) relation-val)
+    :else                                         (assoc ent-data relation-attr relation-val)))
 
 (defn assoc-referenced-vals
   "A visiting function that sets referenced values.
