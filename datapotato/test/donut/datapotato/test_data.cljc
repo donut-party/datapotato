@@ -76,7 +76,7 @@
                      :prefix      :p}})
 
 
-(def cycle-schem
+(def cycle-schema
   {:user      {:spec      ::user
                :prefix    :u
                :relations {:updated-by-id [:user :id]}}
