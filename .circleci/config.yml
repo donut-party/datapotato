@@ -26,13 +26,23 @@ jobs:
           name: Build datapotato
           command: cd datapotato && clojure -T:build jar
 
-          # next-jdbc
+      # next-jdbc
       - run:
           name: test datapotato-next-jdbc clj
           command: cd datapotato-next-jdbc && clojure -X:test
       - run:
           name: Build datapotato-next-jdbc
           command: cd datapotato-next-jdbc && clojure -T:build jar
+
+      # clojure-java-jdbc
+      - run:
+          name: test datapotato-clojure-java-jdbc clj
+          command: cd datapotato-clojure-java-jdbc && clojure -X:test
+      - run:
+          name: Build datapotato-clojure-java-jdbc
+          command: cd datapotato-clojure-java-jdbc && clojure -T:build jar
+
+
 
           # xtdb
           # xtdb test hangs for some reason :(
