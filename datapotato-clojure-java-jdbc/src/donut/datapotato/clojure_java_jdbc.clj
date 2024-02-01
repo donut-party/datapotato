@@ -45,6 +45,12 @@
                          (-> insert-result first ((keyword "last_insert_rowid()")))])))
 
 (defmethod get-inserted
+  "oracle"
+  [{:keys [table-name insert-result] :as db}]
+  (first (jdbc/query db [(str "SELECT * FROM " table-name " WHERE rowid = ?")
+                         (:rowid (first insert-result))])))
+
+(defmethod get-inserted
   :default
   [{:keys [insert-result]}]
   (first insert-result))

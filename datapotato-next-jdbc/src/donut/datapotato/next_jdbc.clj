@@ -46,6 +46,12 @@
                                 (-> insert-result vals first)])))
 
 (defmethod get-inserted
+  "oracle"
+  [{:keys [connection table-name insert-result] :as db}]
+  (first (sql/query connection [(str "SELECT * FROM " table-name " WHERE rowid = ?")
+                                (:rowid (first insert-result))])))
+
+(defmethod get-inserted
   :default
   [{:keys [insert-result]}]
   insert-result)
