@@ -58,7 +58,7 @@
 (defn insert
   "inserts a single record in the clojure.java.jdbc db for an ent"
   [{{:keys [connection]} dc/fixtures-visit-key
-    :as                                potato-db}
+    :as                  potato-db}
    {:keys [ent-name ent-type visit-val]}]
   (let [get-inserted_ (or (get-in potato-db [dc/fixtures-visit-key :get-inserted])
                           get-inserted)
