@@ -1,7 +1,7 @@
 {:paths ["src"]
 
  :deps {aysylu/loom             {:mvn/version "1.0.2"}
-        medley/medley           {:mvn/version "0.8.3"}
+        dev.weavejester/medley  {:mvn/version "1.7.0"}
         better-cond/better-cond {:mvn/version "2.1.5"}
         org.clojure/spec.alpha  {:mvn/version "0.3.218"}}
 
