@@ -1,10 +1,9 @@
 {:paths ["src"]
 
  :deps {aysylu/loom             {:mvn/version "1.0.2"}
-        dev.weavejester/medley  {:mvn/version "1.8.1"}
+        dev.weavejester/medley  {:mvn/version "1.7.0"}
         better-cond/better-cond {:mvn/version "2.1.5"}
-        org.clojure/spec.alpha  {:mvn/version "0.3.218"}
-        org.clojure/clojure     {:mvn/version "1.11.0"}}
+        org.clojure/spec.alpha  {:mvn/version "0.3.218"}}
 
  :aliases
  {:test
