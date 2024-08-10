@@ -1,6 +1,6 @@
 {:paths ["src" "test"]
  :deps  {aysylu/loom                  {:mvn/version "1.0.2"}
-         medley/medley                {:mvn/version "0.8.3"}
+         dev.weavejester/medley       {:mvn/version "1.8.1"}
          better-cond/better-cond      {:mvn/version "2.0.1-SNAPSHOT"}
          org.clojure/core.specs.alpha {:mvn/version "0.2.62"}
          org.babashka/spec.alpha      {:git/url "https://github.com/babashka/spec.alpha"

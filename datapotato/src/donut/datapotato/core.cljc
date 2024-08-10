@@ -278,9 +278,9 @@
   this will return a graph where the `:project` node connects to the
   `:user` node"
   [schema]
-  (->> schema
-       (medley/map-vals (fn [v] (->> v :relations vals (map first) set)))
-       (lg/digraph)))
+  (-> schema
+      (update-vals (fn [v] (->> v :relations vals (map first) set)))
+      (lg/digraph)))
 
 ;; ent naming
 ;; -----------------
@@ -602,7 +602,7 @@
   "Schemas are invalid if two types have the same prefix. This checks
   that."
   [schema]
-  (->> (medley/map-vals :prefix schema)
+  (->> (update-vals schema :prefix)
        (reduce-kv (fn [grouping ent-type prefix]
                     (update grouping prefix (fn [x] (conj (or x #{}) ent-type))))
                   {})
