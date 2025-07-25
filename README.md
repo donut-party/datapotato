@@ -150,7 +150,7 @@ with a real database.)
 ;; The datapotato schema defines `ent-types`, which roughly correspond to db
 ;; tables. Below, the ent-types are `:user`, `:post`, and `:like.` The ent-type
 ;; schemas include a `:generate` key, which includes the `:schema` used to
-;; generate records fo that type. The `:relations` key specifies how ents
+;; generate records for that type. The `:relations` key specifies how ents
 ;; reference each other. Relations correspond to foreign keys.
 
 (def potato-schema
