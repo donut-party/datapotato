@@ -53,7 +53,6 @@
                :constraints {:project/todo-lists #{:coll}}
                :prefix      :p}})
 
-(def uri "datomic:mem://datapotato-test")
 (def client (d/client {:server-type :datomic-local
                        :storage-dir :mem
                        :system      "dev"}))
