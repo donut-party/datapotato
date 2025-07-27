@@ -35,15 +35,12 @@
 
 (def schema
   {:user      {:prefix   :u
-               :generate {:schema User}
-               :fixtures {:collection :user}}
+               :generate {:schema User}}
    :todo-list {:generate  {:schema TodoList}
-               :fixtures  {:collection :todo-list}
                :relations {:todo-list/created-by [:user :db/id]}
                :prefix    :tl}
    :todo      {:generate  {:set {:todo/todo-title "write unit tests"}
                            :schema     Todo}
-               :fixtures  {:collection :todo}
                :relations {:todo/created-by [:user :db/id]
                            :todo/todo-list  [:todo-list :db/id]}
                :prefix    :t}
