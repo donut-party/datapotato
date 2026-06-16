@@ -18,7 +18,7 @@
 (def basis (b/create-basis {:project "deps.edn"}))
 
 (defn- pom-template [version]
-  [[:description "dependency injection lib / framework foundation"]
+  [[:description "datapotato adapter for fluree"]
    [:url "https://github.com/donut-power/datapotato"]
    [:licenses
     [:license
