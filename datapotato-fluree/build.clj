@@ -19,7 +19,7 @@
 
 (defn- pom-template [version]
   [[:description "datapotato adapter for fluree"]
-   [:url "https://github.com/donut-power/datapotato"]
+   [:url "https://github.com/donut-party/datapotato"]
    [:licenses
     [:license
      [:name "MIT"]
@@ -28,9 +28,9 @@
     [:developer
      [:name "Daniel Higginbotham"]]]
    [:scm
-    [:url "https://github.com/donut-power/datapotato"]
-    [:connection "scm:git:https://github.com/donut-power/datapotato.git"]
-    [:developerConnection "scm:git:ssh:git@github.com:donut-power/datapotato.git"]
+    [:url "https://github.com/donut-party/datapotato"]
+    [:connection "scm:git:https://github.com/donut-party/datapotato.git"]
+    [:developerConnection "scm:git:ssh:git@github.com:donut-party/datapotato.git"]
     [:tag (str "v" version)]]])
 
 (defn- jar-opts [opts]
