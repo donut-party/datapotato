@@ -18,7 +18,7 @@
 (def basis (b/create-basis {:project "deps.edn"}))
 
 (defn- pom-template [version]
-  [[:description "datapotato adapter for xtdb"]
+  [[:description "datapotato adapter for next.jdbc"]
    [:url "https://github.com/donut-party/datapotato"]
    [:licenses
     [:license
