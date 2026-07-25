@@ -5,6 +5,11 @@
         better-cond/better-cond {:mvn/version "2.1.5"}
         org.clojure/spec.alpha  {:mvn/version "0.3.218"}}
 
+ :donut/lib {:name           party.donut/datapotato
+             :description    "db fixtures for clojure"
+             :github         "donut-party/datapotato"
+             :version-prefix "1.0"}
+
  :aliases
  {:test
   {:extra-paths ["test"]
@@ -23,6 +28,6 @@
    :exec-fn     cljs-test-runner.main/-main}
 
   :build
-  {:deps       {io.github.clojure/tools.build {:mvn/version "0.9.6"}
-                slipset/deps-deploy           {:mvn/version "0.2.1"}}
-   :ns-default build}}}
+  {:deps       {io.github.donut-party/framework-build
+                {:git/sha "912e0b0ffc914cf1b5824650268307062d92e40c"}}
+   :ns-default donut.build}}}
